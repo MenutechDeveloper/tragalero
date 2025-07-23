@@ -1,0 +1,40 @@
+.branding {
+  width: 100%;
+  text-align: center;
+}
+
+#panchos {
+  background: #DDDDDD;
+}
+
+.branding img {
+  width: 90%;
+}
+
+.botonWeb {
+  width: 100%;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.botonWeb button {
+  background: orange;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 35px;
+  font-family: 'Montserrat';
+  font-weight: 900;
+}
+
+.botonWeb a {
+  text-decoration: none;
+  color: #fff;
+}
+
+#rojas {
+  background: linear-gradient(180deg, #BAC3C5,#E0E9EB);
+}
+

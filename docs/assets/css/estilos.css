@@ -1,0 +1,381 @@
+body{
+  overflow-x: hidden !important;
+}
+.paquetes {
+    text-align: center;
+    font-size: 18px;
+    width: 100%;
+    
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    
+    margin: auto;
+    margin-top: 60px;
+    margin-bottom: 60px;
+  }
+  
+  .paquetes .col {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .paquetes #s {
+    background: rgba(0,0,0,0.1);
+  }
+  
+  .paquetes i {
+    color: green;
+    font-size: 25px;
+  }
+  
+  .paquetes #p {
+    color: #444444;
+    max-width: 70%;
+  }
+  .cabezeraPaquetes{
+    width: 100%;
+    margin: auto;
+    display: flex;
+    justify-content:center;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    z-index: 3;
+    position:sticky;
+    top: 280px;
+    text-align: center;
+  }
+ /* @media (max-width: 998px) {
+    .cabezeraPaquetes h4 {
+      font-size: 12px;
+      width: 100%;
+      margin: auto;
+      text-align: center;
+    }
+  }
+  @media (max-width: 998px) {
+    .cabezeraPaquetes h3 {
+      font-size: 18px;
+      
+    }
+  }*/
+  @media (max-width: 998px) {
+    .cabezeraPaquetes h3 {
+       max-width: 100%;
+      font-size: 12px;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+  }
+  @media (max-width: 998px) {
+    .cabezeraPaquetes h4 {
+      max-width: 100%;
+      font-size: 12px;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+   @media (max-width: 998px) {
+    .cabezeraPaquetes button {
+      font-size: 12px;
+      width: 50%;
+    }
+  }
+  
+  @media (max-width: 600px) {
+    .paquetes #p {
+      width: 100%;
+      padding: 0;
+      max-width: none;
+    }
+  }
+  
+  #paquete {
+    margin-top: 90px;
+    color: #FF9533;
+    font-size: 22px;
+    font-family: 'Montserrat';
+  }
+  
+  .lineaP {
+    background: #FF9533;
+    width: 100%;
+    height: 2px;
+  }
+  
+  #precio {
+    margin-top: 10px;
+    color: #FF9533;
+    font-family: 'Montserrat';
+  }
+  
+  .paquetes span {
+    color: #FF9533;
+  }
+
+  .botones {
+    border-radius: 20px;
+    background: #FF9533;
+    color: #fff;
+    padding: 5px 20px;
+    border: none;
+  }
+  
+  .paquetes #elboton {
+    margin-top: 40px;
+  }
+  .web1{
+    width: 70%;
+    height: auto;
+    margin: auto;
+    
+  }
+  .web1 .imagenesWeb{
+    width: 100%;
+  }
+  .web1 #web2{
+    width: 60%;
+    height: auto;
+    margin: auto;
+  }
+  .web2{
+    width: 100%;
+    text-align: center;
+    max-width:800px;
+    margin:auto;
+    margin-bottom:50px;
+  }
+  .web2 img{
+    width: 80%;
+  }
+  .lineaSeparadora{
+    background: orange;
+    width: 60%;
+    height: 5px;
+    margin: auto;
+    margin-top: 30px;
+    margin-bottom: 30px;
+  }
+  .mk{
+    margin-top: 40px;
+    width: 100%;
+    height: auto;
+    text-align: center;
+    
+  }
+  .mk img{
+    width: 90%;
+    margin: auto;
+  }
+  .mk #poster{
+    width: 30%;
+  }
+  .contPaypal{
+    width:100%;
+    height: 1000px;
+    margin: auto;
+    text-align: center;
+    margin-top:150px;
+  }
+  html {
+  scroll-behavior: smooth;
+}
+
+.irarriba {
+  display: none;
+  padding: 20px;
+  border: 2px #e88817 solid;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 10000;
+  color: #e88817;
+}
+
+.submenu {
+  display: flex;
+  justify-content: space-around;
+}
+
+@media (max-width: 992px) {
+  .submenu {
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 992px) {
+  .submenu a {
+    width: 100%;
+  }
+}
+
+.submenu a {
+  margin: 5px;
+  background: #FF9533;
+  padding: 5px 10px 5px 10px;
+  border-radius: 30px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.printing h1 {
+  color: #FF9533;
+}
+
+.printing {
+  max-width: 800px;
+  margin: auto;
+  text-align: left;
+}
+
+.printing img {
+  width: 100%;
+}
+
+.restaurant {
+  max-width: 800px;
+  margin: auto;
+  text-align: left;
+}
+
+.restaurant h1 {
+  color: #FF9533;
+}
+
+.restaurant img {
+  width: 100%;
+}
+
+.restaurant .columnas li {
+  width: 100%;
+}
+
+.scrollimage {
+  height: 500px;
+  overflow-y: scroll;
+}
+
+.restaurant .columnas2 {
+  margin-bottom: 50px;
+}
+
+.restaurant .org {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.how {
+  max-width: 800px;
+  margin: auto;
+  text-align: left;
+}
+
+.how h1 {
+  color: #FF9533;
+}
+
+.how img {
+  width: 100%;
+}
+
+.how .red {
+  width: 100%;
+  margin: auto;
+  text-align: center;
+}
+
+.red img {
+  width: 50%;
+}
+
+.recommended h1 {
+  color: #FF9533;
+}
+
+.sindecoracion {
+  list-style: none;
+}
+
+.recommended {
+  max-width: 800px;
+  margin: auto;
+  text-align: left;
+}
+
+.tablaImpresoras {
+  text-align: center;
+  font-size: 18px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  margin: auto;
+  margin-top: 60px;
+  margin-bottom: 60px;
+}
+
+.tablaImpresoras #verde span {
+  padding: 8px 25px;
+  background: green;
+  color: #fff;
+  font-family: 'Montserrat';
+  font-weight: 900;
+}
+
+.tablaImpresoras .col {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tablaImpresoras .row {
+  margin-top: 50px;
+}
+
+.tablaImpresoras .botondecompra a {
+  background: #ff9533;
+  width: 90%;
+  padding: 8px 25px;
+  border-radius: 5px;
+  font-family: 'Montserrat';
+  font-weight: 900;
+  text-decoration: none;
+  color: #fff;
+}
+
+.tablaImpresoras .t {
+  color: #ff9533;
+}
+
+.other h3 {
+  color: #ff9533;
+}
+
+.other {
+  max-width: 800px;
+  margin: auto;
+  text-align: left;
+  margin-bottom: 50px;
+}
+
+.botonsub {
+  width: 100%;
+  height: 500px;
+  text-align: center;
+ 
+  
+
+}
+.botonsub #paypal-button-container-P-3EP64089VX4966636MTEB3RA {
+  margin: auto;
+}

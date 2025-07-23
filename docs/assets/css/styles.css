@@ -1,0 +1,393 @@
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden
+}
+
+.ir-arriba {
+  display: none;
+  padding: 20px;
+  border: 2px #e88817 solid;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 10000;
+  color: #e88817;
+}
+
+/* navbar */
+
+#header {
+  background: rgba(255,255,255,0.5);
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 30px 100px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10000;
+}
+
+#header .logo img {
+  width: 150px;
+}
+
+
+#header .navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#header .navigation li {
+  list-style: none;
+  margin-left: 20px;
+}
+
+#header .navigation li a {
+  text-decoration: none;
+  padding: 6px 15px;
+  color: #000;
+  border-radius: 20px;
+}
+
+#header .navigation li a:hover, #header .nsvigation li a.active {
+  background: #fff;
+  color: #111;
+}
+
+#header .navigation #bot a:hover {
+  background: none;
+}
+
+/* end navbar */
+
+/* start dropdown */
+
+/* Dropdown Button */
+
+.dropbtn {
+  background-color: rgba(0,0,0,0);
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+}
+
+/* The container <div> - needed to position the dropdown content */
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #000000;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+/* Links inside the dropdown */
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+/* Change color of dropdown links on hover */
+
+.dropdown-content a:hover {
+  background-color: #ddd;
+}
+
+/* Show the dropdown menu on hover */
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+
+.dropdown:hover .dropbtn {
+  background-color: #000000;
+}
+
+/* end dropdown */
+
+@media (max-width: 992px) {
+  #header {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 992px) {
+  #header .logo {
+    z-index: 10000;
+    position: relative;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 992px) {
+  #header .navigation {
+    display: none;
+  }
+}
+
+@media (max-width: 992px) {
+  #header .navigation.active {
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    height: 100vh;
+    background: rgba(255,255,255,0.46);
+  }
+}
+
+@media (max-width: 992px) {
+  #header .navigation li {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 992px) {
+  #header .navigation li a {
+    font-size: 1.2em;
+    margin: 5px 0;
+    border-radius: 30px;
+    display: inline-block;
+  }
+}
+
+@media (max-width: 992px) {
+  .toggle {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    background: url(/assets/img/menuN.png?h=58459cf8153d8e6b51f85b71b520e8a6);
+    background-size: 30px;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 10000;
+  }
+}
+
+@media (max-width: 992px) {
+  .toggle.active {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: url(/assets/img/closeN.png?h=c5d8d344e55fbbac80d443478fb0cb30);
+    background-size: 25px;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+}
+
+#header li span {
+  padding: 10px 35px;
+  background: orange;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-family: 'Montserrat';
+  font-weight: 900;
+  cursor: pointer;
+}
+
+#header #bot a:hover {
+  background: none;
+  color: #fff;
+  text-decoration: none;
+}
+
+.portada img{
+    width:100%;
+
+}
+
+#menutech {
+  max-width: 800px;
+  margin: auto;
+  text-align: center;
+  margin-top: 30px;
+}
+
+#menutech h1 {
+  color: orange;
+  font-family: 'Montserrat';
+  font-weight: 500;
+}
+
+#services {
+  max-width: 800px;
+  margin: auto;
+  text-align: center;
+  margin-top: 50px;
+  margin-bottom: 50px;
+}
+
+#services h2 {
+  color: orange;
+  font-family: 'Montserrat';
+  font-weight: 900;
+}
+
+.servicios h4 {
+  color: orange;
+  font-family: 'Montserrat';
+  font-weight: 500;
+  margin-top: 20px;
+}
+
+.servicios img {
+  width: 80px;
+}
+
+.servicios .servi {
+  text-align: center;
+}
+
+.modelo3D {
+  width: 100%;
+  margin: auto;
+  text-align: center;
+}
+
+model-viewer {
+  width: 100%;
+  margin: auto;
+}
+
+#services button {
+  background: #e88817;
+  padding: 8px 30px;
+  border: none;
+  border-radius: 10px;
+}
+
+#services button a {
+  text-decoration: none;
+  color: #fff;
+}
+
+#businessinfo {
+  max-width: 800px;
+  margin: auto;
+  text-align: center;
+  margin-top: 50px;
+}
+
+#businessinfo h2 {
+  color: #e88817;
+  font-family: 'Montserrat';
+  font-weight: 900;
+}
+
+.bordear {
+  border: #e88817 2px solid;
+  padding: 10px;
+}
+
+.image1 {
+  width: 100%;
+  height: 500px;
+  background: url("/assets/img/img1.jpg?h=3838e8ce6c1cc7d0ca7e922d3d3aa32e");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+#businessinfo button {
+  background: #e88817;
+  padding: 8px 30px;
+  border: none;
+  border-radius: 10px;
+}
+
+#businessinfo button a {
+  color: #fff;
+  text-decoration: none;
+}
+
+#contact {
+  max-width: 800px;
+  margin: auto;
+  margin-top: 50px;
+}
+
+#contact h2 {
+  color: #e88817;
+  font-family: 'Montserrat';
+  font-weight: 900;
+  text-align: center;
+}
+
+@media (max-width: 992px) {
+  .servicios {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 992px) {
+  #menutech {
+    padding: 20px;
+  }
+}
+@media (max-width: 992px) {
+  .image1 {
+    background: url("/assets/img/img1.jpg");
+    background-position: center;
+    background-size: cover;
+  }
+}
+
+#header .logo{
+    position:relative;
+    opacity:1;
+}
+
+.logoresp {
+  position: absolute;
+  opacity: 0;
+}
+
+.logoresp img {
+  width: 150px;
+}
+
+@media (max-width: 992px) {
+  #header .logo {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 992px) {
+  .logoresp {
+    opacity: 1;
+  }
+}
+
+
+
+
+
+

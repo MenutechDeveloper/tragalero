@@ -1,0 +1,20 @@
+.central {
+  width: 100%;
+  height: 800px;
+  margin: auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Roboto';
+}
+
+.imagenerror {
+  width: 50%;
+}
+
+.central a {
+  color: orange;
+}
+
