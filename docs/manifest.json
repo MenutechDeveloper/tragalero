@@ -1,0 +1,23 @@
+{
+  "short_name": "Tragalero",
+  "name": "Tragalero",
+  "icons": [
+    {
+      "src": "https://menutechdeveloper.github.io/bddImg/assets/img/logov1.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://menutechdeveloper.github.io/bddImg/assets/img/logov1.png",
+      "type": "image/png",
+      "sizes": "500x500"
+    }
+  ],
+  "start_url": "/app.html",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff"
+}
+
