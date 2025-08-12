@@ -1,0 +1,149 @@
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 800px;
+  background: rgba(255, 255, 255, 0.7); /* Fondo semitransparente */
+  backdrop-filter: saturate(180%) blur(10px); /* Efecto difuminado */
+  -webkit-backdrop-filter: saturate(180%) blur(10px); /* Para Safari */
+  z-index: 9999;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: background 0.3s ease;
+}
+
+body {
+  padding-top: 60px; /* Ajusta según altura real de la barra */
+}
+
+/* Barra superior alineada */
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 5px;
+}
+
+/* Botón instalar */
+.instalacion img {
+    height: 100px;
+    cursor: pointer;
+}
+
+/* Buscador centrado */
+.search-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.search-container input {
+    width: 100%;
+    max-width: 250px;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Selector de kilómetros */
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.controls select {
+    padding: 5px;
+}
+/*FIN BARRA*/
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.container {
+  max-width: 800px;
+  width: 100%;
+}
+
+.hero-image {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.hero-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  justify-items: center;
+  margin-top: 50px;
+}
+
+.grid a {
+  display: block;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+  width: 100%;
+  max-width: 220px; 
+}
+
+.grid a:hover {
+  transform: scale(1.03);
+}
+
+.grid img {
+  width: 100%;
+  aspect-ratio: 1 / 1; 
+  object-fit: contain; 
+  display: block;
+  background-color: #fff;
+  padding: 8px; 
+}
+@media (max-width: 992px) {
+ .grid img {
+    padding: 0;
+  }
+}
+.ad{
+    width: 100%;
+}
+.ad video{
+    width: 100%;
+}
+
+/*Controlador*/
+.controls{
+    max-width: 800px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+.controls #radioBusqueda{
+    padding: 15px 10px;
+    font-size: 20px;
+    border: black 2px solid;
+    border-radius: 10px;
+    background: none;
+
+}
