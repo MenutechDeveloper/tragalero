@@ -284,3 +284,9 @@
     opacity: 1;
     pointer-events: auto;
 }
+
+/*IFRAME PRICING*/
+.iframe-popup {
+    color: orange;
+    
+}
