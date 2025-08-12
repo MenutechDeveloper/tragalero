@@ -11,7 +11,7 @@
 
 <body>
 <div class="container">
-  <div class="top-bar">
+  <div class="top-bar" id="topBar">
     <div class="instalacion">
         <a id="installContainer" href="javascript:void(0);">
             <img id="installBtn" src="https://menutechdeveloper.github.io/bddImg/assets/img/instalar.png" alt="Instalar">
@@ -23,7 +23,7 @@
     </div>
 
     <div class="controls">
-        <label for="radioBusqueda">Mostrar a:</label>
+        <label for="radioBusqueda">Resultados a:</label>
         <select id="radioBusqueda">
             <option value="5">5 km</option>
             <option value="10" selected>10 km</option>
@@ -32,7 +32,24 @@
             <option value="9999">Todos</option>
         </select>
     </div>
-</div>
+  </div>
+
+
+<script>
+// Hacer que la barra sea fija al hacer scroll
+const topBar = document.getElementById('topBar');
+const barOffset = topBar.offsetTop;
+
+window.addEventListener('scroll', () => {
+  if (window.scrollY > barOffset) {
+    topBar.style.position = 'fixed';
+    document.body.style.paddingTop = topBar.offsetHeight + 'px';
+  } else {
+    topBar.style.position = 'relative';
+    document.body.style.paddingTop = '0';
+  }
+});
+</script>
     <video class="ad" src="https://menutechdeveloper.github.io/bddImg/assets/img/directorio.mp4"autoplay muted loop alt="Encabezado"></video>
   
 
@@ -137,3 +154,4 @@ if ('serviceWorker' in navigator) {
 <script src="./instalarapp.js"></script>
 </body>
 </html>
+
