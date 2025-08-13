@@ -20,6 +20,7 @@ body{
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
   }
   
   .paquetes #s {
@@ -35,6 +36,24 @@ body{
     color: #444444;
     max-width: 70%;
   }
+  #paquete .slide {
+    background: #FF9533;
+    color: white;
+    padding: 10px 30px;
+    font-size: 18px;
+    border: 2px white solid;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border-radius: 12px;
+  }
+  @media (max-width: 992px) {
+    #paquete .slide{
+      font-size: 9px;
+      padding: 5px 10px;
+      width: 100%;
+    }
+  }
+  
   .cabezeraPaquetes{
     width: 100%;
     margin: auto;
@@ -47,7 +66,7 @@ body{
     top: 280px;
     text-align: center;
   }
- /* @media (max-width: 998px) {
+ /* @media (max-width: 992px) {
     .cabezeraPaquetes h4 {
       font-size: 12px;
       width: 100%;
@@ -55,13 +74,13 @@ body{
       text-align: center;
     }
   }
-  @media (max-width: 998px) {
+  @media (max-width: 992px) {
     .cabezeraPaquetes h3 {
       font-size: 18px;
       
     }
   }*/
-  @media (max-width: 998px) {
+  @media (max-width: 992px) {
     .cabezeraPaquetes h3 {
        max-width: 100%;
       font-size: 12px;
@@ -70,7 +89,7 @@ body{
       text-align: center;
     }
   }
-  @media (max-width: 998px) {
+  @media (max-width: 992px) {
     .cabezeraPaquetes h4 {
       max-width: 100%;
       font-size: 12px;
@@ -98,6 +117,7 @@ body{
     color: #FF9533;
     font-size: 22px;
     font-family: 'Montserrat';
+    background: white;
   }
   
   .lineaP {
@@ -368,14 +388,79 @@ body{
   margin-bottom: 50px;
 }
 
-.botonsub {
-  width: 100%;
-  height: 500px;
-  text-align: center;
- 
-  
+.titlepkg{ /*Titulos de paquetes*/
+    color: #e88817;
+    font-weight: bold;
+    border: none;
+    background: none;
+    font-size: 18px;
+  }
 
+
+
+ /* Fondo oscuro y centrado */
+.iframe-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 10px;
+  box-sizing: border-box;
 }
-.botonsub #paypal-button-container-P-3EP64089VX4966636MTEB3RA {
-  margin: auto;
+
+/* Contenedor del iframe */
+.iframe-content {
+  position: relative;
+  width: 90vw;
+  height: 90vh;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+/* Botón cerrar */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  z-index: 1;
+}
+
+/* El iframe ocupa todo el espacio */
+.iframe-content iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Móvil */
+@media (max-width: 600px) {
+  .iframe-content {
+    width: 95vw;
+    height: 90vh;
+  }
+
+  .close-btn {
+    font-size: 24px;
+  }
+}
+
+.btntitulo {
+  border: none;
+  background:none;
+  color: orange;
+  font-weight: 800;
 }
