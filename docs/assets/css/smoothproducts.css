@@ -173,6 +173,10 @@ html, body {
   }
 }
 
-.clean-navbar .navbar-nav .nav-item {
+/*LOGO TRAGALERO*/
+#logo{
+  filter: drop-shadow(0 0 2px black);
+  width: 150px
 }
+
 
