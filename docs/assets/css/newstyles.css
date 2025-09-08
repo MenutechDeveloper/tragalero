@@ -192,7 +192,7 @@
     text-align: center;
   }
 }
-/* Responsive: en móvil texto primero e imagen después */
+
 @media (max-width: 768px) {
   .about-container {
     flex-direction: column-reverse;
@@ -295,4 +295,5 @@
   filter: drop-shadow(0 0 2px black);
   width: 150px
 }
+
 
