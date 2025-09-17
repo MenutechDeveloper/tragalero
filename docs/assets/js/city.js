@@ -1,10 +1,9 @@
-// Datos de restaurantes con nombre, url y url imagen
 const restaurantData = {
     "cdmx": {
         "polanco": [
             { name: "Restaurante Polanco 1", url: "#", img: "https://menutech.services/assets/img/herradero.png" },
             { name: "Restaurante Polanco 2", url: "#", img: "https://menutech.services/assets/img/LA%20COCINA%20DE%20TIJUANA%20(38).png" }
-            // Puedes agregar más restaurantes en Polanco aquí
+            // agregar más restaurantes en Polanco
         ],
         "roma-norte": [
             { name: "Restaurante Roma 1", url: "#", img: "https://menutech.services/assets/img/herradero.png" }
@@ -44,7 +43,7 @@ const restaurantData = {
     },
     "monterrey": {
         "san-pedro-garza-garcia": [
-            { name: "Restaurante San Pedro 1", url: "https://tragalero.com/app", img: "https://menutech.services/assets/img/herradero.png" }
+            { name: "Restaurante San Pedro 1", url: "#", img: "https://menutech.services/assets/img/herradero.png" }
             // Más restaurantes de San Pedro...
         ],
         "centro": [
@@ -122,7 +121,7 @@ const restaurantData = {
             { name: "Restaurante El Soler 1", url: "#", img: "https://menutech.services/assets/img/herradero.png" }
         ]
     }
-    // Puedes agregar más estados y ciudades de México aquí
+    // agregar más estados y ciudades de México
 };
 
 // Obtener parámetros de URL
@@ -174,3 +173,4 @@ if (!state || !city || !restaurantData[state] || !restaurantData[state][city]) {
     containerDiv.appendChild(rowDiv);
     container.appendChild(containerDiv);
 }
+
