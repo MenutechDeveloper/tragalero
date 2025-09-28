@@ -93,28 +93,52 @@
   <span class="popup-cerrar">&times;</span>
   <img class="popup-img" id="popupImg" src="" alt="Vista previa">
 </div>
-	<script>
-const servicios = document.querySelectorAll(".servicio");
-const popup = document.getElementById("popup");
-const popupImg = document.getElementById("popupImg");
-const cerrar = document.querySelector(".popup-cerrar");
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const servicios = document.querySelectorAll('.servicio');
+  const popup = document.getElementById('popup');
+  const popupImg = document.getElementById('popupImg');
+  const closeBtn = document.getElementById('popupClose');
 
-servicios.forEach(servicio => {
-  servicio.addEventListener("click", () => {
-    const imgSrc = servicio.getAttribute("data-img");
-    popupImg.src = imgSrc;
-    popup.style.display = "block";
-  });
-});
-
-cerrar.addEventListener("click", () => {
-  popup.style.display = "none";
-});
-
-window.addEventListener("click", (e) => {
-  if (e.target == popup) {
-    popup.style.display = "none";
+  function openPopup(src, alt) {
+    if (!src) return;
+    popupImg.src = src;
+    popupImg.alt = alt || 'Vista previa';
+    popup.classList.add('open');
+    popup.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('no-scroll');
+    // foco accesible en el botón cerrar
+    closeBtn.focus();
   }
+
+  function closePopup() {
+    popup.classList.remove('open');
+    popup.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('no-scroll');
+    // limpiamos el src después de la transición para evitar layout flashes / memoria
+    setTimeout(() => { popupImg.src = ''; }, 200);
+  }
+
+  servicios.forEach(s => {
+    s.style.cursor = 'pointer';
+    s.addEventListener('click', () => {
+      const src = s.dataset.img;
+      const alt = s.querySelector('img')?.alt || s.dataset.alt || '';
+      openPopup(src, alt);
+    });
+  });
+
+  closeBtn.addEventListener('click', closePopup);
+
+  // click fuera de la imagen (en el overlay) cierra
+  popup.addEventListener('click', (e) => {
+    if (e.target === popup) closePopup();
+  });
+
+  // tecla ESC cierra
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && popup.classList.contains('open')) closePopup();
+  });
 });
 </script>
 <!-- FIN SERVICIOS -->
