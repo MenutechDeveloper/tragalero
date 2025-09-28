@@ -97,6 +97,7 @@
 document.addEventListener('DOMContentLoaded', function () {
   const servicios = document.querySelectorAll('.servicio');
   const popup = document.getElementById('popup');
+  const popupInner = popup.querySelector('.popup-inner');
   const popupImg = document.getElementById('popupImg');
   const closeBtn = document.getElementById('popupClose');
 
@@ -104,41 +105,59 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!src) return;
     popupImg.src = src;
     popupImg.alt = alt || 'Vista previa';
+    // Añadimos la clase open (controla visibilidad y pointer-events)
     popup.classList.add('open');
     popup.setAttribute('aria-hidden', 'false');
     document.body.classList.add('no-scroll');
-    // foco accesible en el botón cerrar
-    closeBtn.focus();
+    closeBtn.focus(); // accesibilidad
   }
 
   function closePopup() {
     popup.classList.remove('open');
     popup.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('no-scroll');
-    // limpiamos el src después de la transición para evitar layout flashes / memoria
-    setTimeout(() => { popupImg.src = ''; }, 200);
+    // limpiamos src después de la transición para liberar memoria
+    setTimeout(() => { popupImg.src = ''; }, 220);
   }
 
+  // Apertura desde los items .servicio
   servicios.forEach(s => {
     s.style.cursor = 'pointer';
-    s.addEventListener('click', () => {
+    s.addEventListener('click', (e) => {
+      // evita que un click accidental en un hijo haga algo raro
+      e.stopPropagation();
       const src = s.dataset.img;
       const alt = s.querySelector('img')?.alt || s.dataset.alt || '';
       openPopup(src, alt);
     });
   });
 
-  closeBtn.addEventListener('click', closePopup);
-
-  // click fuera de la imagen (en el overlay) cierra
-  popup.addEventListener('click', (e) => {
-    if (e.target === popup) closePopup();
+  // CIERRE: botón
+  closeBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    closePopup();
   });
 
-  // tecla ESC cierra
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && popup.classList.contains('open')) closePopup();
+  // CIERRE: click en overlay fuera de .popup-inner
+  popup.addEventListener('click', function (e) {
+    // si el click NO ocurrió dentro de popupInner, cerramos
+    if (!e.target.closest('.popup-inner') && !e.target.closest('.popup-cerrar')) {
+      closePopup();
+    }
   });
+
+  // CIERRE: tecla ESC
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && popup.classList.contains('open')) {
+      closePopup();
+    }
+  });
+
+  /* --- defensas extra útiles al debug:
+     1) Algunos scripts externos podrían forzar display/block o clases en #popup.
+     2) Si ves que al cargar el popup ya está visible, busca en tu código otro .classList.add('open') o una regla que afecte #popup.
+     3) Si el botón sigue sin responder, abre consola (F12) y mira errores JS; también asegúrate de que no haya otro elemento cubriendo el botón.
+  */
 });
 </script>
 <!-- FIN SERVICIOS -->
