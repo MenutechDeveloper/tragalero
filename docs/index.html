@@ -89,9 +89,11 @@
 </section>
 
 <!-- Popup -->
-<div id="popup" class="popup">
-  <span class="popup-cerrar">&times;</span>
-  <img class="popup-img" id="popupImg" src="" alt="Vista previa">
+<div id="popup" class="popup" aria-hidden="true" role="dialog" aria-modal="true">
+  <button id="popupClose" class="popup-cerrar" aria-label="Cerrar popup">&times;</button>
+  <div class="popup-inner">
+    <img class="popup-img" id="popupImg" src="" alt="Vista previa">
+  </div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
