@@ -61,32 +61,62 @@
 <section class="servicios">
   <h2 class="servicios-titulo">¿Cómo ayudamos a tu restaurante?</h2>
   <div class="servicios-grid">
-    <a href="ordenes-en-linea.html" class="servicio">
+    <div class="servicio" data-img="https://menutechdeveloper.github.io/bddImg/assets/mockups/ordenes.png">
       <img src="https://menutechdeveloper.github.io/bddImg/assets/iconos/orders.png" alt="Órdenes en línea">
       <h3>Órdenes en Línea</h3>
-    </a>
-    <a href="redes-sociales.html" class="servicio">
+    </div>
+    <div class="servicio" data-img="https://menutechdeveloper.github.io/bddImg/assets/mockups/redes.png">
       <img src="https://menutechdeveloper.github.io/bddImg/assets/iconos/share.png" alt="Redes sociales">
       <h3>Redes Sociales</h3>
-    </a>
-    <a href="local-listing.html" class="servicio">
+    </div>
+    <div class="servicio" data-img="https://menutechdeveloper.github.io/bddImg/assets/mockups/local.png">
       <img src="https://menutechdeveloper.github.io/bddImg/assets/iconos/share.png" alt="Local Listing">
       <h3>Local Listing</h3>
-    </a>
-    <a href="pagina-web.html" class="servicio">
+    </div>
+    <div class="servicio" data-img="https://menutechdeveloper.github.io/bddImg/assets/mockups/web.png">
       <img src="https://menutechdeveloper.github.io/bddImg/assets/iconos/share.png" alt="Página web">
       <h3>Páginas Web</h3>
-    </a>
-    <a href="aplicacion-movil.html" class="servicio">
+    </div>
+    <div class="servicio" data-img="https://menutechdeveloper.github.io/bddImg/assets/mockups/app.png">
       <img src="https://menutechdeveloper.github.io/bddImg/assets/iconos/share.png" alt="Aplicación móvil">
       <h3>Aplicación Móvil</h3>
-    </a>
-    <a href="diseno-grafico.html" class="servicio">
+    </div>
+    <div class="servicio" data-img="https://menutechdeveloper.github.io/bddImg/assets/mockups/diseno.png">
       <img src="https://menutechdeveloper.github.io/bddImg/assets/iconos/share.png" alt="Diseño gráfico">
       <h3>Diseño Gráfico</h3>
-    </a>
+    </div>
   </div>
 </section>
+
+<!-- Popup -->
+<div id="popup" class="popup">
+  <span class="popup-cerrar">&times;</span>
+  <img class="popup-img" id="popupImg" src="" alt="Vista previa">
+</div>
+	<script>
+const servicios = document.querySelectorAll(".servicio");
+const popup = document.getElementById("popup");
+const popupImg = document.getElementById("popupImg");
+const cerrar = document.querySelector(".popup-cerrar");
+
+servicios.forEach(servicio => {
+  servicio.addEventListener("click", () => {
+    const imgSrc = servicio.getAttribute("data-img");
+    popupImg.src = imgSrc;
+    popup.style.display = "block";
+  });
+});
+
+cerrar.addEventListener("click", () => {
+  popup.style.display = "none";
+});
+
+window.addEventListener("click", (e) => {
+  if (e.target == popup) {
+    popup.style.display = "none";
+  }
+});
+</script>
 <!-- FIN SERVICIOS -->
  <!-- INSTALAR APP -->
 <section class="install-app" id="installContainer">
