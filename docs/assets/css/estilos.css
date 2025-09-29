@@ -389,7 +389,7 @@ body{
 }
 
 .titlepkg{ /*Titulos de paquetes*/
-    color: #e6bf1e;
+    color: #a48400;
     font-weight: bold;
     border: none;
     background: none;
@@ -464,6 +464,7 @@ body{
   color: orange;
   font-weight: 800;
 }
+
 
 
 
