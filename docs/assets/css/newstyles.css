@@ -44,7 +44,7 @@
 }
 
 .hero-cta {
-  background-color: #ff5a2c;
+  background-color: #f6d54e;
   color: white;
   padding: 14px 32px;
   text-decoration: none;
@@ -55,7 +55,7 @@
 }
 
 .hero-cta:hover {
-  background-color: #e04e21;
+  background-color: #ffde59;
   color: white;
   text-decoration: none;
 }
@@ -368,6 +368,7 @@
   .popup-inner { padding: .5rem; }
 }
 /*END POPUP SERVICES*/
+
 
 
 
