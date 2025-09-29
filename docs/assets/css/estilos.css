@@ -37,7 +37,7 @@ body{
     max-width: 70%;
   }
   #paquete .slide {
-    background: #FF9533;
+    background: #f6d54e;
     color: white;
     padding: 10px 30px;
     font-size: 18px;
@@ -389,7 +389,7 @@ body{
 }
 
 .titlepkg{ /*Titulos de paquetes*/
-    color: #e88817;
+    color: #f6d54e;
     font-weight: bold;
     border: none;
     background: none;
@@ -464,4 +464,5 @@ body{
   color: orange;
   font-weight: 800;
 }
+
 
