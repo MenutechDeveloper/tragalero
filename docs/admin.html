@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark" lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Admin Bento Grid - Tragalero</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="./assets/css/pastel-theme.css">
+
+    <style>
+        :root {
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        .admin-layout {
+            display: block;
+            min-height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        .controls-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 350px;
+            max-height: 90vh;
+            background: var(--bs-body-bg);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            z-index: 1000;
+            overflow-y: auto;
+            border: 1px solid rgba(0,0,0,0.1);
+            transition: width 0.3s ease, height 0.3s ease, border-radius 0.3s ease, transform 0s;
+            touch-action: none;
+        }
+
+        [data-bs-theme="dark"] .controls-panel {
+            border-color: rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .controls-panel.collapsed {
+            width: 70px;
+            height: 70px;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50% !important;
+            cursor: move;
+            border: 3px solid var(--bs-primary);
+        }
+
+        .controls-panel.collapsed .panel-content {
+            display: none;
+        }
+
+        .gear-icon {
+            display: none;
+            font-size: 32px;
+            color: var(--bs-primary);
+        }
+
+        .controls-panel.collapsed .gear-icon {
+            display: block;
+            animation: spin 6s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .panel-header {
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        [data-bs-theme="dark"] .panel-header {
+            border-bottom-color: rgba(255,255,255,0.1);
+        }
+
+        .preview-panel {
+            width: 100%;
+            min-height: 100vh;
+            padding: 50px;
+            background: rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 150px;
+        }
+
+        [data-bs-theme="dark"] .preview-panel {
+            background: #111;
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-auto-rows: 120px;
+            grid-auto-flow: dense;
+            gap: 15px;
+            width: 100%;
+            max-width: 1100px;
+            background: rgba(0,0,0,0.05);
+            padding: 25px;
+            border-radius: 35px;
+            min-height: 400px;
+            height: auto;
+            transition: all 0.3s ease;
+            margin-bottom: 100px;
+        }
+
+        @media (max-width: 768px) {
+            .controls-panel {
+                width: calc(100% - 40px);
+                left: 20px;
+                top: auto !important;
+                bottom: 20px;
+                max-height: 60vh;
+                border-radius: 25px;
+            }
+
+            .controls-panel.collapsed {
+                width: 60px;
+                height: 60px;
+                bottom: 20px;
+                top: auto !important;
+                left: auto;
+                right: 20px;
+            }
+
+            .bento-grid {
+                grid-template-columns: repeat(3, 1fr);
+                padding: 15px;
+            }
+
+            .preview-panel {
+                padding: 20px;
+                padding-top: 80px;
+            }
+        }
+
+        [data-bs-theme="dark"] .bento-grid {
+            background: #222;
+        }
+
+        .bento-item {
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #444;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            transition: all var(--transition-speed) ease;
+            position: relative;
+            cursor: pointer;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid transparent;
+        }
+
+        .bento-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+        }
+
+        .bento-item.selected {
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 4px rgba(var(--bs-primary-rgb), 0.2);
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            transform: scale(0.95);
+        }
+
+        .slot-controls {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+
+        [data-bs-theme="dark"] .slot-controls {
+            border-top-color: rgba(255,255,255,0.1);
+        }
+
+        .pastel-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .pastel-btn:hover, .pastel-btn.active {
+            border-color: var(--bs-body-color);
+            transform: scale(1.2);
+        }
+
+        .color-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .theme-switcher-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, var(--bs-primary), #e67e22);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            margin-bottom: 10px;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .back-btn {
+            border-radius: 12px;
+            padding: 8px 15px;
+            transition: 0.2s;
+            background: rgba(0,0,0,0.05);
+            color: var(--bs-body-color);
+            border: none;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .back-btn:hover {
+            background: var(--bs-primary);
+            color: white;
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-layout">
+        <!-- Floating Config Panel -->
+        <div class="controls-panel" id="configPanel">
+            <i class="bi bi-gear-fill gear-icon" id="expandBtn"></i>
+
+            <div class="panel-content">
+                <div class="panel-header" id="panelHeader">
+                    <div class="d-flex align-items-center">
+                        <img src="https://tragalero.com/assets/img/tragalero.png" alt="Tragalero" height="24" class="me-2">
+                        <h6 class="fw-bold mb-0">Grid Editor</h6>
+                    </div>
+                    <button class="btn btn-sm text-secondary p-0" id="collapseBtn">
+                        <i class="bi bi-dash-lg fs-5"></i>
+                    </button>
+                </div>
+
+                <button class="btn btn-custom-primary w-100 mb-4 fw-bold" id="addSlotBtn">
+                    <i class="bi bi-plus-lg me-2"></i>Agregar Slot
+                </button>
+
+                <div id="editForm" class="slot-controls" style="display: none;">
+                    <h6 class="text-uppercase small fw-bold text-muted mb-3">Configurar Herramienta</h6>
+
+                    <div class="mb-3">
+                        <label class="form-label small">Herramienta</label>
+                        <select id="toolSelect" class="form-select">
+                            <option value="" selected disabled>Elije una herramienta...</option>
+                        </select>
+                    </div>
+
+                    <div id="toolProperties" style="display: none;">
+                    <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small">Ancho (Cols)</label>
+                        <select id="slotCols" class="form-select">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">Alto (Rows)</label>
+                        <select id="slotRows" class="form-select">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small">Color Pastel</label>
+                    <div class="color-palette">
+                        <div class="pastel-btn" style="background-color: #dcf0fa;" data-color="#dcf0fa"></div>
+                        <div class="pastel-btn" style="background-color: #e9dcfb;" data-color="#e9dcfb"></div>
+                        <div class="pastel-btn" style="background-color: #fbe0e0;" data-color="#fbe0e0"></div>
+                        <div class="pastel-btn" style="background-color: #fef9c3;" data-color="#fef9c3"></div>
+                        <div class="pastel-btn" style="background-color: #fde2c4;" data-color="#fde2c4"></div>
+                        <div class="pastel-btn" style="background-color: #e2fbd7;" data-color="#e2fbd7"></div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button class="btn btn-primary flex-grow-1 fw-bold" id="applyBtn">Aplicar</button>
+                    <button class="btn btn-outline-danger" id="deleteBtn"><i class="bi bi-trash"></i></button>
+                </div>
+                </div> <!-- end toolProperties -->
+            </div>
+
+            <div class="mt-5 pt-3 border-top border-secondary">
+                <button class="btn btn-success w-100 fw-bold" id="saveAllBtn">
+                    <i class="bi bi-cloud-upload me-2"></i>Guardar Cambios
+                </button>
+                <div id="saveStatus" class="small text-center mt-2" style="display: none;"></div>
+            </div>
+            </div> <!-- end panel-content -->
+        </div>
+
+        <!-- Grid Preview -->
+        <div class="preview-panel">
+            <div class="theme-switcher-container d-flex align-items-center bg-white bg-opacity-10 p-2 rounded-pill shadow-sm">
+                <div id="authButtons" class="me-3 ps-2">
+                    <!-- Unified User Menu -->
+                </div>
+                <div class="theme-switcher-bar d-flex">
+                    <button class="theme-btn" data-theme-value="light" title="Modo Amarillo"><i class="bi bi-sun-fill"></i></button>
+                    <button class="theme-btn" data-theme-value="dark" title="Modo Oscuro"><i class="bi bi-moon-stars-fill"></i></button>
+                    <button class="theme-btn" data-theme-value="medio" title="Modo Suave"><i class="bi bi-palette-fill"></i></button>
+                </div>
+            </div>
+
+            <div class="text-center mb-4 animate-fade-in">
+                <div id="adminNavigation" style="display: none;">
+                    <a href="./users.html" class="back-btn">
+                        <i class="bi bi-arrow-left me-2"></i>Volver a Usuarios
+                    </a>
+                </div>
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <div id="adminNameDisplay" class="admin-badge me-2" style="display: none;">
+                        <i class="bi bi-shield-check me-2"></i> Admin: <span id="adminNameText" class="ms-1"></span>
+                    </div>
+                </div>
+                <h2 class="fw-bold" id="previewTitle">Vista Previa</h2>
+            </div>
+
+            <div class="bento-grid" id="bentoGrid">
+                <!-- Items dynamically loaded -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script src="./assets/js/theme.js"></script>
+    <script src="./assets/js/tools_config.js"></script>
+    <script src="./assets/js/supabase_logic.js"></script>
+
+    <script>
+        // Auth Check
+        const currentUser = getLoggedInUser();
+        if (!currentUser) {
+            window.location.href = './login.html';
+        }
+
+        // Context check: Is Admin editing an owner?
+        const urlParams = new URLSearchParams(window.location.search);
+        const ownerIdParam = urlParams.get('owner_id');
+        const targetUserId = ownerIdParam || currentUser.id;
+        const isEditingOthers = ownerIdParam && ownerIdParam !== currentUser.id;
+
+        if (isEditingOthers && currentUser.role !== 'Admin') {
+            alert("No tienes permiso para editar el grid de otros usuarios.");
+            window.location.href = './admin.html';
+        }
+
+        // Use global supabaseClient from assets/js/supabase_logic.js
+        const sbClient = supabaseClient;
+
+        let gridData = [];
+        let selectedId = null;
+        let isEditMode = true;
+
+        const configPanel = document.getElementById('configPanel');
+        const panelHeader = document.getElementById('panelHeader');
+        const collapseBtn = document.getElementById('collapseBtn');
+        const expandBtn = document.getElementById('expandBtn');
+        const gridContainer = document.getElementById('bentoGrid');
+        const editForm = document.getElementById('editForm');
+        const toolSelect = document.getElementById('toolSelect');
+        const toolProperties = document.getElementById('toolProperties');
+        const slotCols = document.getElementById('slotCols');
+        const slotRows = document.getElementById('slotRows');
+        const pastelBtns = document.querySelectorAll('.pastel-btn');
+        let selectedColor = '#dcf0fa';
+
+        // Populate Tool Selection from config
+        function populateToolOptions() {
+            toolSelect.innerHTML = '<option value="" selected disabled>Elije una herramienta...</option>';
+            TOOLS_CONFIG.forEach(tool => {
+                // Filter tools by role
+                if (tool.adminOnly && currentUser?.role !== 'Admin') return;
+
+                const opt = document.createElement('option');
+                opt.value = tool.name;
+                opt.textContent = tool.name;
+                toolSelect.appendChild(opt);
+            });
+        }
+        populateToolOptions();
+
+        // Improved Dragging Logic
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        // Add event listeners to both header and gear icon
+        [panelHeader, expandBtn].forEach(el => {
+            el.addEventListener("mousedown", dragStart);
+            el.addEventListener("touchstart", dragStart, { passive: false });
+        });
+
+        document.addEventListener("mousemove", drag);
+        document.addEventListener("touchmove", drag, { passive: false });
+        document.addEventListener("mouseup", dragEnd);
+        document.addEventListener("touchend", dragEnd);
+
+        function dragStart(e) {
+            const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+
+            initialX = clientX - xOffset;
+            initialY = clientY - yOffset;
+
+            // Allow dragging if target is header OR if panel is collapsed and target is gear icon
+            if (e.target === panelHeader || panelHeader.contains(e.target) ||
+               (configPanel.classList.contains('collapsed') && (e.target === expandBtn || expandBtn.contains(e.target)))) {
+                isDragging = true;
+            }
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                if (e.cancelable) e.preventDefault();
+
+                const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+
+                currentX = clientX - initialX;
+                currentY = clientY - initialY;
+                xOffset = currentX;
+                yOffset = currentY;
+                setTranslate(currentX, currentY, configPanel);
+            }
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+        }
+
+        function dragEnd() {
+            isDragging = false;
+        }
+
+        // Collapse/Expand Logic
+        collapseBtn.onclick = (e) => {
+            e.stopPropagation();
+            configPanel.classList.add('collapsed');
+            isEditMode = false;
+            selectedId = null;
+            renderGrid();
+        };
+
+        expandBtn.onclick = () => {
+            configPanel.classList.remove('collapsed');
+            isEditMode = true;
+            renderGrid();
+        };
+
+        // Tool Selection Toggle
+        toolSelect.addEventListener('change', () => {
+            if (toolSelect.value) {
+                toolProperties.style.display = 'block';
+            } else {
+                toolProperties.style.display = 'none';
+            }
+        });
+
+        // Load data
+        async function loadGrid() {
+            if (isEditingOthers) {
+                document.getElementById('adminNavigation').style.display = 'block';
+                document.getElementById('adminNameDisplay').style.display = 'inline-flex';
+                document.getElementById('adminNameText').textContent = currentUser.name;
+
+                try {
+                    const { data: userData } = await sbClient
+                        .from('directory_users')
+                        .select('name, businesses(name)')
+                        .eq('id', targetUserId)
+                        .single();
+                    if (userData) {
+                        const bizNames = userData.businesses?.map(b => b.name).join(', ') || 'Sin negocios';
+                        document.getElementById('previewTitle').innerHTML = `Editando Grid: <span class="text-primary">${userData.name}</span> <br><small class="text-muted" style="font-size: 0.9rem;">Negocios: ${bizNames}</small>`;
+                    }
+                } catch (e) {
+                    document.getElementById('previewTitle').textContent = "Editando Grid de Usuario";
+                }
+            }
+            try {
+                const { data, error } = await sbClient
+                    .from('bento_grid')
+                    .select('*')
+                    .eq('user_id', targetUserId)
+                    .order('position', { ascending: true });
+
+                if (data && data.length > 0) {
+                    gridData = data;
+                } else {
+                    console.log("No data for user, using default tool.");
+                    setFallbackData();
+                }
+                // Always start collapsed as requested
+                configPanel.classList.add('collapsed');
+                isEditMode = false;
+            } catch (e) {
+                console.error("Supabase load failed.", e);
+                setFallbackData();
+            }
+            renderGrid();
+        }
+
+        function setFallbackData() {
+            // Admin gets a more complete starting grid, others get just the Directory
+            if (currentUser.role === 'Admin' && !isEditingOthers) {
+                gridData = [
+                    { id: 'def-1', label: 'Directorio', col_span: 2, row_span: 2, bg_color: '#dcf0fa', link_url: './restaurantapp.html' },
+                    { id: 'def-2', label: 'Usuarios', col_span: 1, row_span: 1, bg_color: '#e9dcfb', link_url: './users.html' },
+                    { id: 'def-3', label: 'Negocios', col_span: 1, row_span: 1, bg_color: '#fbe0e0', link_url: './manage_businesses.html' }
+                ];
+            } else {
+                const directoryTool = TOOLS_CONFIG.find(t => t.name === 'Directorio') || { name: 'Directorio', url: './restaurantapp.html' };
+                gridData = [
+                    { id: 'def-1', label: directoryTool.name, col_span: 2, row_span: 2, bg_color: '#dcf0fa', link_url: directoryTool.url }
+                ];
+            }
+        }
+
+        function renderGrid() {
+            gridContainer.innerHTML = '';
+            gridData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = `bento-item ${selectedId === item.id ? 'selected' : ''}`;
+                div.style.gridColumn = `span ${item.col_span}`;
+                div.style.gridRow = `span ${item.row_span}`;
+                div.style.backgroundColor = item.bg_color;
+                div.setAttribute('data-id', item.id);
+
+                // Content
+                const content = document.createElement('div');
+                content.textContent = item.label || 'Nuevo Slot';
+                div.appendChild(content);
+
+
+                div.onclick = (e) => {
+                    e.stopPropagation();
+                    if (isEditMode) {
+                        selectSlot(item.id);
+                    } else if (item.link_url) {
+                        // Check if the linked tool is admin only
+                        const toolConfig = TOOLS_CONFIG.find(t => t.url === item.link_url);
+                        if (toolConfig && toolConfig.adminOnly && currentUser?.role !== 'Admin') {
+                            alert("Acceso denegado: Se requiere rol de Administrador.");
+                            return;
+                        }
+                        window.location.href = item.link_url;
+                    }
+                };
+                gridContainer.appendChild(div);
+            });
+
+            // Re-initialize Sortable after render
+            initSortable();
+        }
+
+        let sortableInstance = null;
+        function initSortable() {
+            if (sortableInstance) sortableInstance.destroy();
+            if (!isEditMode) return;
+
+            sortableInstance = new Sortable(gridContainer, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                delay: 150,
+                delayOnTouchOnly: true,
+                touchStartThreshold: 5,
+                onEnd: function (evt) {
+                    // Update gridData order based on DOM
+                    const newOrder = [];
+                    const items = gridContainer.querySelectorAll('.bento-item');
+                    items.forEach(el => {
+                        const id = el.getAttribute('data-id');
+                        const item = gridData.find(i => i.id === id);
+                        if (item) newOrder.push(item);
+                    });
+                    gridData = newOrder;
+                }
+            });
+        }
+
+        // Deselect when clicking empty space
+        gridContainer.onclick = () => {
+            selectedId = null;
+            editForm.style.display = 'none';
+            renderGrid();
+        };
+
+        function selectSlot(id) {
+            selectedId = id;
+            const item = gridData.find(i => i.id === id);
+
+            // Populate select
+            if (item.label && item.label !== 'Nuevo Slot') {
+                toolSelect.value = item.label;
+                toolProperties.style.display = 'block';
+            } else {
+                toolSelect.value = '';
+                toolProperties.style.display = 'none';
+            }
+
+            slotCols.value = item.col_span;
+            slotRows.value = item.row_span;
+            selectedColor = item.bg_color;
+
+            updateColorPaletteUI();
+            editForm.style.display = 'block';
+            renderGrid();
+        }
+
+        function updateColorPaletteUI() {
+            pastelBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-color') === selectedColor);
+            });
+        }
+
+        pastelBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedColor = btn.getAttribute('data-color');
+                updateColorPaletteUI();
+            });
+        });
+
+        document.getElementById('addSlotBtn').onclick = () => {
+            const newId = Date.now().toString();
+            const newItem = {
+                id: newId,
+                label: '',
+                col_span: 1,
+                row_span: 1,
+                bg_color: '#dcf0fa',
+                link_url: ''
+            };
+            gridData.push(newItem);
+            selectSlot(newId);
+        };
+
+        document.getElementById('applyBtn').onclick = () => {
+            if (!selectedId || !toolSelect.value) return;
+
+            // Find the URL for the selected tool name in TOOLS_CONFIG
+            const toolInfo = TOOLS_CONFIG.find(t => t.name === toolSelect.value);
+            const toolUrl = toolInfo ? toolInfo.url : '';
+
+            const index = gridData.findIndex(i => i.id === selectedId);
+            gridData[index] = {
+                ...gridData[index],
+                label: toolSelect.value,
+                col_span: parseInt(slotCols.value),
+                row_span: parseInt(slotRows.value),
+                link_url: toolUrl,
+                bg_color: selectedColor
+            };
+            renderGrid();
+        };
+
+        document.getElementById('deleteBtn').onclick = () => {
+            if (!selectedId) return;
+            gridData = gridData.filter(i => i.id !== selectedId);
+            selectedId = null;
+            editForm.style.display = 'none';
+            renderGrid();
+        };
+
+        document.getElementById('saveAllBtn').onclick = async () => {
+            const status = document.getElementById('saveStatus');
+
+            // Auto-apply if form is open to capture last changes
+            if (selectedId && editForm.style.display !== 'none' && toolSelect.value) {
+                const toolInfo = TOOLS_CONFIG.find(t => t.name === toolSelect.value);
+                const toolUrl = toolInfo ? toolInfo.url : '';
+                const idx = gridData.findIndex(i => i.id === selectedId);
+                if (idx !== -1) {
+                    gridData[idx] = {
+                        ...gridData[idx],
+                        label: toolSelect.value,
+                        col_span: parseInt(slotCols.value),
+                        row_span: parseInt(slotRows.value),
+                        link_url: toolUrl,
+                        bg_color: selectedColor
+                    };
+                }
+            }
+
+            status.textContent = 'Guardando...';
+            status.style.display = 'block';
+            status.className = 'small text-center mt-2 text-info';
+
+            // Validation: filter out empty or incomplete slots
+            const validSlots = gridData.filter(item => item.label && item.label !== '' && item.label !== 'Nuevo Slot');
+
+            if (validSlots.length === 0 && gridData.length > 0) {
+                status.textContent = 'Configura al menos una herramienta válida.';
+                status.className = 'small text-center mt-2 text-warning';
+                return;
+            }
+
+            try {
+                // Prepare data for saving
+                const toSave = validSlots.map((item, index) => ({
+                    user_id: targetUserId,
+                    label: item.label,
+                    link_url: item.link_url,
+                    col_span: parseInt(item.col_span),
+                    row_span: parseInt(item.row_span),
+                    bg_color: item.bg_color,
+                    position: index
+                }));
+
+                // Clear existing and insert new for a clean sync
+                // We do it in this order to avoid data loss if validation above passed
+                const { error: deleteError } = await sbClient
+                    .from('bento_grid')
+                    .delete()
+                    .eq('user_id', targetUserId);
+
+                if (deleteError) throw deleteError;
+
+                if (toSave.length > 0) {
+                    const { error: insertError } = await sbClient
+                        .from('bento_grid')
+                        .insert(toSave);
+
+                    if (insertError) {
+                        console.error("Insert Error:", insertError);
+                        throw new Error(insertError.message || "Error al insertar datos.");
+                    }
+                }
+
+                status.textContent = '¡Guardado con éxito!';
+                status.className = 'small text-center mt-2 text-success';
+
+                // Exit editor mode after successful save
+                setTimeout(() => {
+                    status.style.display = 'none';
+                    configPanel.classList.add('collapsed');
+                    isEditMode = false;
+                    selectedId = null;
+                    // Refresh data to get clean IDs from DB if needed
+                    loadGrid();
+                }, 1000);
+            } catch (err) {
+                console.error("Supabase Save Error:", err);
+                status.innerHTML = `Error: ${err.message || 'Verifica la conexión o permisos'}<br><small>Reintenta en unos segundos.</small>`;
+                status.className = 'small text-center mt-2 text-danger';
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderUserMenu('authButtons');
+        });
+        loadGrid();
+    </script>
+</body>
+
+</html>

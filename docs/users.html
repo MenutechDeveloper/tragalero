@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark" lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Gestión de Usuarios - Tragalero</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="./assets/css/pastel-theme.css">
+
+    <style>
+        .user-card-container {
+            background: var(--bs-body-bg);
+            border-radius: 30px;
+            padding: 40px;
+            margin-top: 30px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.03);
+        }
+        [data-bs-theme="dark"] .user-card-container {
+            background: #1e293b;
+            border-color: rgba(255,255,255,0.05);
+        }
+        .table thead th {
+            border-bottom: 2px solid var(--bs-primary);
+            color: var(--bs-primary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-bottom: 15px;
+        }
+        .action-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2px;
+            transition: all 0.2s;
+            border: none;
+            background: rgba(0,0,0,0.03);
+            color: var(--bs-body-color);
+        }
+        [data-bs-theme="dark"] .action-btn {
+            background: rgba(255,255,255,0.05);
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            background: var(--bs-primary);
+            color: white;
+        }
+        .action-btn.btn-danger:hover {
+            background: var(--bs-danger);
+        }
+        .badge-role {
+            font-size: 0.75rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container px-4">
+            <a class="navbar-brand d-flex align-items-center" href="./admin.html">
+                <i class="bi bi-arrow-left me-2"></i>
+                <span class="fw-bold">Admin Panel</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center">
+                <div id="authButtons" class="me-3">
+                    <!-- Unified User Menu -->
+                </div>
+                <div class="theme-switcher-bar d-flex align-items-center">
+                    <button class="theme-btn" data-theme-value="light" title="Modo Amarillo"><i class="bi bi-sun-fill"></i></button>
+                    <button class="theme-btn" data-theme-value="dark" title="Modo Oscuro"><i class="bi bi-moon-stars-fill"></i></button>
+                    <button class="theme-btn" data-theme-value="medio" title="Modo Suave"><i class="bi bi-palette-fill"></i></button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="d-flex justify-content-between align-items-center mb-4 animate-fade-in">
+                    <div>
+                        <h2 class="fw-bold mb-1">Gestión de Usuarios</h2>
+                        <p class="text-muted small mb-0">Administra cuentas, permisos y configuraciones personalizadas.</p>
+                    </div>
+                    <button class="btn btn-custom-primary px-4 shadow-sm" style="border-radius: 15px; height: 45px;" onclick="openUserModal()">
+                        Nuevo Usuario
+                    </button>
+                </div>
+
+                <div class="user-card-container animate-fade-in delay-1">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle border-0">
+                            <thead>
+                                <tr>
+                                    <th class="border-0">Usuario</th>
+                                    <th class="border-0">Contraseña</th>
+                                    <th class="border-0">Rol</th>
+                                    <th class="border-0">Negocios</th>
+                                    <th class="border-0">Límite</th>
+                                    <th class="border-0">Estado</th>
+                                    <th class="border-0 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userTableBody" class="border-0">
+                                <!-- Loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="loader" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted small">Cargando base de datos...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- User Modal (Create/Edit) -->
+    <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
+                <div class="modal-header border-0 p-4">
+                    <h5 class="modal-title fw-bold" id="modalTitle">Nuevo Usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 pt-0">
+                    <form id="userForm">
+                        <input type="hidden" id="userId">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Nombre de Usuario</label>
+                            <input type="text" id="userName" class="form-control bg-light border-0 py-3 px-4" required style="border-radius: 15px;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Contraseña</label>
+                            <input type="password" id="userPass" class="form-control bg-light border-0 py-3 px-4" required style="border-radius: 15px;">
+                        </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-muted">Rol</label>
+                                <select id="userRole" class="form-select bg-light border-0 py-3 px-4" style="border-radius: 15px;">
+                                    <option value="Owner">Owner</option>
+                                    <option value="Admin">Administrador</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-muted">Límite Negocios</label>
+                                <input type="number" id="userLimit" class="form-control bg-light border-0 py-3 px-4" value="1" min="1" style="border-radius: 15px;">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-custom-primary w-100 py-3 fw-bold" style="border-radius: 15px;">
+                            <i class="bi bi-check-lg me-2"></i>Guardar Cambios
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./assets/js/theme.js"></script>
+    <script src="./assets/js/supabase_logic.js"></script>
+
+    <script>
+        const userModal = new bootstrap.Modal(document.getElementById('userModal'));
+        const userForm = document.getElementById('userForm');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderUserMenu('authButtons');
+        });
+
+        // Auth Protection
+        const sessionUser = getLoggedInUser();
+        if (!sessionUser || sessionUser.role !== 'Admin') {
+            window.location.href = './login.html';
+        }
+
+        async function loadUsers() {
+            const tbody = document.getElementById('userTableBody');
+            const loader = document.getElementById('loader');
+            loader.style.display = 'block';
+            tbody.innerHTML = '';
+
+            try {
+                // Fetch users and their businesses (linked by owner_id in businesses table)
+                const { data, error } = await supabaseClient
+                    .from('directory_users')
+                    .select('*, businesses(name)')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                data.forEach(u => {
+                    const tr = document.createElement('tr');
+                    const isActive = u.is_active;
+                    const businessNamesStr = u.businesses?.map(b => b.name).join(', ') || '';
+                    const businessHtml = u.businesses && u.businesses.length > 0
+                        ? escapeHtml(businessNamesStr)
+                        : '<span class="text-muted small">Sin negocios</span>';
+
+                    tr.innerHTML = `
+                        <td class="border-0">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px;">
+                                    <i class="bi bi-person-fill fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">${escapeHtml(u.name)}</div>
+                                    <div class="small text-muted" style="font-size: 0.7rem;">ID: ${u.id.substring(0,8)}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="border-0">
+                           <code class="bg-light p-1 rounded small">${escapeHtml(u.password)}</code>
+                        </td>
+                        <td class="border-0">
+                            <span class="badge-role ${u.role === 'Admin' ? 'bg-danger bg-opacity-10 text-danger' : 'bg-success bg-opacity-10 text-success'}">
+                                ${u.role}
+                            </span>
+                        </td>
+                        <td class="border-0">
+                            <div class="small text-truncate" style="max-width: 150px;" title="${escapeHtml(businessNamesStr)}">
+                                ${businessHtml}
+                            </div>
+                        </td>
+                        <td class="border-0 fw-bold text-muted">${u.max_businesses}</td>
+                        <td class="border-0">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input status-toggle" type="checkbox" data-id="${u.id}" ${isActive ? 'checked' : ''}
+                                    ${u.id === sessionUser.id ? 'disabled' : ''}>
+                                <label class="form-check-label small ms-1">${isActive ? 'Activo' : 'Suspendido'}</label>
+                            </div>
+                        </td>
+                        <td class="border-0 text-center">
+                            <button class="action-btn edit-user" title="Editar Datos"
+                                data-id="${u.id}" data-name="${escapeHtml(u.name)}" data-role="${u.role}" data-limit="${u.max_businesses}">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="action-btn register-biz" title="Registrar Negocio" data-id="${u.id}">
+                                <i class="bi bi-plus-circle-dotted"></i>
+                            </button>
+                            <button class="action-btn manage-grid" title="Gestionar Grid" data-id="${u.id}">
+                                <i class="bi bi-grid-3x3-gap"></i>
+                            </button>
+                            <button class="action-btn text-danger delete-user" title="Eliminar" data-id="${u.id}" ${u.id === sessionUser.id ? 'disabled' : ''}>
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Attach event listeners
+                tbody.querySelectorAll('.status-toggle').forEach(el => {
+                    el.onchange = () => toggleUserStatus(el.dataset.id, el.checked);
+                });
+                tbody.querySelectorAll('.edit-user').forEach(el => {
+                    el.onclick = () => openUserModal(el.dataset.id, el.dataset.name, el.dataset.role, el.dataset.limit);
+                });
+                tbody.querySelectorAll('.register-biz').forEach(el => {
+                    el.onclick = () => window.location.href=`./directorymap.html?owner_id=${el.dataset.id}`;
+                });
+                tbody.querySelectorAll('.manage-grid').forEach(el => {
+                    el.onclick = () => window.location.href=`./admin.html?owner_id=${el.dataset.id}`;
+                });
+                tbody.querySelectorAll('.delete-user').forEach(el => {
+                    el.onclick = () => deleteUser(el.dataset.id);
+                });
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Error al conectar con el servidor.</td></tr>';
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function openUserModal(id = '', name = '', role = 'Owner', limit = 1) {
+            document.getElementById('userId').value = id;
+            document.getElementById('userName').value = name;
+            document.getElementById('userPass').value = '';
+            document.getElementById('userRole').value = role;
+            document.getElementById('userLimit').value = limit;
+            document.getElementById('modalTitle').textContent = id ? 'Editar Usuario' : 'Nuevo Usuario';
+
+            // If editing, password is not strictly required unless changing it
+            document.getElementById('userPass').required = !id;
+
+            userModal.show();
+        }
+
+        userForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('userId').value;
+            const userData = {
+                name: document.getElementById('userName').value,
+                role: document.getElementById('userRole').value,
+                max_businesses: parseInt(document.getElementById('userLimit').value)
+            };
+
+            const pass = document.getElementById('userPass').value;
+            if (pass) userData.password = pass;
+
+            try {
+                if (id) {
+                    const { error } = await supabaseClient.from('directory_users').update(userData).eq('id', id);
+                    if (error) throw error;
+                } else {
+                    const { error } = await supabaseClient.from('directory_users').insert([userData]);
+                    if (error) throw error;
+                }
+                userModal.hide();
+                loadUsers();
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        };
+
+        async function toggleUserStatus(id, active) {
+            try {
+                const { error } = await supabaseClient.from('directory_users').update({ is_active: active }).eq('id', id);
+                if (error) throw error;
+            } catch (err) {
+                alert("Error: " + err.message);
+                loadUsers();
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm("¿Estás seguro de eliminar este usuario? Se perderán permanentemente todos sus negocios registrados y su configuración de panel (Bento Grid).")) return;
+            try {
+                const { error } = await supabaseClient.from('directory_users').delete().eq('id', id);
+                if (error) throw error;
+                loadUsers();
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+
+        loadUsers();
+    </script>
+</body>
+
+</html>

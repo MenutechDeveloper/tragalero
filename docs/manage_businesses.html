@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark" lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Gestión de Negocios - Tragalero</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="./assets/css/pastel-theme.css">
+
+    <style>
+        .biz-table-container {
+            background: var(--bs-body-bg);
+            border-radius: 25px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+        }
+        [data-bs-theme="dark"] .biz-table-container {
+            background: #1e293b;
+            border-color: rgba(255,255,255,0.05);
+        }
+        .biz-logo-sm {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container px-4">
+            <a class="navbar-brand d-flex align-items-center" href="./admin.html">
+                <i class="bi bi-arrow-left me-2"></i>
+                <span class="fw-bold">Admin Panel</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center">
+                <div id="authButtons" class="me-3">
+                    <!-- Unified User Menu -->
+                </div>
+                <div class="theme-switcher-bar d-flex align-items-center">
+                    <button class="theme-btn" data-theme-value="light" title="Modo Amarillo"><i class="bi bi-sun-fill"></i></button>
+                    <button class="theme-btn" data-theme-value="dark" title="Modo Oscuro"><i class="bi bi-moon-stars-fill"></i></button>
+                    <button class="theme-btn" data-theme-value="medio" title="Modo Suave"><i class="bi bi-palette-fill"></i></button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold mb-0">Gestión de Directorio</h2>
+                    <a href="./directorymap.html" class="btn btn-custom-primary btn-sm px-4" style="height: 45px; display: flex; align-items: center; justify-content: center; min-width: 150px;">
+                        Nuevo Negocio
+                    </a>
+                </div>
+
+                <div class="biz-table-container animate-fade-in">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Negocio</th>
+                                    <th>Categoría</th>
+                                    <th>Ubicación</th>
+                                    <th>Dueño</th>
+                                    <th>Visible</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bizTableBody">
+                                <!-- Businesses will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="loader" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Business Modal -->
+    <div class="modal fade" id="editBizModal" tabindex="-1" aria-labelledby="editBizModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
+                <div class="modal-header border-0 pb-0 px-4 pt-4">
+                    <h5 class="modal-title fw-bold" id="editBizModalLabel">Editar Negocio</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editBizForm">
+                        <input type="hidden" id="editBizId">
+
+                        <!-- General Info -->
+                        <div class="form-section mb-4 p-3 bg-light-subtle rounded-4">
+                            <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-info-circle me-2"></i>Información General</h6>
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label small fw-bold">Nombre del Negocio</label>
+                                    <input type="text" id="editBizName" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Categoría</label>
+                                    <select id="editBizCategory" class="form-select" required>
+                                        <option value="Restaurantes">Restaurantes</option>
+                                        <option value="Hogar">Hogar</option>
+                                        <option value="Construcción">Construcción</option>
+                                        <option value="Servicios Técnicos">Servicios Técnicos</option>
+                                        <option value="Varios">Varios</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label small fw-bold">Logo / Imagen</label>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="position-relative">
+                                            <img id="editFilePreview" src="https://via.placeholder.com/150" class="biz-logo-sm" style="width: 80px; height: 80px; object-fit: contain; border: 1px solid rgba(0,0,0,0.1);">
+                                            <div id="uploadLoader" class="position-absolute top-50 start-50 translate-middle d-none">
+                                                <div class="spinner-border spinner-border-sm text-primary"></div>
+                                            </div>
+                                        </div>
+                                        <input type="file" id="editBizLogo" class="form-control" accept="image/*">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="form-section mb-4 p-3 bg-light-subtle rounded-4">
+                            <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-geo-alt me-2"></i>Ubicación</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Ciudad</label>
+                                    <input type="text" id="editBizCity" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Zona / Colonia</label>
+                                    <input type="text" id="editBizState" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Código Postal</label>
+                                    <input type="text" id="editBizZip" class="form-control">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label small fw-bold">Dirección Detallada</label>
+                                    <input type="text" id="editBizAddress" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact & Web -->
+                        <div class="form-section mb-4 p-3 bg-light-subtle rounded-4">
+                            <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-globe me-2"></i>Contacto y Web</h6>
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label small fw-bold">Sitio Web / Menú Digital</label>
+                                    <input type="text" id="editBizWebsite" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Facebook (URL)</label>
+                                    <input type="text" id="editBizFB" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Instagram (URL)</label>
+                                    <input type="text" id="editBizIG" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">WhatsApp (Número)</label>
+                                    <input type="tel" id="editBizWA" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Restaurant Options -->
+                        <div class="form-section mb-4 p-3 bg-light-subtle rounded-4" id="editRestaurantFields" style="display: none;">
+                            <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-egg-fried me-2"></i>Opciones de Restaurante</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">CUID (Menutech)</label>
+                                    <input type="text" id="editBizCuid" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">RUID (Menutech)</label>
+                                    <input type="text" id="editBizRuid" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Orden Fondo</label>
+                                    <input type="color" id="editOrderBgColor" class="form-control form-control-color w-100" value="#f2a04a">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Orden Texto</label>
+                                    <input type="color" id="editOrderTextColor" class="form-control form-control-color w-100" value="#ffffff">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Reserva Fondo</label>
+                                    <input type="color" id="editResBgColor" class="form-control form-control-color w-100" value="#2f4854">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Reserva Texto</label>
+                                    <input type="color" id="editResTextColor" class="form-control form-control-color w-100" value="#ffffff">
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-check form-switch mt-2">
+                                        <input class="form-check-input" type="checkbox" id="editHasReservation">
+                                        <label class="form-check-label fw-bold small" for="editHasReservation">Activar Reservación de Mesas</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label small fw-bold">Link Alternativo Pedidos</label>
+                                    <input type="url" id="editBizOrderUrl" class="form-control">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label small fw-bold">Link Alternativo Reservas</label>
+                                    <input type="url" id="editBizReservationUrl" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="editBizForm" class="btn btn-primary rounded-pill px-4 fw-bold" id="saveBizBtn">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./assets/js/theme.js"></script>
+    <script src="./assets/js/supabase_logic.js"></script>
+    <script src="./assets/js/directory_data.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderUserMenu('authButtons');
+        });
+
+        const user = checkAccess('Admin');
+        const editModal = new bootstrap.Modal(document.getElementById('editBizModal'));
+        const editCategory = document.getElementById('editBizCategory');
+        const editRestaurantFields = document.getElementById('editRestaurantFields');
+
+        editCategory.onchange = () => {
+            editRestaurantFields.style.display = editCategory.value === 'Restaurantes' ? 'block' : 'none';
+        };
+
+        async function openEditModal(bizId) {
+            try {
+                const { data: biz, error } = await supabaseClient
+                    .from('businesses')
+                    .select('*')
+                    .eq('id', bizId)
+                    .single();
+
+                if (error) throw error;
+
+                document.getElementById('editBizId').value = biz.id;
+                document.getElementById('editBizName').value = biz.name;
+                document.getElementById('editBizCategory').value = biz.category;
+                document.getElementById('editBizCity').value = biz.city;
+                document.getElementById('editBizState').value = biz.state || '';
+                document.getElementById('editBizZip').value = biz.zip || '';
+                document.getElementById('editBizAddress').value = biz.address_detail || '';
+                document.getElementById('editBizWebsite').value = biz.website || '';
+
+                // Social Media
+                const sm = biz.social_media || {};
+                document.getElementById('editBizFB').value = sm.facebook || '';
+                document.getElementById('editBizIG').value = sm.instagram || '';
+                document.getElementById('editBizWA').value = sm.whatsapp || '';
+
+                // Restaurant fields
+                document.getElementById('editBizCuid').value = biz.cuid || '';
+                document.getElementById('editBizRuid').value = biz.ruid || '';
+                document.getElementById('editOrderBgColor').value = biz.order_bg_color || '#f2a04a';
+                document.getElementById('editOrderTextColor').value = biz.order_text_color || '#ffffff';
+                document.getElementById('editResBgColor').value = biz.res_bg_color || '#2f4854';
+                document.getElementById('editResTextColor').value = biz.res_text_color || '#ffffff';
+                document.getElementById('editHasReservation').checked = biz.has_reservation || false;
+                document.getElementById('editBizOrderUrl').value = biz.order_url || '';
+                document.getElementById('editBizReservationUrl').value = biz.reservation_url || '';
+
+                // Preview
+                document.getElementById('editFilePreview').src = biz.logo_url || 'https://via.placeholder.com/150';
+
+                editRestaurantFields.style.display = biz.category === 'Restaurantes' ? 'block' : 'none';
+
+                editModal.show();
+            } catch (err) {
+                alert("Error al cargar datos: " + err.message);
+            }
+        }
+
+        const editForm = document.getElementById('editBizForm');
+        const editFileInput = document.getElementById('editBizLogo');
+        const editFilePreview = document.getElementById('editFilePreview');
+
+        editFileInput.onchange = () => {
+            if (editFileInput.files.length) {
+                const reader = new FileReader();
+                reader.onload = (e) => editFilePreview.src = e.target.result;
+                reader.readAsDataURL(editFileInput.files[0]);
+            }
+        };
+
+        editForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('saveBizBtn');
+            const bizId = document.getElementById('editBizId').value;
+            const loader = document.getElementById('uploadLoader');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
+
+            try {
+                let logoUrl = editFilePreview.src;
+
+                // If a new file is selected, upload it
+                if (editFileInput.files.length) {
+                    loader.classList.remove('d-none');
+                    const file = editFileInput.files[0];
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Math.random()}.${fileExt}`;
+                    const filePath = `${fileName}`;
+
+                    const { error: uploadError } = await supabaseClient
+                        .storage
+                        .from('logos')
+                        .upload(filePath, file);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: publicUrlData } = supabaseClient
+                        .storage
+                        .from('logos')
+                        .getPublicUrl(filePath);
+
+                    logoUrl = publicUrlData.publicUrl;
+                    loader.classList.add('d-none');
+                }
+
+                const updates = {
+                    name: document.getElementById('editBizName').value,
+                    category: editCategory.value,
+                    city: document.getElementById('editBizCity').value,
+                    state: document.getElementById('editBizState').value,
+                    zip: document.getElementById('editBizZip').value,
+                    address_detail: document.getElementById('editBizAddress').value,
+                    logo_url: logoUrl,
+                    website: ensureHttps(document.getElementById('editBizWebsite').value),
+                    is_restaurant: editCategory.value === 'Restaurantes',
+                    cuid: document.getElementById('editBizCuid').value,
+                    ruid: document.getElementById('editBizRuid').value,
+                    order_bg_color: document.getElementById('editOrderBgColor').value,
+                    order_text_color: document.getElementById('editOrderTextColor').value,
+                    res_bg_color: document.getElementById('editResBgColor').value,
+                    res_text_color: document.getElementById('editResTextColor').value,
+                    has_reservation: document.getElementById('editHasReservation').checked,
+                    order_url: ensureHttps(document.getElementById('editBizOrderUrl').value),
+                    reservation_url: ensureHttps(document.getElementById('editBizReservationUrl').value),
+                    social_media: {
+                        facebook: ensureHttps(document.getElementById('editBizFB').value),
+                        instagram: ensureHttps(document.getElementById('editBizIG').value),
+                        whatsapp: document.getElementById('editBizWA').value
+                    }
+                };
+
+                const { error } = await supabaseClient
+                    .from('businesses')
+                    .update(updates)
+                    .eq('id', bizId);
+
+                if (error) throw error;
+
+                editModal.hide();
+                loadBusinesses();
+            } catch (err) {
+                console.error(err);
+                alert("Error: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Guardar Cambios';
+                loader.classList.add('d-none');
+            }
+        };
+
+        async function loadBusinesses() {
+            const tbody = document.getElementById('bizTableBody');
+            const loader = document.getElementById('loader');
+            loader.style.display = 'block';
+
+            try {
+                // Get businesses from Supabase
+                const { data: businesses, error: bizError } = await supabaseClient
+                    .from('businesses')
+                    .select('*, directory_users(name)');
+
+                if (bizError) throw bizError;
+
+                tbody.innerHTML = '';
+                businesses.forEach(biz => {
+                    const row = document.createElement('tr');
+                    const isVisible = biz.is_visible;
+                    row.innerHTML = `
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="${escapeHtml(biz.logo_url) || 'https://via.placeholder.com/150'}" class="biz-logo-sm me-3">
+                                <div>
+                                    <div class="fw-bold">${escapeHtml(biz.name)}</div>
+                                    <div class="small text-muted">${escapeHtml(biz.zip || '')}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-secondary">${escapeHtml(biz.category)}</span></td>
+                        <td class="small">${escapeHtml(biz.city)}, ${escapeHtml(biz.state || '')}</td>
+                        <td class="small">${escapeHtml(biz.directory_users?.name || 'Sistema')}</td>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input biz-visibility-toggle" type="checkbox" data-id="${biz.id}" ${isVisible ? 'checked' : ''}>
+                                <label class="form-check-label small">${isVisible ? 'Público' : 'Oculto'}</label>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary btn-sm edit-biz" data-id="${biz.id}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm delete-biz" data-id="${biz.id}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Attach event listeners
+                tbody.querySelectorAll('.biz-visibility-toggle').forEach(el => {
+                    el.onchange = () => updateBiz(el.dataset.id, {is_visible: el.checked});
+                });
+                tbody.querySelectorAll('.edit-biz').forEach(el => {
+                    el.onclick = () => openEditModal(el.dataset.id);
+                });
+                tbody.querySelectorAll('.delete-biz').forEach(el => {
+                    el.onclick = () => deleteBiz(el.dataset.id);
+                });
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar negocios.</td></tr>';
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function ensureHttps(url) {
+            if (!url) return '';
+            url = url.trim();
+            if (url === '') return '';
+            if (!/^https?:\/\//i.test(url)) {
+                return 'https://' + url;
+            }
+            return url;
+        }
+
+        async function updateBiz(bizId, updates) {
+            try {
+                const { error } = await supabaseClient
+                    .from('businesses')
+                    .update(updates)
+                    .eq('id', bizId);
+                if (error) throw error;
+            } catch (err) {
+                alert("Error: " + err.message);
+                loadBusinesses();
+            }
+        }
+
+        async function deleteBiz(bizId) {
+            if (!confirm("¿Seguro que deseas eliminar este negocio?")) return;
+            try {
+                const { error } = await supabaseClient
+                    .from('businesses')
+                    .delete()
+                    .eq('id', bizId);
+                if (error) throw error;
+                loadBusinesses();
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+
+        loadBusinesses();
+    </script>
+</body>
+
+</html>
