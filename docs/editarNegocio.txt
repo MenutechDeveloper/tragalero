@@ -1,0 +1,26 @@
+-- SQL para asegurar que la tabla businesses tenga todas las columnas necesarias para editar
+-- Ejecuta este script en el editor SQL de Supabase
+
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS state TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS zip TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS address_detail TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS logo_url TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS website TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS is_restaurant BOOLEAN DEFAULT FALSE;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS cuid TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS ruid TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS order_bg_color TEXT DEFAULT '#f2a04a';
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS order_text_color TEXT DEFAULT '#ffffff';
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS res_bg_color TEXT DEFAULT '#2f4854';
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS res_text_color TEXT DEFAULT '#ffffff';
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS has_reservation BOOLEAN DEFAULT FALSE;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS order_url TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS reservation_url TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS social_media JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES directory_users(id);
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS is_visible BOOLEAN DEFAULT TRUE;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS btn_bg_color TEXT DEFAULT '#f1c40f';
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS btn_text_color TEXT DEFAULT '#ffffff';

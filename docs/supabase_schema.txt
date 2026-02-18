@@ -1,0 +1,55 @@
+-- SQL for updating the Tragalero Directory Database
+-- Re-run this entire script to ensure all columns and tables exist.
+
+-- 1. Add restaurant-specific fields to the businesses table
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS cuid TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS ruid TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS has_reservation BOOLEAN DEFAULT FALSE;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS order_bg_color TEXT DEFAULT '#f2a04a';
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS order_text_color TEXT DEFAULT '#ffffff';
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS res_bg_color TEXT DEFAULT '#2f4854';
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS res_text_color TEXT DEFAULT '#ffffff';
+
+-- 2. Create the directory_users table for user management
+CREATE TABLE IF NOT EXISTS directory_users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT DEFAULT 'User',
+    is_active BOOLEAN DEFAULT TRUE,
+    max_businesses INTEGER DEFAULT 1,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 2b. Add visibility and ownership to businesses table
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES directory_users(id);
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS is_visible BOOLEAN DEFAULT TRUE;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS btn_bg_color TEXT DEFAULT '#f1c40f';
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS btn_text_color TEXT DEFAULT '#ffffff';
+
+-- 3. Seed the admin user
+-- NOTE: In a production environment, passwords should be hashed.
+INSERT INTO directory_users (name, password, role)
+VALUES ('Antonio', '123', 'Admin')
+ON CONFLICT (name) DO NOTHING;
+
+-- 4. Bento Grid Table
+-- If you have errors with user_id, it's safer to DROP and CREATE again.
+-- WARNING: This will clear existing grid layouts.
+DROP TABLE IF EXISTS bento_grid;
+
+CREATE TABLE bento_grid (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES directory_users(id) ON DELETE CASCADE,
+  label text NOT NULL,
+  link_url text,
+  col_span int DEFAULT 1,
+  row_span int DEFAULT 1,
+  bg_color text DEFAULT '#dcf0fa',
+  position int DEFAULT 0,
+  created_at timestamptz DEFAULT now()
+);
+
+-- 5. Enable RLS (Optional but recommended)
+-- ALTER TABLE directory_users ENABLE ROW LEVEL SECURITY;
+-- CREATE POLICY "Admins can do everything" ON directory_users FOR ALL TO anon USING (TRUE);

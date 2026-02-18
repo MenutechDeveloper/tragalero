@@ -1,0 +1,69 @@
+# INSTRUCCIONES DE ADMINISTRACIÓN - TRAGALERO v2.0
+
+Este documento detalla el funcionamiento del ecosistema Tragalero, incluyendo el Directorio de Negocios y el Panel de Control Bento.
+
+---
+
+## 0. SISTEMA DE USUARIOS Y ACCESO (`login.html`)
+
+El acceso a las funciones de administración y registro está protegido:
+- **Login:** Acceso mediante usuario y contraseña.
+- **Roles:**
+    - **Administrador:** Acceso total al grid, gestión de usuarios y visibilidad de negocios.
+    - **Owner (Dueño):** Puede registrar y gestionar sus propios negocios (según su límite permitido).
+
+---
+
+## 1. DIRECTORIO DE NEGOCIOS (`restaurantapp.html`)
+
+El directorio ha sido rediseñado para ser moderno, responsivo y dinámico.
+
+### Funcionalidades clave:
+- **Temas Visuales:** El usuario puede alternar entre Modo Amarillo (Claro), Modo Oscuro y Modo Suave (Medio). La preferencia se guarda automáticamente.
+- **Búsqueda Inteligente:** La barra superior permite buscar por Nombre, Código Postal, Ciudad o Categoría simultáneamente.
+- **Visualización Integrada:** Al hacer clic en "Ver Menú" o detalles, se abre una ventana modal interna. Esto evita que el usuario salga de la aplicación, mejorando la retención.
+- **Filtro Lateral:** El panel izquierdo permite filtrar rápidamente por ubicaciones populares.
+
+### Registro de Negocios (`directorymap.html`):
+Ahora existe un formulario para que los negocios se registren:
+1. Requiere iniciar sesión.
+2. Cada usuario tiene un **límite de registros** (ej. 1 negocio, o varios) definido por el administrador.
+2. Completa los datos: nombre, dirección, redes sociales, horarios y links de reserva/pedido.
+3. **Imagen de Portada/Logo:** Puedes subir una imagen directamente. Esta se guardará en el almacenamiento en la nube (Supabase Storage).
+4. Al guardar, el negocio aparecerá automáticamente en el directorio principal.
+
+---
+
+## 2. PANEL DE CONTROL BENTO (`admin.html`)
+
+El editor visual para la parrilla de herramientas.
+
+### Gestión de Espacios (Gap Filling):
+- La cuadrícula es inteligente. Si mueves un cuadro y queda un hueco, el sistema intentará **"rellenar el espacio vacío"** automáticamente (Grid Auto-flow Dense) para que la interfaz siempre se vea compacta y profesional.
+
+### Gestión de Usuarios y Directorio:
+- **Usuarios (`users.html`):** El administrador puede crear nuevos usuarios "Owner", suspender cuentas y modificar el límite de negocios que cada uno puede registrar.
+- **Control de Negocios (`manage_businesses.html`):** Permite al administrador ocultar negocios del directorio público o eliminarlos definitivamente.
+
+### Modos de Operación:
+- **Modo Edición:** Permite arrastrar cuadros, cambiar tamaños, colores y seleccionar herramientas.
+- **Modo Navegación:** Una vez que guardas los cambios o cierras el panel de configuración, los cuadros dejan de ser arrastrables y se convierten en **enlaces activos**. Esto permite usar el panel `admin.html` como una página de inicio funcional.
+- Haz clic en el icono de **engranaje (⚙️)** para volver al modo edición.
+
+---
+
+## 3. CONFIGURACIÓN TÉCNICA (Desarrolladores)
+
+### Centralización de Enlaces (`assets/js/tools_config.js`):
+Para evitar errores, los enlaces de las herramientas se gestionan en este archivo. El administrador solo elige el nombre de la herramienta, y el sistema asigna el link pre-configurado.
+
+### Base de Datos y Almacenamiento (Supabase):
+- **Tabla `businesses`:** Almacena la información de los locales registrados.
+- **Tabla `bento_grid`:** Almacena la disposición de los cuadros en el admin.
+- **Bucket `logos`:** Almacena las imágenes subidas desde el formulario de registro.
+
+---
+
+### Notas de Mantenimiento:
+- Para cambios masivos de datos base, puedes seguir usando `docs/assets/js/directory_data.js`, pero la prioridad de carga la tienen los datos dinámicos de Supabase.
+- Asegúrate de mantener actualizadas las claves de API en `docs/assets/js/supabase_logic.js`.
