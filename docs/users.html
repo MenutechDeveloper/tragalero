@@ -109,7 +109,6 @@
                             <thead>
                                 <tr>
                                     <th class="border-0">Usuario</th>
-                                    <th class="border-0">Contraseña</th>
                                     <th class="border-0">Rol</th>
                                     <th class="border-0">Negocios</th>
                                     <th class="border-0">Límite</th>
@@ -146,10 +145,6 @@
                             <label class="form-label small fw-bold text-muted">Nombre de Usuario</label>
                             <input type="text" id="userName" class="form-control bg-light border-0 py-3 px-4" required style="border-radius: 15px;">
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Contraseña</label>
-                            <input type="password" id="userPass" class="form-control bg-light border-0 py-3 px-4" required style="border-radius: 15px;">
-                        </div>
                         <div class="row g-3 mb-4">
                             <div class="col-6">
                                 <label class="form-label small fw-bold text-muted">Rol</label>
@@ -181,16 +176,18 @@
     <script>
         const userModal = new bootstrap.Modal(document.getElementById('userModal'));
         const userForm = document.getElementById('userForm');
+        let sessionUser = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            renderUserMenu('authButtons');
+        document.addEventListener('DOMContentLoaded', async () => {
+            await renderUserMenu('authButtons');
+            sessionUser = await getLoggedInUser();
+
+            if (!sessionUser || sessionUser.role !== 'Admin') {
+                window.location.href = './login.html';
+                return;
+            }
+            loadUsers();
         });
-
-        // Auth Protection
-        const sessionUser = getLoggedInUser();
-        if (!sessionUser || sessionUser.role !== 'Admin') {
-            window.location.href = './login.html';
-        }
 
         async function loadUsers() {
             const tbody = document.getElementById('userTableBody');
@@ -226,9 +223,6 @@
                                     <div class="small text-muted" style="font-size: 0.7rem;">ID: ${u.id.substring(0,8)}</div>
                                 </div>
                             </div>
-                        </td>
-                        <td class="border-0">
-                           <code class="bg-light p-1 rounded small">${escapeHtml(u.password)}</code>
                         </td>
                         <td class="border-0">
                             <span class="badge-role ${u.role === 'Admin' ? 'bg-danger bg-opacity-10 text-danger' : 'bg-success bg-opacity-10 text-success'}">
@@ -294,13 +288,13 @@
         function openUserModal(id = '', name = '', role = 'Owner', limit = 1) {
             document.getElementById('userId').value = id;
             document.getElementById('userName').value = name;
-            document.getElementById('userPass').value = '';
             document.getElementById('userRole').value = role;
             document.getElementById('userLimit').value = limit;
-            document.getElementById('modalTitle').textContent = id ? 'Editar Usuario' : 'Nuevo Usuario';
+            document.getElementById('modalTitle').textContent = id ? 'Editar Usuario' : 'Nuevo Usuario (Manual)';
 
-            // If editing, password is not strictly required unless changing it
-            document.getElementById('userPass').required = !id;
+            if (!id) {
+                alert("Nota: Para nuevos usuarios, primero deben registrarse en Supabase Auth. Esta opción es para editar metadatos existentes.");
+            }
 
             userModal.show();
         }
@@ -314,16 +308,13 @@
                 max_businesses: parseInt(document.getElementById('userLimit').value)
             };
 
-            const pass = document.getElementById('userPass').value;
-            if (pass) userData.password = pass;
-
             try {
                 if (id) {
                     const { error } = await supabaseClient.from('directory_users').update(userData).eq('id', id);
                     if (error) throw error;
                 } else {
-                    const { error } = await supabaseClient.from('directory_users').insert([userData]);
-                    if (error) throw error;
+                    alert("Para crear un nuevo usuario, utiliza Supabase Auth (Sign Up). El trigger creará el perfil automáticamente.");
+                    return;
                 }
                 userModal.hide();
                 loadUsers();

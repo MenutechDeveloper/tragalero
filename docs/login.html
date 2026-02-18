@@ -57,8 +57,8 @@
 
         <form id="loginForm">
             <div class="mb-3">
-                <label class="form-label small fw-bold">Usuario</label>
-                <input type="text" id="username" class="form-control" placeholder="Tu nombre de usuario" required>
+                <label class="form-label small fw-bold">Email</label>
+                <input type="email" id="email" class="form-control" placeholder="tu@email.com" required>
             </div>
             <div class="mb-4">
                 <label class="form-label small fw-bold">Contraseña</label>
@@ -84,39 +84,48 @@
     <script>
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const user = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
             const msg = document.getElementById('loginMessage');
 
             msg.classList.add('d-none');
 
             try {
-                const { data, error } = await supabaseClient
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: pass
+                });
+
+                if (error) throw error;
+
+                // Fetch profile from directory_users
+                const { data: profile, error: profileError } = await supabaseClient
                     .from('directory_users')
                     .select('*')
-                    .eq('name', user)
-                    .eq('password', pass)
+                    .eq('id', data.user.id)
                     .single();
 
-                if (error || !data) {
-                    throw new Error('Credenciales incorrectas');
+                if (profileError || !profile) {
+                    throw new Error('No se encontró el perfil de usuario. Contacta al administrador.');
                 }
 
-                if (!data.is_active) {
+                if (!profile.is_active) {
+                    await supabaseClient.auth.signOut();
                     throw new Error('Tu cuenta ha sido suspendida. Contacta al administrador.');
                 }
 
-                // Save session
+                // Save session for sync components
                 sessionStorage.setItem('tragalero_user', JSON.stringify({
-                    id: data.id,
-                    name: data.name,
-                    role: data.role
+                    id: profile.id,
+                    name: profile.name,
+                    role: profile.role,
+                    email: email
                 }));
 
-                window.location.href = data.role === 'Admin' ? './admin.html' : './directorymap.html';
+                window.location.href = profile.role === 'Admin' ? './admin.html' : './directorymap.html';
 
             } catch (err) {
-                msg.textContent = err.message;
+                msg.textContent = err.message === 'Invalid login credentials' ? 'Credenciales incorrectas' : err.message;
                 msg.classList.remove('d-none');
             }
         });
