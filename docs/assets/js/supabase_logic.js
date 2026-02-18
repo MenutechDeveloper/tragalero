@@ -1,6 +1,6 @@
 // Supabase shared configuration and logic
-const SUPABASE_URL = 'https://cnoiesjjupubkrgyhbof.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNub2llc2pqdXB1YmtyZ3loYm9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2MjYxMjIsImV4cCI6MjA4NjIwMjEyMn0.GZ3gGs7Wk4IJm0Ebp-3bAUlFtKHPV6jTpLATacLcJhA';
+const SUPABASE_URL = 'https://qoimkzgmfuauwomoskum.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvaW1remdtZnVhdXdvbW9za3VtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0MTg4MDEsImV4cCI6MjA4Njk5NDgwMX0.HlwapiEnygHXCkIe6D2sieDxs33ND49JRbLIducTsg4';
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -62,9 +62,38 @@ async function getBusinesses(showAll = false) {
 /**
  * Auth check helpers
  */
-function getLoggedInUser() {
-    const session = sessionStorage.getItem('tragalero_user');
-    return session ? JSON.parse(session) : null;
+async function getLoggedInUser() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) {
+        sessionStorage.removeItem('tragalero_user');
+        return null;
+    }
+
+    // Try to get from sessionStorage first for speed/meta
+    let localUser = sessionStorage.getItem('tragalero_user');
+    if (localUser) {
+        return JSON.parse(localUser);
+    }
+
+    // If not in session storage but authenticated in Supabase, fetch from directory_users
+    const { data: profile } = await supabaseClient
+        .from('directory_users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+    if (profile) {
+        const userData = {
+            id: profile.id,
+            name: profile.name,
+            role: profile.role,
+            email: user.email
+        };
+        sessionStorage.setItem('tragalero_user', JSON.stringify(userData));
+        return userData;
+    }
+
+    return null;
 }
 
 /**
@@ -80,13 +109,14 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-function logout() {
+async function logout() {
+    await supabaseClient.auth.signOut();
     sessionStorage.removeItem('tragalero_user');
     window.location.href = './login.html';
 }
 
-function checkAccess(roleRequired) {
-    const user = getLoggedInUser();
+async function checkAccess(roleRequired) {
+    const user = await getLoggedInUser();
     if (!user) {
         window.location.href = './login.html';
         return null;
@@ -102,11 +132,11 @@ function checkAccess(roleRequired) {
  * Renders the unified circular user menu
  * Expects a container with id "userMenuContainer" or similar
  */
-function renderUserMenu(containerId = 'authButtons') {
+async function renderUserMenu(containerId = 'authButtons') {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    const user = getLoggedInUser();
+    const user = await getLoggedInUser();
 
     if (!user) {
         container.innerHTML = `

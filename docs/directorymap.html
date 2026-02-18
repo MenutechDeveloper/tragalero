@@ -289,28 +289,33 @@
     <script src="./assets/js/supabase_logic.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            renderUserMenu('authButtons');
+        let sessionUser = null;
+        let ownerIdParam = null;
+        let targetOwnerId = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await renderUserMenu('authButtons');
+            sessionUser = await getLoggedInUser();
+            if (!sessionUser) {
+                window.location.href = './login.html';
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            ownerIdParam = urlParams.get('owner_id');
+            targetOwnerId = ownerIdParam || sessionUser.id;
+
+            // Security: only Admin can register for someone else
+            if (ownerIdParam && ownerIdParam !== sessionUser.id && sessionUser.role !== 'Admin') {
+                alert("No tienes permiso para registrar negocios a otros usuarios.");
+                window.location.href = './directorymap.html';
+                return;
+            }
+
             if (ownerIdParam && ownerIdParam !== sessionUser.id && sessionUser.role === 'Admin') {
                 document.getElementById('adminNav').style.display = 'block';
             }
         });
-
-        // Check Access
-        const sessionUser = getLoggedInUser();
-        if (!sessionUser) {
-            window.location.href = './login.html';
-        }
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const ownerIdParam = urlParams.get('owner_id');
-        const targetOwnerId = ownerIdParam || sessionUser.id;
-
-        // Security: only Admin can register for someone else
-        if (ownerIdParam && ownerIdParam !== sessionUser.id && sessionUser.role !== 'Admin') {
-            alert("No tienes permiso para registrar negocios a nombre de otro usuario.");
-            window.location.href = './directorymap.html';
-        }
 
         const form = document.getElementById('businessForm');
         const bizCategory = document.getElementById('bizCategory');

@@ -408,22 +408,32 @@
     <script src="./assets/js/supabase_logic.js"></script>
 
     <script>
-        // Auth Check
-        const currentUser = getLoggedInUser();
-        if (!currentUser) {
-            window.location.href = './login.html';
-        }
+        let currentUser = null;
+        let targetUserId = null;
+        let isEditingOthers = false;
 
-        // Context check: Is Admin editing an owner?
-        const urlParams = new URLSearchParams(window.location.search);
-        const ownerIdParam = urlParams.get('owner_id');
-        const targetUserId = ownerIdParam || currentUser.id;
-        const isEditingOthers = ownerIdParam && ownerIdParam !== currentUser.id;
+        document.addEventListener('DOMContentLoaded', async () => {
+            await renderUserMenu('authButtons');
+            currentUser = await getLoggedInUser();
+            if (!currentUser) {
+                window.location.href = './login.html';
+                return;
+            }
 
-        if (isEditingOthers && currentUser.role !== 'Admin') {
-            alert("No tienes permiso para editar el grid de otros usuarios.");
-            window.location.href = './admin.html';
-        }
+            // Context check: Is Admin editing an owner?
+            const urlParams = new URLSearchParams(window.location.search);
+            const ownerIdParam = urlParams.get('owner_id');
+            targetUserId = ownerIdParam || currentUser.id;
+            isEditingOthers = ownerIdParam && ownerIdParam !== currentUser.id;
+
+            if (isEditingOthers && currentUser.role !== 'Admin') {
+                alert("No tienes permiso para editar el grid de otros usuarios.");
+                window.location.href = './admin.html';
+                return;
+            }
+
+            loadGrid();
+        });
 
         // Use global supabaseClient from assets/js/supabase_logic.js
         const sbClient = supabaseClient;
@@ -830,10 +840,6 @@
             }
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            renderUserMenu('authButtons');
-        });
-        loadGrid();
     </script>
 </body>
 

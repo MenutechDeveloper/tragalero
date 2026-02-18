@@ -244,11 +244,14 @@
     <script src="./assets/js/directory_data.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            renderUserMenu('authButtons');
+        let user = null;
+        document.addEventListener('DOMContentLoaded', async () => {
+            await renderUserMenu('authButtons');
+            user = await checkAccess('Admin');
+            if (user) {
+                loadBusinesses();
+            }
         });
-
-        const user = checkAccess('Admin');
         const editModal = new bootstrap.Modal(document.getElementById('editBizModal'));
         const editCategory = document.getElementById('editBizCategory');
         const editRestaurantFields = document.getElementById('editRestaurantFields');
@@ -502,7 +505,6 @@
             }
         }
 
-        loadBusinesses();
     </script>
 </body>
 
