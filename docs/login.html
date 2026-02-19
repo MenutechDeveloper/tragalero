@@ -49,28 +49,75 @@
 </head>
 
 <body>
-    <div class="login-card animate-fade-in">
+    <div class="login-card animate-fade-in" id="authCard">
         <div class="text-center">
             <img src="https://tragalero.com/assets/img/tragalero.png" alt="Tragalero" class="login-logo">
-            <h3 class="fw-bold mb-4">Bienvenido</h3>
+            <h3 class="fw-bold mb-4" id="cardTitle">Bienvenido</h3>
         </div>
 
+        <!-- Login Form -->
         <form id="loginForm">
             <div class="mb-3">
                 <label class="form-label small fw-bold">Email</label>
-                <input type="email" id="email" class="form-control" placeholder="tu@email.com" required>
+                <input type="email" id="loginEmail" class="form-control" placeholder="tu@email.com" required>
             </div>
-            <div class="mb-4">
+            <div class="mb-3">
                 <label class="form-label small fw-bold">Contraseña</label>
-                <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                <input type="password" id="loginPass" class="form-control" placeholder="••••••••" required>
+            </div>
+            <div class="text-end mb-4">
+                <a href="#" class="small text-primary text-decoration-none" onclick="showForm('forgot')">¿Olvidaste tu contraseña?</a>
             </div>
             <button type="submit" class="btn btn-custom-primary w-100 py-3 mb-3">
                 Iniciar Sesión
             </button>
-            <div id="loginMessage" class="alert alert-danger d-none small text-center" style="border-radius: 15px;"></div>
+            <div class="text-center small">
+                ¿No tienes cuenta? <a href="#" class="text-primary fw-bold text-decoration-none" onclick="showForm('register')">Regístrate aquí</a>
+            </div>
         </form>
 
-        <div class="text-center mt-3">
+        <!-- Register Form -->
+        <form id="registerForm" class="d-none">
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Usuario</label>
+                <input type="text" id="regUsername" class="form-control" placeholder="Nombre de usuario" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Email</label>
+                <input type="email" id="regEmail" class="form-control" placeholder="tu@email.com" required>
+            </div>
+            <div class="mb-4">
+                <label class="form-label small fw-bold">Contraseña</label>
+                <input type="password" id="regPass" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
+            </div>
+            <button type="submit" class="btn btn-custom-primary w-100 py-3 mb-3">
+                Crear Cuenta
+            </button>
+            <div class="text-center small">
+                ¿Ya tienes cuenta? <a href="#" class="text-primary fw-bold text-decoration-none" onclick="showForm('login')">Inicia Sesión</a>
+            </div>
+        </form>
+
+        <!-- Forgot Password Form -->
+        <form id="forgotForm" class="d-none">
+            <p class="text-muted small mb-4">Ingresa tu email y te enviaremos instrucciones para restablecer tu contraseña.</p>
+            <div class="mb-4">
+                <label class="form-label small fw-bold">Email</label>
+                <input type="email" id="forgotEmail" class="form-control" placeholder="tu@email.com" required>
+            </div>
+            <button type="submit" class="btn btn-custom-primary w-100 py-3 mb-3">
+                Enviar Instrucciones
+            </button>
+            <div class="text-center small">
+                <a href="#" class="text-muted text-decoration-none" onclick="showForm('login')">
+                    <i class="bi bi-arrow-left me-1"></i>Volver al Inicio
+                </a>
+            </div>
+        </form>
+
+        <div id="authMessage" class="alert d-none small text-center mt-3" style="border-radius: 15px;"></div>
+
+        <div class="text-center mt-4">
             <a href="./restaurantapp.html" class="text-muted small text-decoration-none">
                 <i class="bi bi-arrow-left me-1"></i>Volver al Directorio
             </a>
@@ -82,39 +129,53 @@
     <script src="./assets/js/theme.js"></script>
     <script src="./assets/js/supabase_logic.js"></script>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-            const msg = document.getElementById('loginMessage');
+        const forms = {
+            login: document.getElementById('loginForm'),
+            register: document.getElementById('registerForm'),
+            forgot: document.getElementById('forgotForm')
+        };
+        const title = document.getElementById('cardTitle');
+        const msg = document.getElementById('authMessage');
 
+        function showForm(type) {
+            Object.values(forms).forEach(f => f.classList.add('d-none'));
+            forms[type].classList.remove('d-none');
+            msg.classList.add('d-none');
+
+            if (type === 'login') title.textContent = 'Bienvenido';
+            if (type === 'register') title.textContent = 'Crear Cuenta';
+            if (type === 'forgot') title.textContent = 'Recuperar Cuenta';
+        }
+
+        function showMessage(text, type = 'danger') {
+            msg.textContent = text;
+            msg.className = `alert alert-${type} small text-center mt-3`;
+            msg.classList.remove('d-none');
+        }
+
+        // Login Logic
+        forms.login.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
             msg.classList.add('d-none');
 
             try {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: pass
-                });
-
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
                 if (error) throw error;
 
-                // Fetch profile from directory_users
                 const { data: profile, error: profileError } = await supabaseClient
                     .from('directory_users')
                     .select('*')
                     .eq('id', data.user.id)
                     .single();
 
-                if (profileError || !profile) {
-                    throw new Error('No se encontró el perfil de usuario. Contacta al administrador.');
-                }
-
+                if (profileError || !profile) throw new Error('No se encontró el perfil de usuario.');
                 if (!profile.is_active) {
                     await supabaseClient.auth.signOut();
-                    throw new Error('Tu cuenta ha sido suspendida. Contacta al administrador.');
+                    throw new Error('Tu cuenta ha sido suspendida.');
                 }
 
-                // Save session for sync components
                 sessionStorage.setItem('tragalero_user', JSON.stringify({
                     id: profile.id,
                     name: profile.name,
@@ -123,10 +184,55 @@
                 }));
 
                 window.location.href = profile.role === 'Admin' ? './admin.html' : './directorymap.html';
-
             } catch (err) {
-                msg.textContent = err.message === 'Invalid login credentials' ? 'Credenciales incorrectas' : err.message;
-                msg.classList.remove('d-none');
+                showMessage(err.message === 'Invalid login credentials' ? 'Email o contraseña incorrectos' : err.message);
+            }
+        });
+
+        // Register Logic
+        forms.register.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('regEmail').value;
+            const pass = document.getElementById('regPass').value;
+            const username = document.getElementById('regUsername').value;
+            msg.classList.add('d-none');
+
+            try {
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email,
+                    password: pass,
+                    options: {
+                        data: { username: username }
+                    }
+                });
+
+                if (error) throw error;
+
+                if (data.session) {
+                    showMessage('¡Cuenta creada con éxito! Redirigiendo...', 'success');
+                    setTimeout(() => window.location.href = './directorymap.html', 1500);
+                } else {
+                    showMessage('¡Registro casi completo! Por favor verifica tu email.', 'info');
+                }
+            } catch (err) {
+                showMessage(err.message);
+            }
+        });
+
+        // Forgot Password Logic
+        forms.forgot.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+            msg.classList.add('d-none');
+
+            try {
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + '/login.html',
+                });
+                if (error) throw error;
+                showMessage('Instrucciones enviadas a tu email.', 'success');
+            } catch (err) {
+                showMessage(err.message);
             }
         });
     </script>
