@@ -1,11 +1,14 @@
 -- ==========================================================
--- SQL FINAL - ACCESO TOTAL (RLS DESACTIVADO EN USUARIOS)
+-- SQL FINAL - ACCESO TOTAL (USUARIO Y CONTRASEÑA)
 -- ==========================================================
--- Este script crea tu usuario Admin y DESACTIVA el RLS en la tabla
--- directory_users para que puedas entrar sin ningún error de permisos.
+-- Este script:
+-- 1. Agrega la columna 'email' a directory_users si no existe.
+-- 2. Crea tu usuario Admin y lo vincula con el sistema de Auth.
+-- 3. DESACTIVA el RLS en directory_users para que puedas entrar sin errores.
 
--- 1. Habilitar extensiones
+-- 1. Preparar extensiones y esquema
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+ALTER TABLE public.directory_users ADD COLUMN IF NOT EXISTS email TEXT;
 
 DO $$
 DECLARE
@@ -51,24 +54,17 @@ BEGIN
   )
   VALUES (new_user_id, new_user_id, jsonb_build_object('sub', new_user_id, 'email', user_email), 'email', new_user_id, now(), now(), now());
 
-  -- D. CREAR PERFIL (Evitando errores de trigger)
+  -- D. CREAR PERFIL (Soportando columnas dinámicas)
   SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'directory_users' AND column_name = 'password') INTO has_password_col;
 
   IF has_password_col THEN
-    EXECUTE format('INSERT INTO public.directory_users (id, name, role, is_active, password) VALUES (%L, %L, %L, true, %L) ON CONFLICT (id) DO UPDATE SET role = %L, name = %L, password = %L, is_active = true', new_user_id, user_name, 'Admin', user_password, 'Admin', user_name, user_password);
+    EXECUTE format('INSERT INTO public.directory_users (id, name, email, role, is_active, password) VALUES (%L, %L, %L, %L, true, %L) ON CONFLICT (id) DO UPDATE SET role = %L, name = %L, email = %L, password = %L, is_active = true', new_user_id, user_name, user_email, 'Admin', user_password, 'Admin', user_name, user_email, user_password);
   ELSE
-    INSERT INTO public.directory_users (id, name, role, is_active) VALUES (new_user_id, user_name, 'Admin', true) ON CONFLICT (id) DO UPDATE SET role = 'Admin', name = EXCLUDED.name, is_active = true;
+    INSERT INTO public.directory_users (id, name, email, role, is_active) VALUES (new_user_id, user_name, user_email, 'Admin', true) ON CONFLICT (id) DO UPDATE SET role = 'Admin', name = EXCLUDED.name, email = user_email, is_active = true;
   END IF;
 
-  RAISE NOTICE '¡Listo! Usuario creado y perfil configurado.';
+  RAISE NOTICE '¡Listo! Usuario Admin creado.';
 END $$;
 
--- E. DESACTIVAR RLS (SOLO EN USUARIOS)
--- Esto permite que el login lea los perfiles sin restricciones de seguridad por ahora.
+-- E. DESACTIVAR RLS TEMPORALMENTE (Como se solicitó)
 ALTER TABLE public.directory_users DISABLE ROW LEVEL SECURITY;
-
--- NOTA: Cuando tengas tu correo corporativo y quieras reactivar la seguridad,
--- ejecuta estos comandos en el SQL Editor:
--- ALTER TABLE public.directory_users ENABLE ROW LEVEL SECURITY;
--- DROP POLICY IF EXISTS "Users can view their own profile" ON public.directory_users;
--- CREATE POLICY "Users can view their own profile" ON public.directory_users FOR SELECT USING (auth.uid() = id);
