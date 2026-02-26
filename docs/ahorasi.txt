@@ -6,9 +6,11 @@
 -- 2. Crea tu usuario Admin y lo vincula con el sistema de Auth.
 -- 3. DESACTIVA el RLS en directory_users para que puedas entrar sin errores.
 
--- 1. Preparar extensiones y esquema
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+-- 1. Preparar esquema (ESTO ES CRUCIAL)
 ALTER TABLE public.directory_users ADD COLUMN IF NOT EXISTS email TEXT;
+
+-- 2. Habilitar extensiones
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 DO $$
 DECLARE
@@ -68,3 +70,6 @@ END $$;
 
 -- E. DESACTIVAR RLS TEMPORALMENTE (Como se solicitó)
 ALTER TABLE public.directory_users DISABLE ROW LEVEL SECURITY;
+
+-- F. ASEGURAR QUE EL EMAIL ESTÉ PUESTO (Doble verificación)
+UPDATE public.directory_users SET email = 'francisco.menutech@gmail.com' WHERE name = 'Antonio';

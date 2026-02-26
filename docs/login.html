@@ -169,7 +169,8 @@
                     .single();
 
                 if (userError || !userData?.email) {
-                    throw new Error('Usuario no encontrado.');
+                    console.error("Username lookup failed:", userError);
+                    throw new Error('Usuario no encontrado. Revisa si ejecutaste el último SQL.');
                 }
 
                 const email = userData.email;
@@ -199,6 +200,7 @@
 
                 window.location.href = profile.role === 'Admin' ? './admin.html' : './directorymap.html';
             } catch (err) {
+                console.error("Login Error:", err);
                 showMessage(err.message === 'Invalid login credentials' ? 'Email o contraseña incorrectos' : err.message);
             }
         });
