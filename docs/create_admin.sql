@@ -1,9 +1,14 @@
 -- ==========================================================
--- SQL PARA CREAR ADMIN SIN VERIFICACIÓN DE EMAIL (TEMPLATE)
+-- SQL FINAL PARA CREAR ADMIN (ULTRA-RESILIENTE)
 -- ==========================================================
 -- Este script crea un usuario en Supabase Auth y lo configura como Admin
 -- en la tabla directory_users, saltándose la confirmación por correo.
 -- REEMPLACE LOS VALORES EN LA SECCIÓN DE CONFIGURACIÓN ABAJO.
+
+-- >>> IMPORTANTE: Si ves el error "Database error querying schema" <<<
+-- 1. Ve a "Settings" (Icono de engranaje) en tu panel de Supabase.
+-- 2. Entra en la sección "API".
+-- 3. Busca el botón que dice "Reload PostgREST schema" y haz clic en él.
 
 -- 1. Habilitar extensiones
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -32,7 +37,6 @@ BEGIN
   DELETE FROM public.directory_users WHERE name = user_name;
 
   -- B. CREAR EN AUTH.USERS
-  -- Nota: Un trigger suele insertar automáticamente en directory_users al hacer esto.
   INSERT INTO auth.users (
     id, instance_id, email, encrypted_password, email_confirmed_at,
     raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
@@ -51,10 +55,19 @@ BEGIN
   INSERT INTO auth.identities (
     id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at
   )
-  VALUES (new_user_id, new_user_id, jsonb_build_object('sub', new_user_id, 'email', user_email), 'email', new_user_id, now(), now(), now());
+  VALUES (
+    new_user_id, new_user_id,
+    jsonb_build_object('sub', new_user_id, 'email', user_email),
+    'email', new_user_id, now(), now(), now()
+  );
 
-  -- D. ACTUALIZAR O CREAR PERFIL (Usamos ON CONFLICT por si el trigger ya lo creó)
-  SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'directory_users' AND column_name = 'password') INTO has_password_col;
+  -- D. ACTUALIZAR O CREAR PERFIL
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+    AND table_name = 'directory_users'
+    AND column_name = 'password'
+  ) INTO has_password_col;
 
   IF has_password_col THEN
     EXECUTE format(
@@ -72,7 +85,13 @@ BEGIN
   RAISE NOTICE 'Usuario y perfil creados/actualizados correctamente.';
 END $$;
 
--- E. CONFIGURAR POLÍTICA DE SEGURIDAD (RLS)
+-- E. LIMPIAR POLÍTICAS RECURSIVAS (Esto arregla el "Database error querying schema")
+-- Las políticas que consultan la propia tabla (directory_users) causan bucles infinitos en PostgREST.
 ALTER TABLE public.directory_users ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admins have full access to directory_users" ON public.directory_users;
 DROP POLICY IF EXISTS "Users can view their own profile" ON public.directory_users;
-CREATE POLICY "Users can view their own profile" ON public.directory_users FOR SELECT USING (auth.uid() = id);
+
+-- Crear una política segura no-recursiva
+CREATE POLICY "Users can view their own profile" ON public.directory_users
+    FOR SELECT USING (auth.uid() = id);
