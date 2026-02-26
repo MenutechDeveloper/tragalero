@@ -58,8 +58,8 @@
         <!-- Login Form -->
         <form id="loginForm">
             <div class="mb-3">
-                <label class="form-label small fw-bold">Usuario</label>
-                <input type="text" id="loginEmail" class="form-control" placeholder="Tu nombre de usuario" required>
+                <label class="form-label small fw-bold">Email</label>
+                <input type="email" id="loginEmail" class="form-control" placeholder="tu@email.com" required>
             </div>
             <div class="mb-3">
                 <label class="form-label small fw-bold">Contraseña</label>
@@ -156,26 +156,11 @@
         // Login Logic
         forms.login.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const usernameInput = document.getElementById('loginEmail').value;
+            const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPass').value;
             msg.classList.add('d-none');
 
             try {
-                // 1. Resolve Username to Email
-                const { data: userData, error: userError } = await supabaseClient
-                    .from('directory_users')
-                    .select('email')
-                    .eq('name', usernameInput)
-                    .single();
-
-                if (userError || !userData?.email) {
-                    console.error("Username lookup failed:", userError);
-                    throw new Error('Usuario no encontrado. Revisa si ejecutaste el último SQL.');
-                }
-
-                const email = userData.email;
-
-                // 2. Perform Supabase Login
                 const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
                 if (error) throw error;
 
@@ -200,7 +185,6 @@
 
                 window.location.href = profile.role === 'Admin' ? './admin.html' : './directorymap.html';
             } catch (err) {
-                console.error("Login Error:", err);
                 showMessage(err.message === 'Invalid login credentials' ? 'Email o contraseña incorrectos' : err.message);
             }
         });
