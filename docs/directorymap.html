@@ -176,6 +176,20 @@
                                 <label class="form-label">Dirección Detallada</label>
                                 <input type="text" id="bizAddress" class="form-control" placeholder="Calle, Número, etc.">
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Latitud</label>
+                                <input type="number" step="any" id="bizLat" class="form-control" placeholder="Ej. 32.5149">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Longitud</label>
+                                <input type="number" step="any" id="bizLng" class="form-control" placeholder="Ej. -117.0382">
+                            </div>
+                            <div class="col-md-12">
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="getLocBtn">
+                                    <i class="bi bi-geo-fill me-1"></i>Usar mi ubicación actual
+                                </button>
+                                <div id="locStatus" class="small mt-1 text-muted"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -324,6 +338,28 @@
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('bizLogo');
         const filePreview = document.getElementById('filePreview');
+        const getLocBtn = document.getElementById('getLocBtn');
+        const locStatus = document.getElementById('locStatus');
+
+        // Geolocation
+        if (getLocBtn) {
+            getLocBtn.onclick = () => {
+                locStatus.textContent = "Obteniendo ubicación...";
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        document.getElementById('bizLat').value = pos.coords.latitude;
+                        document.getElementById('bizLng').value = pos.coords.longitude;
+                        locStatus.textContent = "Ubicación obtenida con éxito.";
+                        locStatus.className = "small mt-1 text-success";
+                    },
+                    (err) => {
+                        console.error(err);
+                        locStatus.textContent = "Error al obtener ubicación: " + err.message;
+                        locStatus.className = "small mt-1 text-danger";
+                    }
+                );
+            };
+        }
 
         // Category Toggle
         bizCategory.addEventListener('change', () => {
@@ -461,6 +497,8 @@
                     state: document.getElementById('bizState').value,
                     zip: document.getElementById('bizZip').value,
                     address_detail: document.getElementById('bizAddress').value,
+                    latitude: document.getElementById('bizLat').value ? parseFloat(document.getElementById('bizLat').value) : null,
+                    longitude: document.getElementById('bizLng').value ? parseFloat(document.getElementById('bizLng').value) : null,
                     logo_url: logoUrl,
                     website: ensureHttps(document.getElementById('bizWebsite').value),
                     is_restaurant: bizCategory.value === 'Restaurantes',

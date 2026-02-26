@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS businesses (
     logo_url TEXT,
     website TEXT,
     address_detail TEXT,
+    latitude NUMERIC,
+    longitude NUMERIC,
     social_media JSONB DEFAULT '{}'::jsonb,
     hours JSONB DEFAULT '{}'::jsonb,
     is_restaurant BOOLEAN DEFAULT FALSE,

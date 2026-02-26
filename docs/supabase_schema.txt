@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS directory_users (
 -- 2b. Add visibility and ownership to businesses table
 ALTER TABLE businesses ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES directory_users(id);
 ALTER TABLE businesses ADD COLUMN IF NOT EXISTS is_visible BOOLEAN DEFAULT TRUE;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS latitude NUMERIC;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS longitude NUMERIC;
 ALTER TABLE businesses ADD COLUMN IF NOT EXISTS btn_bg_color TEXT DEFAULT '#f1c40f';
 ALTER TABLE businesses ADD COLUMN IF NOT EXISTS btn_text_color TEXT DEFAULT '#ffffff';
 

@@ -33,6 +33,8 @@ async function getBusinesses(showAll = false) {
                 btn_bg_color: item.btn_bg_color || '',
                 btn_text_color: item.btn_text_color || '',
                 address: item.address_detail || '',
+                latitude: item.latitude,
+                longitude: item.longitude,
                 social_media: item.social_media || {},
                 hours: item.hours || {},
                 is_restaurant: item.is_restaurant,

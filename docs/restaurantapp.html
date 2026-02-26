@@ -86,9 +86,12 @@
         <div class="custom-search-card shadow-sm">
             <div class="row g-3 p-4">
                 <div class="col-md-9">
-                    <div class="search-input-wrapper">
+                    <div class="search-input-wrapper position-relative">
                         <i class="bi bi-search"></i>
                         <input type="text" id="directorySearch" class="form-control" placeholder="Busca por nombre, categoría, CP o ciudad...">
+                        <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-3 opacity-50 hover-opacity-100" id="searchLocBtn" title="Usar mi ubicación">
+                            <i class="bi bi-geo-fill"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="col-md-3">
