@@ -72,7 +72,6 @@ BEGIN
 END $$;
 
 -- E. CONFIGURAR POLÍTICA DE SEGURIDAD (RLS)
--- Nota: La función check_is_admin() permite RLS sin recursión.
 CREATE OR REPLACE FUNCTION public.check_is_admin()
 RETURNS BOOLEAN AS $$
 BEGIN
