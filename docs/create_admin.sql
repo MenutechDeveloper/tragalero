@@ -1,17 +1,23 @@
 -- ==========================================================
--- SQL FINAL PARA CREAR ADMIN (ULTRA-RESILIENTE)
+-- SQL FINAL PARA CREAR ADMIN (RLS PROTEGIDO)
 -- ==========================================================
 -- Este script crea un usuario en Supabase Auth y lo configura como Admin
--- en la tabla directory_users, saltándose la confirmación por correo.
--- REEMPLACE LOS VALORES EN LA SECCIÓN DE CONFIGURACIÓN ABAJO.
-
--- >>> IMPORTANTE: Si ves el error "Database error querying schema" <<<
--- 1. Ve a "Settings" (Icono de engranaje) en tu panel de Supabase.
--- 2. Entra en la sección "API".
--- 3. Busca el botón que dice "Reload PostgREST schema" y haz clic en él.
+-- MANTIENE EL RLS ACTIVADO y arregla el error de "Database error querying schema".
 
 -- 1. Habilitar extensiones
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- 2. Función auxiliar para evitar recursión en RLS
+-- Esta función permite verificar el rol sin causar un bucle infinito.
+CREATE OR REPLACE FUNCTION public.check_is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.directory_users
+    WHERE id = auth.uid() AND role = 'Admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DO $$
 DECLARE
@@ -28,7 +34,7 @@ DECLARE
 BEGIN
   encrypted_pw := crypt(user_password, gen_salt('bf'));
 
-  -- A. LIMPIEZA TOTAL
+  -- A. LIMPIEZA TOTAL (Para asegurar un estado limpio)
   SELECT id INTO old_user_id FROM auth.users WHERE email = user_email;
   IF old_user_id IS NOT NULL THEN
     DELETE FROM public.directory_users WHERE id = old_user_id;
@@ -51,7 +57,7 @@ BEGIN
   )
   RETURNING id INTO new_user_id;
 
-  -- C. CREAR IDENTIDAD
+  -- C. CREAR IDENTIDAD (Necesario para el login)
   INSERT INTO auth.identities (
     id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at
   )
@@ -85,13 +91,18 @@ BEGIN
   RAISE NOTICE 'Usuario y perfil creados/actualizados correctamente.';
 END $$;
 
--- E. LIMPIAR POLÍTICAS RECURSIVAS (Esto arregla el "Database error querying schema")
--- Las políticas que consultan la propia tabla (directory_users) causan bucles infinitos en PostgREST.
+-- E. CONFIGURAR POLÍTICAS DE RLS (MANTENIENDO SEGURIDAD)
+-- Nos aseguramos de que el RLS esté ACTIVADO
 ALTER TABLE public.directory_users ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Admins have full access to directory_users" ON public.directory_users;
+-- Limpiamos políticas anteriores para poner las corregidas
 DROP POLICY IF EXISTS "Users can view their own profile" ON public.directory_users;
+DROP POLICY IF EXISTS "Admins have full access to directory_users" ON public.directory_users;
 
--- Crear una política segura no-recursiva
+-- 1. Permitir que cada usuario vea su propio perfil
 CREATE POLICY "Users can view their own profile" ON public.directory_users
     FOR SELECT USING (auth.uid() = id);
+
+-- 2. Permitir que los Admins vean todo (usando la función para evitar el error de esquema)
+CREATE POLICY "Admins have full access to directory_users" ON public.directory_users
+    FOR ALL USING (public.check_is_admin());
