@@ -5,7 +5,6 @@
 CREATE TABLE IF NOT EXISTS directory_users (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT UNIQUE NOT NULL,
-    email TEXT,
     role TEXT DEFAULT 'Owner' CHECK (role IN ('Owner', 'Admin')),
     is_active BOOLEAN DEFAULT TRUE,
     max_businesses INTEGER DEFAULT 1,
@@ -105,11 +104,10 @@ CREATE POLICY "Admins have full access to bento_grid" ON bento_grid
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO public.directory_users (id, name, email, role)
+    INSERT INTO public.directory_users (id, name, role)
     VALUES (
         NEW.id,
         COALESCE(NEW.raw_user_meta_data->>'username', NEW.raw_user_meta_data->>'full_name', NEW.email),
-        NEW.email,
         'Owner'
     );
     RETURN NEW;
