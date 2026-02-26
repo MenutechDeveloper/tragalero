@@ -30,6 +30,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentCategory = '';
     let renderTimeout;
     let allDirectoryData = [];
+    let userLocation = null;
+
+    // Haversine formula to calculate distance in km
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+        const R = 6371; // Radius of the earth in km
+        const dLat = deg2rad(lat2 - lat1);
+        const dLon = deg2rad(lon2 - lon1);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    function deg2rad(deg) {
+        return deg * (Math.PI / 180);
+    }
+
+    async function getUserLocation() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error("Geolocation not supported"));
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    userLocation = {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude
+                    };
+                    resolve(userLocation);
+                },
+                (err) => reject(err),
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            );
+        });
+    }
 
     // Fetch data from Supabase + Local
     async function loadAllData() {
@@ -79,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function initCategories() {
         if (!categoryContainer) return;
 
-        const categories = ['Todos', ...new Set(allDirectoryData.map(item => item.category))];
+        const categories = ['Todos', 'Cerca de mí', ...new Set(allDirectoryData.map(item => item.category))];
         categoryContainer.innerHTML = '';
 
         categories.forEach(cat => {
@@ -87,10 +126,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.className = `chip ${cat === 'Todos' ? 'active' : ''}`;
             btn.textContent = cat;
             btn.setAttribute('data-category', cat === 'Todos' ? '' : cat);
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', async () => {
+                const targetCat = btn.getAttribute('data-category');
+
+                if (targetCat === 'Cerca de mí') {
+                    if (!userLocation) {
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Buscando...';
+                        try {
+                            await getUserLocation();
+                            btn.innerHTML = 'Cerca de mí';
+                        } catch (err) {
+                            alert("No se pudo obtener tu ubicación. Asegúrate de dar permisos.");
+                            btn.innerHTML = 'Cerca de mí';
+                            return;
+                        }
+                    }
+                }
+
                 document.querySelectorAll('#categoryChips .chip').forEach(c => c.classList.remove('active'));
                 btn.classList.add('active');
-                currentCategory = btn.getAttribute('data-category');
+                currentCategory = targetCat;
                 renderDirectory(searchInput.value, currentCity, currentCategory);
             });
             categoryContainer.appendChild(btn);
@@ -104,7 +159,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderTimeout = setTimeout(() => {
             resultsContainer.innerHTML = '';
 
-            const filtered = allDirectoryData.filter(item => {
+            // Map and calculate distance for all data if location is available
+            const dataWithDistance = allDirectoryData.map(item => {
+                if (userLocation && item.latitude !== null && item.longitude !== null && item.latitude !== undefined && item.longitude !== undefined) {
+                    return {
+                        ...item,
+                        distance: calculateDistance(userLocation.lat, userLocation.lng, item.latitude, item.longitude)
+                    };
+                }
+                return { ...item, distance: null };
+            });
+
+            const filtered = dataWithDistance.filter(item => {
                 const searchLower = filterText.toLowerCase();
                 const matchesText = !filterText ||
                     item.name.toLowerCase().includes(searchLower) ||
@@ -115,10 +181,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const itemCitySlug = slugify(item.city);
                 const matchesCity = !cityFilter || itemCitySlug === cityFilter;
-                const matchesCategory = !catFilter || item.category === catFilter;
+                const isNearMeFilter = catFilter === 'Cerca de mí';
+                const matchesCategory = !catFilter || isNearMeFilter || item.category === catFilter;
 
-                return matchesText && matchesCity && matchesCategory;
+                const matchesProximity = !isNearMeFilter || item.distance !== null;
+
+                return matchesText && matchesCity && matchesCategory && matchesProximity;
             });
+
+            // Sort by distance if 'Cerca de mí' is selected
+            if (catFilter === 'Cerca de mí') {
+                filtered.sort((a, b) => {
+                    if (a.distance === null) return 1;
+                    if (b.distance === null) return -1;
+                    return a.distance - b.distance;
+                });
+            }
 
             if (filtered.length === 0) {
                 resultsContainer.innerHTML = `
@@ -144,6 +222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const sState = escapeHtml(item.state);
                 const sAddress = escapeHtml(item.address);
                 const sLogo = escapeHtml(item.logo);
+                const sDistance = item.distance !== null ? `<span class="badge bg-success text-white position-absolute bottom-0 end-0 m-3 shadow-sm border-0" style="border-radius: 20px; padding: 6px 12px; font-size: 0.75rem; font-weight: 600;"><i class="bi bi-cursor-fill me-1"></i>a ${item.distance.toFixed(1)} km</span>` : '';
 
                 // New Card Design: Single Purple Button
                 const buttonText = isRestaurant ? 'Ver Menú' : 'Ver Detalles';
@@ -154,6 +233,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <img src="${sLogo}" alt="${sName}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
                             <span class="badge position-absolute top-0 start-0 m-3" style="background: #7c83fd; color: white; border-radius: 10px; padding: 6px 12px; font-weight: 600; font-size: 0.7rem; text-transform: uppercase;">${sCategory}</span>
                             <span class="badge bg-white text-dark position-absolute top-0 end-0 m-3 shadow-sm border-0" style="border-radius: 20px; padding: 8px 18px; font-size: 0.8rem; font-weight: 500;">${sCity}</span>
+                            ${sDistance}
                         </div>
                         <div class="card-body d-flex flex-column p-4">
                             <div class="d-flex justify-content-between align-items-start mb-1">
@@ -356,6 +436,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (e.key === 'Enter') handleSearch(navbarSearch.value);
             else if (navbarSearch.value.length > 2 || navbarSearch.value.length === 0) {
                 handleSearch(navbarSearch.value);
+            }
+        });
+    }
+
+    const searchLocBtn = document.getElementById('searchLocBtn');
+    if (searchLocBtn) {
+        searchLocBtn.addEventListener('click', async () => {
+            searchLocBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            try {
+                await getUserLocation();
+                currentCategory = 'Cerca de mí';
+                // Activate chip
+                document.querySelectorAll('#categoryChips .chip').forEach(c => {
+                    if (c.textContent === 'Cerca de mí') c.classList.add('active');
+                    else c.classList.remove('active');
+                });
+                renderDirectory(searchInput.value, currentCity, currentCategory);
+            } catch (err) {
+                alert("Error al obtener ubicación.");
+            } finally {
+                searchLocBtn.innerHTML = '<i class="bi bi-geo-fill"></i>';
             }
         });
     }

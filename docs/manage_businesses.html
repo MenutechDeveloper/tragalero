@@ -157,6 +157,19 @@
                                     <label class="form-label small fw-bold">Dirección Detallada</label>
                                     <input type="text" id="editBizAddress" class="form-control">
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Latitud</label>
+                                    <input type="number" step="any" id="editBizLat" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Longitud</label>
+                                    <input type="number" step="any" id="editBizLng" class="form-control">
+                                </div>
+                                <div class="col-md-12">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="editGetLocBtn">
+                                        <i class="bi bi-geo-fill me-1"></i>Usar mi ubicación actual
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -260,6 +273,21 @@
             editRestaurantFields.style.display = editCategory.value === 'Restaurantes' ? 'block' : 'none';
         };
 
+        const editGetLocBtn = document.getElementById('editGetLocBtn');
+        if (editGetLocBtn) {
+            editGetLocBtn.onclick = () => {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        document.getElementById('editBizLat').value = pos.coords.latitude;
+                        document.getElementById('editBizLng').value = pos.coords.longitude;
+                    },
+                    (err) => {
+                        alert("Error al obtener ubicación: " + err.message);
+                    }
+                );
+            };
+        }
+
         async function openEditModal(bizId) {
             try {
                 const { data: biz, error } = await supabaseClient
@@ -277,6 +305,8 @@
                 document.getElementById('editBizState').value = biz.state || '';
                 document.getElementById('editBizZip').value = biz.zip || '';
                 document.getElementById('editBizAddress').value = biz.address_detail || '';
+                document.getElementById('editBizLat').value = biz.latitude || '';
+                document.getElementById('editBizLng').value = biz.longitude || '';
                 document.getElementById('editBizWebsite').value = biz.website || '';
 
                 // Social Media
@@ -362,6 +392,8 @@
                     state: document.getElementById('editBizState').value,
                     zip: document.getElementById('editBizZip').value,
                     address_detail: document.getElementById('editBizAddress').value,
+                    latitude: document.getElementById('editBizLat').value ? parseFloat(document.getElementById('editBizLat').value) : null,
+                    longitude: document.getElementById('editBizLng').value ? parseFloat(document.getElementById('editBizLng').value) : null,
                     logo_url: logoUrl,
                     website: ensureHttps(document.getElementById('editBizWebsite').value),
                     is_restaurant: editCategory.value === 'Restaurantes',
