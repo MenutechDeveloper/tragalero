@@ -1,15 +1,25 @@
--- Habilitar pgcrypto para el hash de contraseñas (necesario para crypt y gen_salt)
+-- ==========================================================
+-- SQL PARA CREAR ADMIN SIN VERIFICACIÓN DE EMAIL (TEMPLATE)
+-- ==========================================================
+-- Este script crea un usuario en Supabase Auth y lo configura como Admin
+-- en la tabla directory_users, saltándose la confirmación por correo.
+-- REEMPLACE LOS VALORES ABAJO SEGÚN SEA NECESARIO.
+
+-- 1. Habilitar la extensión necesaria para el hash de contraseñas
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 DO $$
 DECLARE
   new_user_id UUID := gen_random_uuid();
-  user_email TEXT := 'francisco.menutech@gmail.com';
-  user_password TEXT := '9090Asd';
-  user_name TEXT := 'Antonio';
+  user_email TEXT := 'REEMPLACE_CON_EMAIL'; -- ej: admin@ejemplo.com
+  user_password TEXT := 'REEMPLACE_CON_PASSWORD';
+  user_name TEXT := 'REEMPLACE_CON_NOMBRE';
+  encrypted_pw TEXT;
 BEGIN
-  -- 1. Insertar en auth.users (Sistema de Autenticación de Supabase)
-  -- Solo si el usuario no existe ya por email
+  -- Generar el hash de la contraseña (bcrypt)
+  encrypted_pw := crypt(user_password, gen_salt('bf'));
+
+  -- 2. Insertar en auth.users si no existe
   IF NOT EXISTS (SELECT 1 FROM auth.users WHERE email = user_email) THEN
     INSERT INTO auth.users (
       id,
@@ -24,16 +34,14 @@ BEGIN
       role,
       aud,
       confirmation_token,
-      email_change,
-      email_change_token_new,
-      recovery_token
+      is_super_admin
     )
     VALUES (
       new_user_id,
       '00000000-0000-0000-0000-000000000000',
       user_email,
-      crypt(user_password, gen_salt('bf')),
-      now(),
+      encrypted_pw,
+      now(), -- Marca el email como confirmado inmediatamente
       '{"provider":"email","providers":["email"]}',
       jsonb_build_object('username', user_name),
       now(),
@@ -41,29 +49,60 @@ BEGIN
       'authenticated',
       'authenticated',
       '',
-      '',
-      '',
-      ''
+      false
     )
     RETURNING id INTO new_user_id;
-    RAISE NOTICE 'Nuevo usuario creado en auth.users con ID: %', new_user_id;
+
+    -- 3. Insertar en auth.identities (CRUCIAL para que Supabase lo reconozca en el login)
+    INSERT INTO auth.identities (
+      id,
+      user_id,
+      identity_data,
+      provider,
+      provider_id,
+      last_sign_in_at,
+      created_at,
+      updated_at
+    )
+    VALUES (
+      new_user_id,
+      new_user_id,
+      jsonb_build_object('sub', new_user_id, 'email', user_email),
+      'email',
+      new_user_id,
+      now(),
+      now(),
+      now()
+    );
+
+    RAISE NOTICE 'Usuario creado con ID: %', new_user_id;
   ELSE
     SELECT id INTO new_user_id FROM auth.users WHERE email = user_email;
-    RAISE NOTICE 'El usuario ya existía en auth.users con ID: %. Se procederá a asegurar que su perfil sea Admin.', new_user_id;
+
+    UPDATE auth.users
+    SET encrypted_password = encrypted_pw,
+        email_confirmed_at = COALESCE(email_confirmed_at, now()),
+        updated_at = now()
+    WHERE id = new_user_id;
+
+    RAISE NOTICE 'Usuario existente actualizado con ID: %', new_user_id;
   END IF;
 
-  -- 2. Asegurar que el usuario tenga el rol de Admin en directory_users
-  -- Intentamos insertar o actualizar por ID
+  -- 4. Sincronizar con la tabla de perfiles de la aplicación (public.directory_users)
   BEGIN
-    INSERT INTO public.directory_users (id, name, role)
-    VALUES (new_user_id, user_name, 'Admin')
+    INSERT INTO public.directory_users (id, name, role, is_active)
+    VALUES (new_user_id, user_name, 'Admin', true)
     ON CONFLICT (id) DO UPDATE SET
       role = 'Admin',
-      name = user_name;
+      name = EXCLUDED.name,
+      is_active = true;
   EXCEPTION WHEN unique_violation THEN
-    -- Si hay un conflicto de nombre único con otro ID, actualizamos por nombre
-    UPDATE public.directory_users SET role = 'Admin' WHERE name = user_name;
+    UPDATE public.directory_users
+    SET role = 'Admin',
+        is_active = true,
+        id = new_user_id
+    WHERE name = user_name;
   END;
 
-  RAISE NOTICE 'Perfil en directory_users configurado como Admin para: %', user_name;
+  RAISE NOTICE 'Perfil de Admin configurado correctamente para %', user_name;
 END $$;
