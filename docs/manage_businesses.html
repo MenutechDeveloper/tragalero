@@ -364,25 +364,14 @@
                 // If a new file is selected, upload it
                 if (editFileInput.files.length) {
                     loader.classList.remove('d-none');
-                    const file = editFileInput.files[0];
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${Math.random()}.${fileExt}`;
-                    const filePath = `${fileName}`;
-
-                    const { error: uploadError } = await supabaseClient
-                        .storage
-                        .from('logos')
-                        .upload(filePath, file);
-
-                    if (uploadError) throw uploadError;
-
-                    const { data: publicUrlData } = supabaseClient
-                        .storage
-                        .from('logos')
-                        .getPublicUrl(filePath);
-
-                    logoUrl = publicUrlData.publicUrl;
-                    loader.classList.add('d-none');
+                    try {
+                        const uploadRes = await uploadToCloudinary(editFileInput.files[0]);
+                        logoUrl = uploadRes.url;
+                    } catch (uploadError) {
+                        throw new Error("Error al subir la imagen: " + uploadError.message);
+                    } finally {
+                        loader.classList.add('d-none');
+                    }
                 }
 
                 const updates = {
@@ -499,6 +488,7 @@
                 loader.style.display = 'none';
             }
         }
+
 
         function ensureHttps(url) {
             if (!url) return '';

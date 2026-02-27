@@ -10,6 +10,7 @@ const TOOLS_CONFIG = [
     { name: "Promotions", url: "https://tragalero.com/herramientas/promotions" },
     { name: "Pos", url: "https://tragalero.com/herramientas/pos" },
     { name: "Apps", url: "https://tragalero.com/herramientas/apps" },
+    { name: "Tarjeta Digital", url: "./cards.html" },
     { name: "Usuarios", url: "./users.html", adminOnly: true },
     { name: "Negocios", url: "./manage_businesses.html", adminOnly: true }
 ];

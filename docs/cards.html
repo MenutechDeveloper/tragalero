@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark" lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Tarjeta Digital - Tragalero</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="./assets/css/pastel-theme.css">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+
+        .card-preview-container {
+            max-width: 450px;
+            margin: 20px auto;
+            background: var(--bs-body-bg);
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-header-design {
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 50px;
+        }
+
+        .profile-img-container {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 5px solid var(--bs-body-bg);
+            background: #eee;
+            position: absolute;
+            bottom: -50px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .profile-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-body-content {
+            padding: 60px 20px 20px;
+            text-align: center;
+        }
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .portfolio-item {
+            aspect-ratio: 1/1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .portfolio-item img, .portfolio-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .before-after-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .ba-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .ba-before {
+            z-index: 1;
+        }
+
+        .ba-after {
+            z-index: 2;
+            width: 50%;
+            border-right: 2px solid white;
+        }
+
+        .ba-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            cursor: ew-resize;
+            opacity: 0;
+        }
+
+        .social-icons-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-icon {
+            font-size: 1.5rem;
+            color: var(--bs-primary);
+            transition: transform 0.2s;
+        }
+
+        .social-icon:hover {
+            transform: scale(1.2);
+        }
+
+        .qr-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+        }
+
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .admin-controls {
+            padding: 20px;
+            background: var(--bs-tertiary-bg);
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
+
+        .drag-over {
+            border: 2px dashed var(--bs-primary) !important;
+            background: rgba(var(--bs-primary-rgb), 0.1) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container px-4">
+            <a class="navbar-brand d-flex align-items-center" href="./admin.html" id="backBtn">
+                <i class="bi bi-arrow-left me-2"></i>
+                <span class="fw-bold">Regresar</span>
+            </a>
+            <div id="authButtons"></div>
+        </div>
+    </nav>
+
+    <main class="container py-5">
+        <div class="row">
+            <!-- Left Side: Controls -->
+            <div class="col-lg-6" id="editorColumn">
+                <div class="admin-controls">
+                    <h4 class="fw-bold mb-4">Personaliza tu Tarjeta</h4>
+
+                    <div class="mb-3">
+                        <label class="form-label">Nombre / Empresa</label>
+                        <input type="text" id="inputName" class="form-control" placeholder="Juan Pérez">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Título / Profesión</label>
+                        <input type="text" id="inputTitle" class="form-control" placeholder="Desarrollador Web">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Bio Corta</label>
+                        <textarea id="inputBio" class="form-control" rows="2" placeholder="Crea experiencias digitales únicas..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Color del Header</label>
+                        <input type="color" id="inputHeaderColor" class="form-control form-control-color w-100" value="#667eea">
+                    </div>
+
+                    <hr>
+
+                    <h6 class="fw-bold mb-3">Redes Sociales</h6>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="bi bi-facebook"></i></span>
+                                <input type="text" id="inputFB" class="form-control" placeholder="URL Facebook">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="bi bi-instagram"></i></span>
+                                <input type="text" id="inputIG" class="form-control" placeholder="URL Instagram">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="bi bi-linkedin"></i></span>
+                                <input type="text" id="inputLI" class="form-control" placeholder="URL LinkedIn">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text"><i class="bi bi-whatsapp"></i></span>
+                                <input type="text" id="inputWA" class="form-control" placeholder="WhatsApp Number">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="fw-bold mb-3">Portfolio (Arrastra imágenes/videos)</h6>
+                    <div class="mb-3">
+                        <div class="upload-area p-4 border-2 border-dashed rounded-3 text-center" id="portfolioUploadZone" style="cursor:pointer">
+                            <i class="bi bi-images fs-2 text-muted"></i>
+                            <p class="mb-0">Haz clic o arrastra archivos aquí</p>
+                            <input type="file" id="portfolioInput" multiple accept="image/*,video/*" class="d-none">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="fw-bold mb-3">Antes y Después</h6>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="small">Imagen Antes</label>
+                            <input type="file" id="beforeInput" accept="image/*" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-6">
+                            <label class="small">Imagen Después</label>
+                            <input type="file" id="afterInput" accept="image/*" class="form-control form-control-sm">
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button class="btn btn-primary btn-lg fw-bold" id="saveCardBtn">
+                            <i class="bi bi-save me-2"></i>Guardar Configuración
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Preview -->
+            <div class="col-lg-6" id="previewColumn">
+                <div class="sticky-top" style="top: 100px;">
+                    <h5 class="text-center text-muted mb-3" id="previewTitleHeader">Vista Previa Real</h5>
+                    <div class="card-preview-container" id="cardToExport">
+                        <div class="card-header-design" id="headerDesign">
+                            <div class="profile-img-container" id="profileBtn">
+                                <img src="https://via.placeholder.com/150" id="profileImg" alt="Perfil">
+                                <input type="file" id="profileInput" accept="image/*" class="d-none">
+                            </div>
+                        </div>
+
+                        <div class="card-body-content">
+                            <h3 class="fw-bold mb-1" id="previewName">Tu Nombre</h3>
+                            <p class="text-primary mb-3" id="previewTitle">Tu Profesión</p>
+                            <p class="small text-muted mb-4" id="previewBio">Tu biografía aparecerá aquí. Cuéntale al mundo lo que haces.</p>
+
+                            <div class="social-icons-container" id="socialContainer">
+                                <!-- Icons added dynamically -->
+                            </div>
+
+                            <hr class="my-4 opacity-10">
+
+                            <h6 class="fw-bold text-start mb-3">Mi Portfolio</h6>
+                            <div class="portfolio-grid" id="portfolioPreview">
+                                <!-- Portfolio items -->
+                            </div>
+
+                            <hr class="my-4 opacity-10">
+
+                            <h6 class="fw-bold text-start mb-3">Trabajos Realizados</h6>
+                            <div class="before-after-container" id="baContainer" style="display: none;">
+                                <div class="ba-image ba-before" id="baBeforeImg"></div>
+                                <div class="ba-image ba-after" id="baAfterImg"></div>
+                                <input type="range" min="0" max="100" value="50" class="ba-slider" id="baSlider">
+                            </div>
+
+                            <div class="qr-section" id="qrSection">
+                                <div id="qrcode"></div>
+                                <button class="btn btn-sm btn-outline-light w-100" id="downloadQR">
+                                    <i class="bi bi-download me-2"></i>Descargar QR .PNG
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script src="./assets/js/theme.js"></script>
+    <script src="./assets/js/supabase_logic.js"></script>
+
+    <script>
+        let currentUser = null;
+        let portfolioData = []; // Array of {url, resource_type}
+        let isPublicView = false;
+        let targetUserId = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            targetUserId = urlParams.get('user_id');
+            isPublicView = !!targetUserId;
+
+            await renderUserMenu('authButtons');
+            currentUser = await getLoggedInUser();
+
+            if (isPublicView) {
+                document.getElementById('editorColumn').style.display = 'none';
+                document.getElementById('previewColumn').className = 'col-lg-12';
+                document.getElementById('previewTitleHeader').style.display = 'none';
+                document.getElementById('backBtn').href = './restaurantapp.html';
+                document.getElementById('qrSection').style.display = 'none';
+                loadCardConfig(targetUserId);
+            } else {
+                if (!currentUser) {
+                    window.location.href = './login.html';
+                    return;
+                }
+
+                initDragAndDrop();
+                initRealTimePreview();
+                initQR();
+                initBeforeAfter();
+                initSocials();
+                initProfileUpload();
+                initHeaderColor();
+                loadCardConfig(currentUser.id);
+
+                document.getElementById('saveCardBtn').onclick = saveCardConfig;
+            }
+        });
+
+        function initDragAndDrop() {
+            const portfolioPreview = document.getElementById('portfolioPreview');
+            const uploadZone = document.getElementById('portfolioUploadZone');
+            const fileInput = document.getElementById('portfolioInput');
+
+            new Sortable(portfolioPreview, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: function() {
+                    updatePortfolioArray();
+                }
+            });
+
+            uploadZone.onclick = () => fileInput.click();
+            uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+            uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+            uploadZone.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('drag-over');
+                if (e.dataTransfer.files.length) handlePortfolioFiles(e.dataTransfer.files);
+            });
+
+            fileInput.onchange = () => {
+                if (fileInput.files.length) handlePortfolioFiles(fileInput.files);
+            };
+        }
+
+        async function handlePortfolioFiles(files) {
+            const status = document.getElementById('portfolioUploadZone').querySelector('p');
+            status.textContent = "Subiendo archivos...";
+
+            for (let file of files) {
+                try {
+                    const res = await uploadToCloudinary(file);
+                    addPortfolioItem(res.url, res.resource_type);
+                } catch (err) {
+                    alert("Error al subir: " + err.message);
+                }
+            }
+            status.textContent = "Haz clic o arrastra archivos aquí";
+        }
+
+        function addPortfolioItem(url, type) {
+            const div = document.createElement('div');
+            div.className = 'portfolio-item';
+            div.setAttribute('data-type', type);
+
+            let mediaHtml = type === 'video'
+                ? `<video src="${url}" muted loop playsinline style="width:100%; height:100%; object-fit:cover;"></video>`
+                : `<img src="${url}">`;
+
+            div.innerHTML = mediaHtml + (isPublicView ? '' : `
+                <button class="btn btn-sm btn-danger position-absolute top-0 end-0 p-1" onclick="this.parentElement.remove(); updatePortfolioArray();">
+                    <i class="bi bi-x"></i>
+                </button>
+            `);
+
+            if (type === 'video') {
+                div.onmouseenter = () => div.querySelector('video').play();
+                div.onmouseleave = () => div.querySelector('video').pause();
+            }
+
+            document.getElementById('portfolioPreview').appendChild(div);
+            if (!isPublicView) updatePortfolioArray();
+        }
+
+        function updatePortfolioArray() {
+            const items = document.querySelectorAll('#portfolioPreview .portfolio-item');
+            portfolioData = Array.from(items).map(item => {
+                const media = item.querySelector('img, video');
+                return {
+                    url: media.src,
+                    resource_type: item.getAttribute('data-type')
+                };
+            });
+        }
+
+        function initBeforeAfter() {
+            const beforeInput = document.getElementById('beforeInput');
+            const afterInput = document.getElementById('afterInput');
+            const baSlider = document.getElementById('baSlider');
+            const baAfterImg = document.getElementById('baAfterImg');
+            const baContainer = document.getElementById('baContainer');
+
+            beforeInput.onchange = async () => {
+                if (beforeInput.files.length) {
+                    const res = await uploadToCloudinary(beforeInput.files[0]);
+                    document.getElementById('baBeforeImg').style.backgroundImage = `url(${res.url})`;
+                    checkBAVisibility();
+                }
+            };
+
+            afterInput.onchange = async () => {
+                if (afterInput.files.length) {
+                    const res = await uploadToCloudinary(afterInput.files[0]);
+                    document.getElementById('baAfterImg').style.backgroundImage = `url(${res.url})`;
+                    checkBAVisibility();
+                }
+            };
+
+            baSlider.oninput = (e) => { baAfterImg.style.width = e.target.value + "%"; };
+
+            function checkBAVisibility() {
+                if (document.getElementById('baBeforeImg').style.backgroundImage &&
+                    document.getElementById('baAfterImg').style.backgroundImage) {
+                    baContainer.style.display = 'block';
+                }
+            }
+        }
+
+        function initSocials() {
+            const ids = ['inputFB', 'inputIG', 'inputLI', 'inputWA'];
+            ids.forEach(id => document.getElementById(id).addEventListener('input', updateSocialIcons));
+
+            function updateSocialIcons() {
+                const container = document.getElementById('socialContainer');
+                container.innerHTML = '';
+                const map = { inputFB: 'bi-facebook', inputIG: 'bi-instagram', inputLI: 'bi-linkedin', inputWA: 'bi-whatsapp' };
+                ids.forEach(id => {
+                    const val = document.getElementById(id).value;
+                    if (val) {
+                        const a = document.createElement('a');
+                        a.href = val.startsWith('http') ? val : (id === 'inputWA' ? `https://wa.me/${val.replace(/\D/g,'')}` : `https://${val}`);
+                        a.target = '_blank';
+                        a.className = 'social-icon';
+                        a.innerHTML = `<i class="bi ${map[id]}"></i>`;
+                        container.appendChild(a);
+                    }
+                });
+            }
+        }
+
+        function initHeaderColor() {
+            const input = document.getElementById('inputHeaderColor');
+            const header = document.getElementById('headerDesign');
+            input.addEventListener('input', (e) => { header.style.background = e.target.value; });
+        }
+
+        function initProfileUpload() {
+            const profileBtn = document.getElementById('profileBtn');
+            const profileInput = document.getElementById('profileInput');
+            const profileImg = document.getElementById('profileImg');
+
+            profileBtn.onclick = () => { if(!isPublicView) profileInput.click(); };
+            profileInput.onchange = async () => {
+                if (profileInput.files.length) {
+                    try {
+                        const res = await uploadToCloudinary(profileInput.files[0]);
+                        profileImg.src = res.url;
+                    } catch (err) { alert("Error: " + err.message); }
+                }
+            };
+        }
+
+        async function loadCardConfig(userId) {
+            try {
+                const { data, error } = await supabaseClient.from('digital_cards').select('*').eq('user_id', userId).single();
+                if (error && error.code !== 'PGRST116') throw error;
+                if (data) {
+                    if (!isPublicView) {
+                        document.getElementById('inputName').value = data.header_config.name || '';
+                        document.getElementById('inputTitle').value = data.header_config.title || '';
+                        document.getElementById('inputBio').value = data.header_config.bio || '';
+                        document.getElementById('inputHeaderColor').value = data.header_config.header_color || '#667eea';
+                    }
+                    document.getElementById('previewName').textContent = data.header_config.name || 'Tu Nombre';
+                    document.getElementById('previewTitle').textContent = data.header_config.title || 'Tu Profesión';
+                    document.getElementById('previewBio').textContent = data.header_config.bio || '';
+                    document.getElementById('profileImg').src = data.header_config.profile_url || 'https://via.placeholder.com/150';
+                    document.getElementById('headerDesign').style.background = data.header_config.header_color || '#667eea';
+
+                    document.getElementById('portfolioPreview').innerHTML = '';
+                    data.portfolio.forEach(item => {
+                        const url = typeof item === 'string' ? item : item.url;
+                        const type = typeof item === 'string' ? 'image' : item.resource_type;
+                        addPortfolioItem(url, type);
+                    });
+
+                    const sm = data.social_media;
+                    if (!isPublicView) {
+                        document.getElementById('inputFB').value = sm.facebook || '';
+                        document.getElementById('inputIG').value = sm.instagram || '';
+                        document.getElementById('inputLI').value = sm.linkedin || '';
+                        document.getElementById('inputWA').value = sm.whatsapp || '';
+                    }
+
+                    const container = document.getElementById('socialContainer');
+                    container.innerHTML = '';
+                    const items = [{v:sm.facebook,i:'bi-facebook'},{v:sm.instagram,i:'bi-instagram'},{v:sm.linkedin,i:'bi-linkedin'},{v:sm.whatsapp,i:'bi-whatsapp',w:true}];
+                    items.forEach(s => {
+                        if (s.v) {
+                            const a = document.createElement('a');
+                            a.href = s.v.startsWith('http') ? s.v : (s.w ? `https://wa.me/${s.v.replace(/\D/g,'')}` : `https://${s.v}`);
+                            a.target = '_blank'; a.className = 'social-icon'; a.innerHTML = `<i class="bi ${s.i}"></i>`;
+                            container.appendChild(a);
+                        }
+                    });
+
+                    if (data.before_after && data.before_after.length === 2) {
+                        document.getElementById('baBeforeImg').style.backgroundImage = `url(${data.before_after[0]})`;
+                        document.getElementById('baAfterImg').style.backgroundImage = `url(${data.before_after[1]})`;
+                        document.getElementById('baContainer').style.display = 'block';
+                    }
+                }
+            } catch (err) { console.error("Error loading config:", err); }
+        }
+
+        async function saveCardConfig() {
+            const btn = document.getElementById('saveCardBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
+
+            const config = {
+                user_id: currentUser.id,
+                header_config: {
+                    name: document.getElementById('inputName').value,
+                    title: document.getElementById('inputTitle').value,
+                    bio: document.getElementById('inputBio').value,
+                    profile_url: document.getElementById('profileImg').src,
+                    header_color: document.getElementById('inputHeaderColor').value
+                },
+                portfolio: portfolioData,
+                social_media: {
+                    facebook: document.getElementById('inputFB').value,
+                    instagram: document.getElementById('inputIG').value,
+                    linkedin: document.getElementById('inputLI').value,
+                    whatsapp: document.getElementById('inputWA').value
+                },
+                before_after: [
+                    document.getElementById('baBeforeImg').style.backgroundImage.replace(/url\(['"]?(.*?)['"]?\)/, '$1'),
+                    document.getElementById('baAfterImg').style.backgroundImage.replace(/url\(['"]?(.*?)['"]?\)/, '$1')
+                ].filter(url => url && url !== 'none'),
+                updated_at: new Date()
+            };
+
+            try {
+                const { error } = await supabaseClient.from('digital_cards').upsert(config, { onConflict: 'user_id' });
+                if (error) throw error;
+                alert("¡Tarjeta guardada con éxito!");
+                initQR();
+            } catch (err) { alert("Error al guardar: " + err.message); }
+            finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-save me-2"></i>Guardar Configuración'; }
+        }
+
+        function initRealTimePreview() {
+            ['inputName', 'inputTitle', 'inputBio'].forEach(id => {
+                document.getElementById(id).addEventListener('input', (e) => {
+                    document.getElementById(id.replace('input', 'preview')).textContent = e.target.value || document.getElementById(id).placeholder;
+                });
+            });
+        }
+
+        function initQR() {
+            const qrContainer = document.getElementById("qrcode");
+            const downloadBtn = document.getElementById("downloadQR");
+            function updateQR() {
+                qrContainer.innerHTML = '';
+                const url = window.location.origin + window.location.pathname + "?user_id=" + currentUser.id;
+                new QRCode(qrContainer, { text: url, width: 150, height: 150, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
+            }
+            downloadBtn.onclick = () => {
+                const qrImg = qrContainer.querySelector('img');
+                const canvas = qrContainer.querySelector('canvas');
+                const link = document.createElement('a');
+                link.download = 'mi-tarjeta-qr.png';
+                link.href = qrImg ? qrImg.src : canvas.toDataURL("image/png");
+                link.click();
+            };
+            updateQR();
+        }
+    </script>
+</body>
+
+</html>
