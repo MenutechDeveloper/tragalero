@@ -421,6 +421,7 @@
         setupColorSync('resBgColor', 'resBgText');
         setupColorSync('resTextColor', 'resTextText');
 
+
         function ensureHttps(url) {
             if (!url) return '';
             url = url.trim();
@@ -470,23 +471,12 @@
                 let logoUrl = '';
 
                 if (logoFile) {
-                    const fileExt = logoFile.name.split('.').pop();
-                    const fileName = `${Math.random()}.${fileExt}`;
-                    const filePath = `${fileName}`;
-
-                    const { error: uploadError } = await supabaseClient
-                        .storage
-                        .from('logos')
-                        .upload(filePath, logoFile);
-
-                    if (uploadError) throw uploadError;
-
-                    const { data: publicUrlData } = supabaseClient
-                        .storage
-                        .from('logos')
-                        .getPublicUrl(filePath);
-
-                    logoUrl = publicUrlData.publicUrl;
+                    try {
+                        const uploadRes = await uploadToCloudinary(logoFile);
+                        logoUrl = uploadRes.url;
+                    } catch (uploadError) {
+                        throw new Error("Error al subir la imagen: " + uploadError.message);
+                    }
                 }
 
                 const bizData = {

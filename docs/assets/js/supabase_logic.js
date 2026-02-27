@@ -208,3 +208,40 @@ async function renderUserMenu(containerId = 'authButtons') {
         });
     }
 }
+
+/**
+ * Shared Cloudinary Upload logic
+ * Supports images and videos
+ */
+async function uploadToCloudinary(file) {
+    const cloudName = "dbbjxhvz5";
+    const uploadPreset = "Tragalero";
+    // Using 'auto' instead of 'image' to support video/image automatically
+    const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", uploadPreset);
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || "Error al subir a Cloudinary");
+        }
+
+        const data = await response.json();
+        // Return both secure_url and resource_type for better handling
+        return {
+            url: data.secure_url,
+            resource_type: data.resource_type
+        };
+    } catch (err) {
+        console.error("Cloudinary upload error:", err);
+        throw err;
+    }
+}
