@@ -1,17 +1,17 @@
 -- ==========================================================
--- SQL DE RESTAURACIÓN ORIGINAL - TRAGALERO
+-- SQL DE REPARACIÓN Y RESTAURACIÓN ORIGINAL
 -- ==========================================================
--- Ejecuta este script para volver a activar el RLS y las políticas
--- de seguridad originales en tu base de datos de Supabase.
+-- Usa este script si las tablas ya existen y solo quieres
+-- restaurar la seguridad (RLS) y las reglas originales.
 
 DO $$
 BEGIN
-  -- 1. Asegurar que las tablas tengan el RLS ACTIVADO
+  -- 1. Activar RLS en todas las tablas (no da error si ya está activo)
   ALTER TABLE public.directory_users ENABLE ROW LEVEL SECURITY;
   ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
   ALTER TABLE public.bento_grid ENABLE ROW LEVEL SECURITY;
 
-  -- 2. Limpiar políticas experimentales anteriores
+  -- 2. Limpiar políticas anteriores para evitar duplicados
   DROP POLICY IF EXISTS "Users can view their own profile" ON public.directory_users;
   DROP POLICY IF EXISTS "Admins have full access to directory_users" ON public.directory_users;
   DROP POLICY IF EXISTS "Anyone can view visible businesses" ON public.businesses;
@@ -21,7 +21,7 @@ BEGIN
   DROP POLICY IF EXISTS "Users can manage their own bento grid" ON public.bento_grid;
   DROP POLICY IF EXISTS "Admins have full access to bento_grid" ON public.bento_grid;
 
-  -- 3. Crear Función de Seguridad DEFINER (Para evitar recursión infinita en RLS)
+  -- 3. Crear Función de Seguridad Segura (Evita errores de esquema circular)
   CREATE OR REPLACE FUNCTION public.check_is_admin()
   RETURNS BOOLEAN AS $f$
   BEGIN
@@ -32,38 +32,31 @@ BEGIN
   END;
   $f$ LANGUAGE plpgsql SECURITY DEFINER;
 
-  -- 4. Re-crear Políticas para directory_users
+  -- 4. Re-crear Políticas Originales (directory_users)
   CREATE POLICY "Users can view their own profile" ON public.directory_users FOR SELECT USING (auth.uid() = id);
   CREATE POLICY "Admins have full access to directory_users" ON public.directory_users FOR ALL USING (public.check_is_admin());
 
-  -- 5. Re-crear Políticas para businesses
+  -- 5. Re-crear Políticas Originales (businesses)
   CREATE POLICY "Anyone can view visible businesses" ON public.businesses FOR SELECT USING (is_visible = TRUE);
   CREATE POLICY "Owners can view their own businesses" ON public.businesses FOR SELECT USING (auth.uid() = owner_id);
   CREATE POLICY "Owners can manage their own businesses" ON public.businesses FOR ALL USING (auth.uid() = owner_id);
   CREATE POLICY "Admins have full access to businesses" ON public.businesses FOR ALL USING (public.check_is_admin());
 
-  -- 6. Re-crear Políticas para bento_grid
+  -- 6. Re-crear Políticas Originales (bento_grid)
   CREATE POLICY "Users can manage their own bento grid" ON public.bento_grid FOR ALL USING (auth.uid() = user_id);
   CREATE POLICY "Admins have full access to bento_grid" ON public.bento_grid FOR ALL USING (public.check_is_admin());
 
-  -- 7. Restaurar el Trigger de creación de perfiles original
-  CREATE OR REPLACE FUNCTION public.handle_new_user()
-  RETURNS TRIGGER AS $func$
+  -- 7. Restaurar Trigger Original
+  CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS TRIGGER AS $func$
   BEGIN
       INSERT INTO public.directory_users (id, name, role)
-      VALUES (
-          NEW.id,
-          COALESCE(NEW.raw_user_meta_data->>'username', NEW.raw_user_meta_data->>'full_name', NEW.email),
-          'Owner'
-      );
+      VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'username', NEW.raw_user_meta_data->>'full_name', NEW.email), 'Owner');
       RETURN NEW;
   END;
   $func$ LANGUAGE plpgsql SECURITY DEFINER;
 
   DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-  CREATE TRIGGER on_auth_user_created
-      AFTER INSERT ON auth.users
-      FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+  CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
-  RAISE NOTICE 'Seguridad RLS y políticas originales restauradas con éxito.';
+  RAISE NOTICE 'Seguridad restaurada con éxito.';
 END $$;
