@@ -62,45 +62,53 @@ ALTER TABLE businesses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bento_grid ENABLE ROW LEVEL SECURITY;
 
 -- 5. RLS Policies for directory_users
+-- 5. Helper function for safe Admin check (prevents recursion)
+CREATE OR REPLACE FUNCTION public.check_is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.directory_users
+        WHERE id = auth.uid() AND role = 'Admin'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- 6. RLS Policies for directory_users
+DROP POLICY IF EXISTS "Users can view their own profile" ON directory_users;
 CREATE POLICY "Users can view their own profile" ON directory_users
     FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Admins have full access to directory_users" ON directory_users;
 CREATE POLICY "Admins have full access to directory_users" ON directory_users
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM directory_users WHERE id = auth.uid() AND role = 'Admin'
-        )
-    );
+    FOR ALL USING (public.check_is_admin());
 
--- 6. RLS Policies for businesses
+-- 7. RLS Policies for businesses
+DROP POLICY IF EXISTS "Anyone can view visible businesses" ON businesses;
 CREATE POLICY "Anyone can view visible businesses" ON businesses
     FOR SELECT USING (is_visible = TRUE);
 
+DROP POLICY IF EXISTS "Owners can view their own businesses" ON businesses;
 CREATE POLICY "Owners can view their own businesses" ON businesses
     FOR SELECT USING (auth.uid() = owner_id);
 
+DROP POLICY IF EXISTS "Owners can manage their own businesses" ON businesses;
 CREATE POLICY "Owners can manage their own businesses" ON businesses
     FOR ALL USING (auth.uid() = owner_id);
 
+DROP POLICY IF EXISTS "Admins have full access to businesses" ON businesses;
 CREATE POLICY "Admins have full access to businesses" ON businesses
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM directory_users WHERE id = auth.uid() AND role = 'Admin'
-        )
-    );
+    FOR ALL USING (public.check_is_admin());
 
--- 7. RLS Policies for bento_grid
+-- 8. RLS Policies for bento_grid
+DROP POLICY IF EXISTS "Users can manage their own bento grid" ON bento_grid;
 CREATE POLICY "Users can manage their own bento grid" ON bento_grid
     FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins have full access to bento_grid" ON bento_grid;
 CREATE POLICY "Admins have full access to bento_grid" ON bento_grid
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM directory_users WHERE id = auth.uid() AND role = 'Admin'
-        )
-    );
+    FOR ALL USING (public.check_is_admin());
 
--- 8. Trigger to automatically create a profile in directory_users on signup
+-- 9. Trigger to automatically create a profile in directory_users on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -109,12 +117,14 @@ BEGIN
         NEW.id,
         COALESCE(NEW.raw_user_meta_data->>'username', NEW.raw_user_meta_data->>'full_name', NEW.email),
         'Owner'
-    );
+    )
+    ON CONFLICT (id) DO NOTHING;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
-CREATE OR REPLACE TRIGGER on_auth_user_created
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
