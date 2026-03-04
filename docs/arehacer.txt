@@ -1,7 +1,40 @@
--- SQL Setup for Tragalero Directory
--- This script recreates the schema and implements RLS policies for the new Supabase project.
+-- ==========================================================
+-- SCRIPT DE REPARACIÓN INTEGRAL PARA SUPABASE - TRAGALERO
+-- ==========================================================
+-- Este script limpia, recrea y asegura que el esquema sea funcional.
+-- Ejecútalo en el SQL Editor de Supabase.
 
--- 1. Create the directory_users table (linking to Supabase Auth)
+-- 0. ELIMINAR USUARIOS PROBLEMÁTICOS (LIMPIEZA)
+-- Cambia los correos abajo si necesitas eliminar cuentas específicas para re-crearlas.
+DO $$
+DECLARE
+    emails_to_delete TEXT[] := ARRAY['ejemplo@correo.com', 'otro@correo.com']; -- AGREGA AQUÍ LOS CORREOS
+    e TEXT;
+BEGIN
+    FOREACH e IN ARRAY emails_to_delete
+    LOOP
+        DELETE FROM auth.users WHERE email = e;
+    END LOOP;
+END $$;
+
+-- 1. EXTENSIONES Y FUNCIONES DE APOYO
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Función segura para verificar si es Admin (EVITA RECURSIVIDAD RLS)
+-- El error "Database error querying schema" ocurre cuando una política se consulta a sí misma infinitamente.
+CREATE OR REPLACE FUNCTION public.check_is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.directory_users
+        WHERE id = auth.uid() AND role = 'Admin'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- 2. TABLAS DEL SISTEMA (IDEMPOTENTE)
+
+-- Tabla de Usuarios del Directorio
 CREATE TABLE IF NOT EXISTS public.directory_users (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT UNIQUE NOT NULL,
@@ -11,7 +44,7 @@ CREATE TABLE IF NOT EXISTS public.directory_users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 2. Create the businesses table
+-- Tabla de Negocios
 CREATE TABLE IF NOT EXISTS public.businesses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
@@ -43,7 +76,7 @@ CREATE TABLE IF NOT EXISTS public.businesses (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3. Create the bento_grid table
+-- Tabla de Bento Grid (Panel de Control Visual)
 CREATE TABLE IF NOT EXISTS public.bento_grid (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES public.directory_users(id) ON DELETE CASCADE,
@@ -56,7 +89,7 @@ CREATE TABLE IF NOT EXISTS public.bento_grid (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. Create the digital_cards table
+-- Tabla de Tarjetas Digitales
 CREATE TABLE IF NOT EXISTS public.digital_cards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES public.directory_users(id) ON DELETE CASCADE,
@@ -70,24 +103,15 @@ CREATE TABLE IF NOT EXISTS public.digital_cards (
     UNIQUE(user_id)
 );
 
--- 5. Helper function for safe Admin check (prevents recursion)
-CREATE OR REPLACE FUNCTION public.check_is_admin()
-RETURNS BOOLEAN AS $$
-BEGIN
-    RETURN EXISTS (
-        SELECT 1 FROM public.directory_users
-        WHERE id = auth.uid() AND role = 'Admin'
-    );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+-- 3. SEGURIDAD (RLS)
 
--- 6. Enable Row Level Security (RLS)
+-- Habilitar RLS en todas las tablas
 ALTER TABLE public.directory_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bento_grid ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.digital_cards ENABLE ROW LEVEL SECURITY;
 
--- 7. RLS Policies for directory_users
+-- Políticas para directory_users
 DROP POLICY IF EXISTS "Users can view their own profile" ON public.directory_users;
 CREATE POLICY "Users can view their own profile" ON public.directory_users
     FOR SELECT USING (auth.uid() = id);
@@ -96,7 +120,7 @@ DROP POLICY IF EXISTS "Admins have full access to directory_users" ON public.dir
 CREATE POLICY "Admins have full access to directory_users" ON public.directory_users
     FOR ALL USING (public.check_is_admin());
 
--- 8. RLS Policies for businesses
+-- Políticas para businesses
 DROP POLICY IF EXISTS "Anyone can view visible businesses" ON public.businesses;
 CREATE POLICY "Anyone can view visible businesses" ON public.businesses
     FOR SELECT USING (is_visible = TRUE);
@@ -113,7 +137,7 @@ DROP POLICY IF EXISTS "Admins have full access to businesses" ON public.business
 CREATE POLICY "Admins have full access to businesses" ON public.businesses
     FOR ALL USING (public.check_is_admin());
 
--- 9. RLS Policies for bento_grid
+-- Políticas para bento_grid
 DROP POLICY IF EXISTS "Users can manage their own bento grid" ON public.bento_grid;
 CREATE POLICY "Users can manage their own bento grid" ON public.bento_grid
     FOR ALL USING (auth.uid() = user_id);
@@ -122,7 +146,7 @@ DROP POLICY IF EXISTS "Admins have full access to bento_grid" ON public.bento_gr
 CREATE POLICY "Admins have full access to bento_grid" ON public.bento_grid
     FOR ALL USING (public.check_is_admin());
 
--- 10. RLS Policies for digital_cards
+-- Políticas para digital_cards
 DROP POLICY IF EXISTS "Public can view digital cards" ON public.digital_cards;
 CREATE POLICY "Public can view digital cards" ON public.digital_cards
     FOR SELECT USING (TRUE);
@@ -135,7 +159,9 @@ DROP POLICY IF EXISTS "Admins have full access to digital_cards" ON public.digit
 CREATE POLICY "Admins have full access to digital_cards" ON public.digital_cards
     FOR ALL USING (public.check_is_admin());
 
--- 11. Trigger to automatically create a profile in directory_users on signup
+-- 4. DISPARADORES (TRIGGERS) PARA AUTOMATIZACIÓN
+
+-- Sincronizar auth.users con public.directory_users al registrarse
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -155,3 +181,7 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 5. RECARGA DE ESQUEMA POSTGREST (IMPORTANTE)
+-- Si el error "Database error querying schema" persiste después de correr esto:
+-- Ve a "Settings" -> "API" y haz clic en "Reload PostgREST schema".
