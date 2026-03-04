@@ -4,12 +4,19 @@
 -- 1. Create the directory_users table (linking to Supabase Auth)
 CREATE TABLE IF NOT EXISTS public.directory_users (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    name TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
     role TEXT DEFAULT 'Owner' CHECK (role IN ('Owner', 'Admin')),
     is_active BOOLEAN DEFAULT TRUE,
     max_businesses INTEGER DEFAULT 1,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'directory_users_name_key') THEN
+        ALTER TABLE public.directory_users ADD CONSTRAINT directory_users_name_key UNIQUE (name);
+    END IF;
+END $$;
 
 -- 2. Create the businesses table
 CREATE TABLE IF NOT EXISTS public.businesses (
@@ -87,66 +94,61 @@ ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bento_grid ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.digital_cards ENABLE ROW LEVEL SECURITY;
 
--- 7. RLS Policies for directory_users
-DROP POLICY IF EXISTS "Users can view their own profile" ON public.directory_users;
-CREATE POLICY "Users can view their own profile" ON public.directory_users
-    FOR SELECT USING (auth.uid() = id);
+-- 7. Secure RLS Policies
+DROP POLICY IF EXISTS "Public profile view" ON public.directory_users;
+CREATE POLICY "Public profile view" ON public.directory_users FOR SELECT USING (TRUE);
 
-DROP POLICY IF EXISTS "Admins have full access to directory_users" ON public.directory_users;
-CREATE POLICY "Admins have full access to directory_users" ON public.directory_users
-    FOR ALL USING (public.check_is_admin());
+DROP POLICY IF EXISTS "Self manage profile" ON public.directory_users;
+CREATE POLICY "Self manage profile" ON public.directory_users FOR ALL USING (auth.uid() = id);
 
--- 8. RLS Policies for businesses
-DROP POLICY IF EXISTS "Anyone can view visible businesses" ON public.businesses;
-CREATE POLICY "Anyone can view visible businesses" ON public.businesses
-    FOR SELECT USING (is_visible = TRUE);
+DROP POLICY IF EXISTS "Admin full access users" ON public.directory_users;
+CREATE POLICY "Admin full access users" ON public.directory_users FOR ALL USING (public.check_is_admin());
 
-DROP POLICY IF EXISTS "Owners can view their own businesses" ON public.businesses;
-CREATE POLICY "Owners can view their own businesses" ON public.businesses
-    FOR SELECT USING (auth.uid() = owner_id);
+DROP POLICY IF EXISTS "Public business view" ON public.businesses;
+CREATE POLICY "Public business view" ON public.businesses FOR SELECT USING (is_visible = TRUE);
 
-DROP POLICY IF EXISTS "Owners can manage their own businesses" ON public.businesses;
-CREATE POLICY "Owners can manage their own businesses" ON public.businesses
-    FOR ALL USING (auth.uid() = owner_id);
+DROP POLICY IF EXISTS "Owner manage business" ON public.businesses;
+CREATE POLICY "Owner manage business" ON public.businesses FOR ALL USING (auth.uid() = owner_id);
 
-DROP POLICY IF EXISTS "Admins have full access to businesses" ON public.businesses;
-CREATE POLICY "Admins have full access to businesses" ON public.businesses
-    FOR ALL USING (public.check_is_admin());
+DROP POLICY IF EXISTS "Admin full access business" ON public.businesses;
+CREATE POLICY "Admin full access business" ON public.businesses FOR ALL USING (public.check_is_admin());
 
--- 9. RLS Policies for bento_grid
-DROP POLICY IF EXISTS "Users can manage their own bento grid" ON public.bento_grid;
-CREATE POLICY "Users can manage their own bento grid" ON public.bento_grid
-    FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Owner manage grid" ON public.bento_grid;
+CREATE POLICY "Owner manage grid" ON public.bento_grid FOR ALL USING (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "Admins have full access to bento_grid" ON public.bento_grid;
-CREATE POLICY "Admins have full access to bento_grid" ON public.bento_grid
-    FOR ALL USING (public.check_is_admin());
+DROP POLICY IF EXISTS "Admin full access grid" ON public.bento_grid;
+CREATE POLICY "Admin full access grid" ON public.bento_grid FOR ALL USING (public.check_is_admin());
 
--- 10. RLS Policies for digital_cards
-DROP POLICY IF EXISTS "Public can view digital cards" ON public.digital_cards;
-CREATE POLICY "Public can view digital cards" ON public.digital_cards
-    FOR SELECT USING (TRUE);
+DROP POLICY IF EXISTS "Public card view" ON public.digital_cards;
+CREATE POLICY "Public card view" ON public.digital_cards FOR SELECT USING (TRUE);
 
-DROP POLICY IF EXISTS "Users can manage their own digital card" ON public.digital_cards;
-CREATE POLICY "Users can manage their own digital card" ON public.digital_cards
-    FOR ALL USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Owner manage card" ON public.digital_cards;
+CREATE POLICY "Owner manage card" ON public.digital_cards FOR ALL USING (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "Admins have full access to digital_cards" ON public.digital_cards;
-CREATE POLICY "Admins have full access to digital_cards" ON public.digital_cards
-    FOR ALL USING (public.check_is_admin());
+DROP POLICY IF EXISTS "Admin full access card" ON public.digital_cards;
+CREATE POLICY "Admin full access card" ON public.digital_cards FOR ALL USING (public.check_is_admin());
 
--- 11. Trigger to automatically create a profile in directory_users on signup
+-- 8. Trigger to automatically create a profile in directory_users on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+    base_name TEXT;
+    final_name TEXT;
+    counter INTEGER := 0;
 BEGIN
+    base_name := COALESCE(NEW.raw_user_meta_data->>'username', NEW.raw_user_meta_data->>'full_name', SPLIT_PART(NEW.email, '@', 1));
+    final_name := base_name;
+
+    WHILE EXISTS (SELECT 1 FROM public.directory_users WHERE name = final_name) LOOP
+        counter := counter + 1;
+        final_name := base_name || counter;
+    END LOOP;
+
     INSERT INTO public.directory_users (id, name, role)
-    VALUES (
-        NEW.id,
-        COALESCE(NEW.raw_user_meta_data->>'username', NEW.raw_user_meta_data->>'full_name', SPLIT_PART(NEW.email, '@', 1)),
-        'Owner'
-    )
+    VALUES (NEW.id, final_name, 'Owner')
     ON CONFLICT (id) DO UPDATE SET
-        name = COALESCE(EXCLUDED.name, public.directory_users.name);
+        name = EXCLUDED.name;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
