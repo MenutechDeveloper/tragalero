@@ -430,7 +430,7 @@
                 // Get businesses from Supabase
                 const { data: businesses, error: bizError } = await supabaseClient
                     .from('businesses')
-                    .select('*, directory_users(name)');
+                    .select('*, usuarios(name)');
 
                 if (bizError) throw bizError;
 
@@ -450,7 +450,7 @@
                         </td>
                         <td><span class="badge bg-secondary">${escapeHtml(biz.category)}</span></td>
                         <td class="small">${escapeHtml(biz.city)}, ${escapeHtml(biz.state || '')}</td>
-                        <td class="small">${escapeHtml(biz.directory_users?.name || 'Sistema')}</td>
+                        <td class="small">${escapeHtml(biz.usuarios?.name || 'Sistema')}</td>
                         <td>
                             <div class="form-check form-switch">
                                 <input class="form-check-input biz-visibility-toggle" type="checkbox" data-id="${biz.id}" ${isVisible ? 'checked' : ''}>

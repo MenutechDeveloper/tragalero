@@ -5,7 +5,7 @@
 -- EJECUTAR ESTO EN EL "SQL EDITOR" DE SUPABASE.
 
 -- 0. LIMPIEZA TOTAL DE USUARIO ESPECÍFICO (PARA EMPEZAR DE CERO)
--- Esto elimina al usuario tanto de auth.users como de directory_users.
+-- Esto elimina al usuario tanto de auth.users como de usuarios.
 DO $$
 DECLARE
     target_email TEXT := 'francisco.menutech@gmail.com';
@@ -27,7 +27,7 @@ CREATE OR REPLACE FUNCTION public.check_is_admin()
 RETURNS BOOLEAN AS $$
 BEGIN
     RETURN EXISTS (
-        SELECT 1 FROM public.directory_users
+        SELECT 1 FROM public.usuarios
         WHERE id = auth.uid() AND role = 'Admin'
     );
 END;
@@ -36,7 +36,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 -- 2. TABLAS DEL SISTEMA (IDEMPOTENTE)
 
 -- Tabla de Usuarios
-CREATE TABLE IF NOT EXISTS public.directory_users (
+CREATE TABLE IF NOT EXISTS public.usuarios (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL, -- Eliminamos UNIQUE aquí para evitar fallos en el trigger, o manejamos el conflicto
     role TEXT DEFAULT 'Owner' CHECK (role IN ('Owner', 'Admin')),
@@ -48,8 +48,8 @@ CREATE TABLE IF NOT EXISTS public.directory_users (
 -- Asegurar que el nombre sea único pero de forma manejable
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'directory_users_name_key') THEN
-        ALTER TABLE public.directory_users ADD CONSTRAINT directory_users_name_key UNIQUE (name);
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'usuarios_name_key') THEN
+        ALTER TABLE public.usuarios ADD CONSTRAINT usuarios_name_key UNIQUE (name);
     END IF;
 END $$;
 
@@ -81,14 +81,14 @@ CREATE TABLE IF NOT EXISTS public.businesses (
     btn_bg_color TEXT DEFAULT '#f1c40f',
     btn_text_color TEXT DEFAULT '#ffffff',
     is_visible BOOLEAN DEFAULT TRUE,
-    owner_id UUID REFERENCES public.directory_users(id) ON DELETE SET NULL,
+    owner_id UUID REFERENCES public.usuarios(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Otras tablas
 CREATE TABLE IF NOT EXISTS public.bento_grid (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES public.directory_users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.usuarios(id) ON DELETE CASCADE,
     label TEXT NOT NULL,
     link_url TEXT,
     col_span INTEGER DEFAULT 1,
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS public.bento_grid (
 
 CREATE TABLE IF NOT EXISTS public.digital_cards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES public.directory_users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES public.usuarios(id) ON DELETE CASCADE,
     card_name TEXT,
     header_config JSONB DEFAULT '{}'::jsonb,
     portfolio JSONB DEFAULT '[]'::jsonb,
@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS public.digital_cards (
 );
 
 -- 3. SEGURIDAD (RLS)
-ALTER TABLE public.directory_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bento_grid ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.digital_cards ENABLE ROW LEVEL SECURITY;
@@ -128,9 +128,9 @@ BEGIN
 END $$;
 
 -- Nuevas Políticas Seguras
-CREATE POLICY "Public profile view" ON public.directory_users FOR SELECT USING (TRUE);
-CREATE POLICY "Self manage profile" ON public.directory_users FOR ALL USING (auth.uid() = id);
-CREATE POLICY "Admin full access users" ON public.directory_users FOR ALL USING (public.check_is_admin());
+CREATE POLICY "Public profile view" ON public.usuarios FOR SELECT USING (TRUE);
+CREATE POLICY "Self manage profile" ON public.usuarios FOR ALL USING (auth.uid() = id);
+CREATE POLICY "Admin full access users" ON public.usuarios FOR ALL USING (public.check_is_admin());
 
 CREATE POLICY "Public business view" ON public.businesses FOR SELECT USING (is_visible = TRUE);
 CREATE POLICY "Owner manage business" ON public.businesses FOR ALL USING (auth.uid() = owner_id);
@@ -156,12 +156,12 @@ BEGIN
     final_name := base_name;
 
     -- Bucle para encontrar un nombre único si ya existe
-    WHILE EXISTS (SELECT 1 FROM public.directory_users WHERE name = final_name) LOOP
+    WHILE EXISTS (SELECT 1 FROM public.usuarios WHERE name = final_name) LOOP
         counter := counter + 1;
         final_name := base_name || counter;
     END LOOP;
 
-    INSERT INTO public.directory_users (id, name, role)
+    INSERT INTO public.usuarios (id, name, role)
     VALUES (NEW.id, final_name, 'Owner')
     ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name;

@@ -77,9 +77,9 @@ async function getLoggedInUser() {
         return JSON.parse(localUser);
     }
 
-    // If not in session storage but authenticated in Supabase, fetch from directory_users
+    // If not in session storage but authenticated in Supabase, fetch from usuarios
     const { data: profile } = await supabaseClient
-        .from('directory_users')
+        .from('usuarios')
         .select('*')
         .eq('id', user.id)
         .single();

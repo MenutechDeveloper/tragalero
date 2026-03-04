@@ -13,15 +13,15 @@ CREATE OR REPLACE FUNCTION public.check_is_admin()
 RETURNS BOOLEAN AS $f$
 BEGIN
     RETURN EXISTS (
-        SELECT 1 FROM public.directory_users
+        SELECT 1 FROM public.usuarios
         WHERE id = auth.uid() AND role = 'Admin'
     );
 END;
 $f$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Actualizamos las políticas para usar la función segura
-DROP POLICY IF EXISTS "Admins have full access to directory_users" ON public.directory_users;
-CREATE POLICY "Admins have full access to directory_users" ON public.directory_users
+DROP POLICY IF EXISTS "Admins have full access to usuarios" ON public.usuarios;
+CREATE POLICY "Admins have full access to usuarios" ON public.usuarios
 FOR ALL USING (public.check_is_admin());
 
 DROP POLICY IF EXISTS "Admins have full access to businesses" ON public.businesses;
@@ -110,7 +110,7 @@ BEGIN
     END IF;
 
     -- 4. ASEGURAR PERFIL EN PUBLIC.DIRECTORY_USERS
-    INSERT INTO public.directory_users (id, name, role)
+    INSERT INTO public.usuarios (id, name, role)
     VALUES (target_user_id, user_name, 'Admin')
     ON CONFLICT (id) DO UPDATE SET role = 'Admin';
 

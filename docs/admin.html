@@ -560,7 +560,7 @@
 
                 try {
                     const { data: userData } = await sbClient
-                        .from('directory_users')
+                        .from('usuarios')
                         .select('name, businesses(name)')
                         .eq('id', targetUserId)
                         .single();

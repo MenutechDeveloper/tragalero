@@ -452,7 +452,7 @@
 
                     // Fetch user specific limit
                     const { data: userData, error: userError } = await supabaseClient
-                        .from('directory_users')
+                        .from('usuarios')
                         .select('max_businesses, is_active')
                         .eq('id', targetOwnerId)
                         .single();
