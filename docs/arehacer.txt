@@ -2,26 +2,27 @@
 -- SCRIPT DE REPARACIÓN INTEGRAL PARA SUPABASE - TRAGALERO
 -- ==========================================================
 -- Este script limpia, recrea y asegura que el esquema sea funcional.
--- Ejecútalo en el SQL Editor de Supabase.
+-- EJECUTAR ESTO EN EL "SQL EDITOR" DE SUPABASE.
 
--- 0. ELIMINAR USUARIOS PROBLEMÁTICOS (LIMPIEZA)
--- Cambia los correos abajo si necesitas eliminar cuentas específicas para re-crearlas.
+-- 0. LIMPIEZA TOTAL DE USUARIO ESPECÍFICO (PARA EMPEZAR DE CERO)
+-- Esto elimina al usuario tanto de auth.users como de directory_users.
 DO $$
 DECLARE
-    emails_to_delete TEXT[] := ARRAY['ejemplo@correo.com', 'otro@correo.com']; -- AGREGA AQUÍ LOS CORREOS
-    e TEXT;
+    target_email TEXT := 'francisco.menutech@gmail.com';
+    uid UUID;
 BEGIN
-    FOREACH e IN ARRAY emails_to_delete
-    LOOP
-        DELETE FROM auth.users WHERE email = e;
-    END LOOP;
+    SELECT id INTO uid FROM auth.users WHERE email = target_email;
+    IF uid IS NOT NULL THEN
+        DELETE FROM auth.users WHERE id = uid;
+        RAISE NOTICE 'Usuario % eliminado correctamente.', target_email;
+    END IF;
 END $$;
 
 -- 1. EXTENSIONES Y FUNCIONES DE APOYO
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Función segura para verificar si es Admin (EVITA RECURSIVIDAD RLS)
--- El error "Database error querying schema" ocurre cuando una política se consulta a sí misma infinitamente.
+-- El error "Database error querying schema" ocurre cuando una política se consulta a sí misma.
 CREATE OR REPLACE FUNCTION public.check_is_admin()
 RETURNS BOOLEAN AS $$
 BEGIN
@@ -34,15 +35,23 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- 2. TABLAS DEL SISTEMA (IDEMPOTENTE)
 
--- Tabla de Usuarios del Directorio
+-- Tabla de Usuarios
 CREATE TABLE IF NOT EXISTS public.directory_users (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    name TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL, -- Eliminamos UNIQUE aquí para evitar fallos en el trigger, o manejamos el conflicto
     role TEXT DEFAULT 'Owner' CHECK (role IN ('Owner', 'Admin')),
     is_active BOOLEAN DEFAULT TRUE,
     max_businesses INTEGER DEFAULT 1,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Asegurar que el nombre sea único pero de forma manejable
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'directory_users_name_key') THEN
+        ALTER TABLE public.directory_users ADD CONSTRAINT directory_users_name_key UNIQUE (name);
+    END IF;
+END $$;
 
 -- Tabla de Negocios
 CREATE TABLE IF NOT EXISTS public.businesses (
@@ -76,7 +85,7 @@ CREATE TABLE IF NOT EXISTS public.businesses (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Tabla de Bento Grid (Panel de Control Visual)
+-- Otras tablas
 CREATE TABLE IF NOT EXISTS public.bento_grid (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES public.directory_users(id) ON DELETE CASCADE,
@@ -89,7 +98,6 @@ CREATE TABLE IF NOT EXISTS public.bento_grid (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Tabla de Tarjetas Digitales
 CREATE TABLE IF NOT EXISTS public.digital_cards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES public.directory_users(id) ON DELETE CASCADE,
@@ -104,75 +112,60 @@ CREATE TABLE IF NOT EXISTS public.digital_cards (
 );
 
 -- 3. SEGURIDAD (RLS)
-
--- Habilitar RLS en todas las tablas
 ALTER TABLE public.directory_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bento_grid ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.digital_cards ENABLE ROW LEVEL SECURITY;
 
--- Políticas para directory_users
-DROP POLICY IF EXISTS "Users can view their own profile" ON public.directory_users;
-CREATE POLICY "Users can view their own profile" ON public.directory_users
-    FOR SELECT USING (auth.uid() = id);
+-- Limpieza de políticas antiguas
+DO $$
+DECLARE
+    pol record;
+BEGIN
+    FOR pol IN (SELECT policyname, tablename FROM pg_policies WHERE schemaname = 'public') LOOP
+        EXECUTE format('DROP POLICY IF EXISTS %I ON %I', pol.policyname, pol.tablename);
+    END LOOP;
+END $$;
 
-DROP POLICY IF EXISTS "Admins have full access to directory_users" ON public.directory_users;
-CREATE POLICY "Admins have full access to directory_users" ON public.directory_users
-    FOR ALL USING (public.check_is_admin());
+-- Nuevas Políticas Seguras
+CREATE POLICY "Public profile view" ON public.directory_users FOR SELECT USING (TRUE);
+CREATE POLICY "Self manage profile" ON public.directory_users FOR ALL USING (auth.uid() = id);
+CREATE POLICY "Admin full access users" ON public.directory_users FOR ALL USING (public.check_is_admin());
 
--- Políticas para businesses
-DROP POLICY IF EXISTS "Anyone can view visible businesses" ON public.businesses;
-CREATE POLICY "Anyone can view visible businesses" ON public.businesses
-    FOR SELECT USING (is_visible = TRUE);
+CREATE POLICY "Public business view" ON public.businesses FOR SELECT USING (is_visible = TRUE);
+CREATE POLICY "Owner manage business" ON public.businesses FOR ALL USING (auth.uid() = owner_id);
+CREATE POLICY "Admin full access business" ON public.businesses FOR ALL USING (public.check_is_admin());
 
-DROP POLICY IF EXISTS "Owners can view their own businesses" ON public.businesses;
-CREATE POLICY "Owners can view their own businesses" ON public.businesses
-    FOR SELECT USING (auth.uid() = owner_id);
+CREATE POLICY "Owner manage grid" ON public.bento_grid FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Admin full access grid" ON public.bento_grid FOR ALL USING (public.check_is_admin());
 
-DROP POLICY IF EXISTS "Owners can manage their own businesses" ON public.businesses;
-CREATE POLICY "Owners can manage their own businesses" ON public.businesses
-    FOR ALL USING (auth.uid() = owner_id);
+CREATE POLICY "Public card view" ON public.digital_cards FOR SELECT USING (TRUE);
+CREATE POLICY "Owner manage card" ON public.digital_cards FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Admin full access card" ON public.digital_cards FOR ALL USING (public.check_is_admin());
 
-DROP POLICY IF EXISTS "Admins have full access to businesses" ON public.businesses;
-CREATE POLICY "Admins have full access to businesses" ON public.businesses
-    FOR ALL USING (public.check_is_admin());
-
--- Políticas para bento_grid
-DROP POLICY IF EXISTS "Users can manage their own bento grid" ON public.bento_grid;
-CREATE POLICY "Users can manage their own bento grid" ON public.bento_grid
-    FOR ALL USING (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Admins have full access to bento_grid" ON public.bento_grid;
-CREATE POLICY "Admins have full access to bento_grid" ON public.bento_grid
-    FOR ALL USING (public.check_is_admin());
-
--- Políticas para digital_cards
-DROP POLICY IF EXISTS "Public can view digital cards" ON public.digital_cards;
-CREATE POLICY "Public can view digital cards" ON public.digital_cards
-    FOR SELECT USING (TRUE);
-
-DROP POLICY IF EXISTS "Users can manage their own digital card" ON public.digital_cards;
-CREATE POLICY "Users can manage their own digital card" ON public.digital_cards
-    FOR ALL USING (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Admins have full access to digital_cards" ON public.digital_cards;
-CREATE POLICY "Admins have full access to digital_cards" ON public.digital_cards
-    FOR ALL USING (public.check_is_admin());
-
--- 4. DISPARADORES (TRIGGERS) PARA AUTOMATIZACIÓN
-
--- Sincronizar auth.users con public.directory_users al registrarse
+-- 4. DISPARADOR DE REGISTRO (TRIGGER)
+-- Mejorado para evitar fallos por nombres duplicados
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+    base_name TEXT;
+    final_name TEXT;
+    counter INTEGER := 0;
 BEGIN
+    base_name := COALESCE(NEW.raw_user_meta_data->>'username', NEW.raw_user_meta_data->>'full_name', SPLIT_PART(NEW.email, '@', 1));
+    final_name := base_name;
+
+    -- Bucle para encontrar un nombre único si ya existe
+    WHILE EXISTS (SELECT 1 FROM public.directory_users WHERE name = final_name) LOOP
+        counter := counter + 1;
+        final_name := base_name || counter;
+    END LOOP;
+
     INSERT INTO public.directory_users (id, name, role)
-    VALUES (
-        NEW.id,
-        COALESCE(NEW.raw_user_meta_data->>'username', NEW.raw_user_meta_data->>'full_name', SPLIT_PART(NEW.email, '@', 1)),
-        'Owner'
-    )
+    VALUES (NEW.id, final_name, 'Owner')
     ON CONFLICT (id) DO UPDATE SET
-        name = COALESCE(EXCLUDED.name, public.directory_users.name);
+        name = EXCLUDED.name;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
@@ -182,6 +175,8 @@ CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 5. RECARGA DE ESQUEMA POSTGREST (IMPORTANTE)
--- Si el error "Database error querying schema" persiste después de correr esto:
--- Ve a "Settings" -> "API" y haz clic en "Reload PostgREST schema".
+-- 5. NOTA FINAL PARA EL USUARIO
+-- Si después de correr esto sigue el error:
+-- 1. Ve a "Settings" -> "API".
+-- 2. Clic en "Reload PostgREST schema".
+-- 3. Asegúrate de que no haya otros triggers personalizados en la tabla auth.users.
