@@ -198,7 +198,7 @@
             try {
                 // Fetch users and their businesses (linked by owner_id in businesses table)
                 const { data, error } = await supabaseClient
-                    .from('directory_users')
+                    .from('usuarios')
                     .select('*, businesses(name)')
                     .order('created_at', { ascending: false });
 
@@ -310,7 +310,7 @@
 
             try {
                 if (id) {
-                    const { error } = await supabaseClient.from('directory_users').update(userData).eq('id', id);
+                    const { error } = await supabaseClient.from('usuarios').update(userData).eq('id', id);
                     if (error) throw error;
                 } else {
                     alert("Para crear un nuevo usuario, utiliza Supabase Auth (Sign Up). El trigger creará el perfil automáticamente.");
@@ -325,7 +325,7 @@
 
         async function toggleUserStatus(id, active) {
             try {
-                const { error } = await supabaseClient.from('directory_users').update({ is_active: active }).eq('id', id);
+                const { error } = await supabaseClient.from('usuarios').update({ is_active: active }).eq('id', id);
                 if (error) throw error;
             } catch (err) {
                 alert("Error: " + err.message);
@@ -336,7 +336,7 @@
         async function deleteUser(id) {
             if (!confirm("¿Estás seguro de eliminar este usuario? Se perderán permanentemente todos sus negocios registrados y su configuración de panel (Bento Grid).")) return;
             try {
-                const { error } = await supabaseClient.from('directory_users').delete().eq('id', id);
+                const { error } = await supabaseClient.from('usuarios').delete().eq('id', id);
                 if (error) throw error;
                 loadUsers();
             } catch (err) {

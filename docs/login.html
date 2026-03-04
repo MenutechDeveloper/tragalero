@@ -165,7 +165,7 @@
                 if (error) throw error;
 
                 const { data: profile, error: profileError } = await supabaseClient
-                    .from('directory_users')
+                    .from('usuarios')
                     .select('*')
                     .eq('id', data.user.id)
                     .single();
