@@ -1,8 +1,0 @@
-127.0.0.1 - - [04/Mar/2026 04:54:00] "GET /login.html HTTP/1.1" 200 -
-127.0.0.1 - - [04/Mar/2026 04:54:00] "GET /assets/js/supabase_logic.js HTTP/1.1" 200 -
-127.0.0.1 - - [04/Mar/2026 04:54:00] "GET /assets/css/pastel-theme.css HTTP/1.1" 200 -
-127.0.0.1 - - [04/Mar/2026 04:54:00] "GET /assets/js/theme.js HTTP/1.1" 200 -
-127.0.0.1 - - [04/Mar/2026 13:09:54] "GET /login.html HTTP/1.1" 200 -
-127.0.0.1 - - [04/Mar/2026 13:09:54] "GET /assets/css/pastel-theme.css HTTP/1.1" 200 -
-127.0.0.1 - - [04/Mar/2026 13:09:54] "GET /assets/js/supabase_logic.js HTTP/1.1" 200 -
-127.0.0.1 - - [04/Mar/2026 13:09:54] "GET /assets/js/theme.js HTTP/1.1" 200 -
