@@ -290,11 +290,23 @@
             document.getElementById('userName').value = name;
             document.getElementById('userRole').value = role;
             document.getElementById('userLimit').value = limit;
-            document.getElementById('modalTitle').textContent = id ? 'Editar Usuario' : 'Nuevo Usuario (Manual)';
 
-            if (!id) {
-                alert("Nota: Para nuevos usuarios, primero deben registrarse en Supabase Auth. Esta opción es para editar metadatos existentes.");
+            // For simple auth, we add a password field if it's a new user
+            let passField = document.getElementById('userPassword');
+            if (!passField) {
+                const div = document.createElement('div');
+                div.className = 'mb-3';
+                div.id = 'passwordContainer';
+                div.innerHTML = `
+                    <label class="form-label small fw-bold text-muted">Contraseña</label>
+                    <input type="password" id="userPassword" class="form-control bg-light border-0 py-3 px-4" style="border-radius: 15px;">
+                `;
+                document.getElementById('userName').parentElement.after(div);
+                passField = document.getElementById('userPassword');
             }
+
+            document.getElementById('passwordContainer').style.display = id ? 'none' : 'block';
+            document.getElementById('modalTitle').textContent = id ? 'Editar Usuario' : 'Nuevo Usuario';
 
             userModal.show();
         }
@@ -308,13 +320,20 @@
                 max_businesses: parseInt(document.getElementById('userLimit').value)
             };
 
+            const password = document.getElementById('userPassword')?.value;
+
             try {
                 if (id) {
                     const { error } = await supabaseClient.from('usuarios').update(userData).eq('id', id);
                     if (error) throw error;
                 } else {
-                    alert("Para crear un nuevo usuario, utiliza Supabase Auth (Sign Up). El trigger creará el perfil automáticamente.");
-                    return;
+                    if (!password) {
+                        alert("La contraseña es obligatoria para nuevos usuarios.");
+                        return;
+                    }
+                    userData.password = password;
+                    const { error } = await supabaseClient.from('usuarios').insert([userData]);
+                    if (error) throw error;
                 }
                 userModal.hide();
                 loadUsers();

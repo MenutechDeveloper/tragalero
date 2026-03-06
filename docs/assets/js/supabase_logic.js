@@ -1,6 +1,6 @@
 // Supabase shared configuration and logic
-const SUPABASE_URL = 'https://qoimkzgmfuauwomoskum.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvaW1remdtZnVhdXdvbW9za3VtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0MTg4MDEsImV4cCI6MjA4Njk5NDgwMX0.HlwapiEnygHXCkIe6D2sieDxs33ND49JRbLIducTsg4';
+const SUPABASE_URL = 'https://jqmmzufomzcsyzdskxze.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxbW16dWZvbXpjc3l6ZHNreHplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE1NTgsImV4cCI6MjA4ODMxNzU1OH0.mAd28JHZmLZGLd4Z3r59SgtSdeEpMyZd_WJdrD381Vs';
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -62,39 +62,19 @@ async function getBusinesses(showAll = false) {
 }
 
 /**
- * Auth check helpers
+ * Auth check helpers (Simplified for Custom Username/Password)
  */
 async function getLoggedInUser() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) {
-        sessionStorage.removeItem('tragalero_user');
-        return null;
-    }
-
-    // Try to get from sessionStorage first for speed/meta
+    // Simple sessionStorage based check
     let localUser = sessionStorage.getItem('tragalero_user');
     if (localUser) {
-        return JSON.parse(localUser);
+        try {
+            return JSON.parse(localUser);
+        } catch (e) {
+            sessionStorage.removeItem('tragalero_user');
+            return null;
+        }
     }
-
-    // If not in session storage but authenticated in Supabase, fetch from usuarios
-    const { data: profile } = await supabaseClient
-        .from('usuarios')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-    if (profile) {
-        const userData = {
-            id: profile.id,
-            name: profile.name,
-            role: profile.role,
-            email: user.email
-        };
-        sessionStorage.setItem('tragalero_user', JSON.stringify(userData));
-        return userData;
-    }
-
     return null;
 }
 
@@ -112,7 +92,6 @@ function escapeHtml(unsafe) {
 }
 
 async function logout() {
-    await supabaseClient.auth.signOut();
     sessionStorage.removeItem('tragalero_user');
     window.location.href = './login.html';
 }
