@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+body {
+  scroll-behavior: smooth; /* Agregar desplazamiento suave */
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  @font-face {
+    font-family: 'genty';
+    src: url(./assets/css/GentyDemo-Regular.ttf);
+  }
+  @font-face {
+    font-family: 'helado';
+    src: url(./assets/css/MazzardH-Bold.otf);
+  }
+
+  nav {
+    background-color: #E5017D;
+    color: #fff;
+    text-align: center;
+    padding: 15px 20px; /* Aumentar la altura del nav */
+    top: 0;
+    left: 0;
+    right: 0; /* Asegura que el nav se extienda completamente a lo ancho de la pantalla */
+    z-index: 1000; /* Asegurar que el nav esté encima de otros elementos */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo-container img {
+    height: 100px; /* Ajustar altura del logo según sea necesario */
+  }
+
+  .mobile-menu {
+    display: flex;
+    align-items: center;
+  }
+
+  .hamburger-menu {
+    cursor: pointer;
+    display: none; /* Ocultar por defecto en pantallas más grandes */
+  }
+
+  .bar {
+    width: 25px;
+    height: 3px;
+    background-color: #fff;
+    margin: 6px 0;
+  }
+
+  .nav-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+  }
+
+  /* ... (código anterior) ... */
+
+  @media (max-width: 768px) {
+    .hamburger-menu {
+      display: block; /* Mostrar en pantallas más pequeñas */
+    }
+
+    .nav-links {
+      flex-direction: column;
+      position: absolute;
+      top: 125px;
+      left: 0;
+      width: 100%;
+      background-color: #333;
+      text-align: center;
+      display: none; /* Ocultar por defecto en pantallas más pequeñas */
+    }
+
+    .nav-links.active {
+      display: flex; /* Mostrar cuando el menú está activo */
+    }
+
+    .nav-links li {
+      margin-right: 0;
+      margin-bottom: 10px;
+    }
+  }
+  nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center; /* Centrar los elementos en el nav */
+    align-items: center;
+  }
+
+  nav li {
+    margin: 0 10px; /* Agregar un espacio a ambos lados de cada elemento */
+  }
+
+  nav a {
+    text-decoration: none;
+    color: #fff;
+    font-weight: bold;
+    font-size: 16px;
+  }
+.mimargen{
+  width:100%;
+  height:200px;
+}
+
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  header.hero {
+    background: url('https://barrilesicecream.online/assets/css/pp1.png') center/cover no-repeat;
+    color: #fff;
+    text-align: center;
+    padding: 100px 20px;
+    position: relative;
+    height: 500px;
+  }
+
+  header.hero .overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  header.hero h1 {
+    font-size: 2.5em;
+  }
+
+  header.hero p {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+  }
+  .bienvenida{
+    max-width: 800px;
+    text-align: center;
+    margin: auto;
+    margin-top: 22px;
+  }
+  .bienvenida img{
+    width: 100%;
+  }
+  .bienvenida p {
+    font-size: 25px;
+  }
+  @media (max-width: 992px) {
+    .bienvenida img{
+      width: 90%;
+    }
+    .bienvenida p{
+      font-size: 18px;
+    }
+
+    }
+
+  .grilla{
+    width: 100%;
+    height: 800px;
+    background: #FFC901;
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-rows: 300px 300px;
+    justify-content: space-evenly;
+    align-content: center;
+
+  }
+
+  .grilla div{
+    width: 100%;
+    height: 100%;
+    border: 2px purple solid;
+    background: orange;
+  }
+  .grilla .item1 img{
+    width: 100%;
+  }
+  .grilla .item3 img{
+    width: 100%;
+  }
+
+  .item4{
+    text-align: center;
+    grid-column: 1 / 2;
+  }
+
+  @media (max-width: 992px) {
+    .grilla{
+      justify-content: center;
+    }
+    .item3{
+      grid-row: 1 / 2;
+    }
+    .item1{
+      grid-row: 2 / 3;
+    }
+    .item5{
+      grid-row: 4 /5;
+      opacity: 0;
+      width: 0px;
+      height: 0px;
+    }
+    }
+
+  .promoBoton{
+    width: 80%;
+    border: 2px White solid;
+    background: red;
+    border-radius: 25px;
+    font-size: 30px;
+    padding: 15px 35px;
+    color: white;
+    font-family:genty;
+    font-weight: 500;
+  }
+  .promoBoton:hover{
+    background: rgb(204, 0, 0);
+  }
+
+  .cartas{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .card{
+    margin: 20px;
+    width: 350px;
+    height: 500px;
+    border-radius: 5px;
+    position: relative;
+    display: flex;
+    justify-content:center;
+    align-items: center;
+    color: white;
+  }
+
+  .card video{
+    position: absolute;
+    z-index: -2;
+    width: 100%;
+  }
+  .sombra{
+    width: 100%;
+    height: 100%;
+    background: black;
+    opacity: 0.5;
+    position:absolute;
+    z-index: -1;
+
+  }
+
+  #card1{
+    overflow-y: hidden;
+  }
+  #card2{
+    overflow-y: hidden;
+  }
+  #card3{
+    overflow-y: hidden;
+  }
+
+  .card h2{
+    font-size: 38px;
+    padding: 20px;
+    font-family: 'helado';
+  }
+
+  .banner{
+    width: 100%;
+    height: 500px;
+    background: url();
+  }
+
+
+
+  .about-us,
+  .menu,
+  .order-online,
+  .gallery,
+  .contact,
+  .facebook-video {
+    padding: 40px 20px;
+  }
+
+  .menu-item {
+    margin-bottom: 20px;
+  }
+
+  .menu-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+  }
+
+  .order-button {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 18px;
+    text-align: center;
+    text-decoration: none;
+    background-color: #E5017D;
+    color: #fff;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+
+  .order-button:hover {
+    background-color: #e55e00;
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .gallery img {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+  }
+
+  @media (max-width: 768px) {
+    .gallery-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  footer {
+    background-color: #E5017D;
+    color: #fff;
+    text-align: center;
+    padding: 10px 20px;
+    position: relative;
+  }
+
+
+  #scroll-to-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: transparent;
+    color: #ff0000; /* Color rojo */
+    border: 2px solid #ff0000; /* Borde rojo */
+    padding: 15px; /* Aumentar tamaño del botón */
+    font-size: 24px; /* Aumentar tamaño de la flecha */
+    line-height: 1; /* Hacer la altura del contorno igual al tamaño de la fuente */
+    cursor: pointer;
+    border-radius: 50%; /* Hacer el botón completamente circular */
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+
+  @media (max-width: 992px) {
+    #scroll-to-top {
+      right: 30px; /* Ajustar posición a la izquierda en dispositivos móviles */
+    }
+  }
+
+  #scroll-to-top:hover {
+    background-color: #ff0000; /* Cambiar color de fondo en hover */
+    color: #fff; /* Cambiar color de texto en hover */
+    border-color: #fff; /* Cambiar color del borde en hover */
+  }
+
+  .mapa {
+    width: 100%;
+    margin: auto;
+
+  }
+
+  .mapa iframe {
+    width: 90%;
+    height: 450px;
+    border: 2px orange solid;
+    border-radius: 15px;
+  }
+
+  @media (max-width: 992px) {
+    .mapa {
+
+      margin: auto;
+
+    }
+  }
+
+  .contact-info {
+    background-color: #E5017D;
+    color: #fff;
+    text-align: right;
+    padding: 10px 20px;
+    font-family: 'helado';
+  }
+
+  .contact-info a {
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .img1{
+    background: red;
+    position: relative;
+    width: 300px;
+    margin: auto;
+    text-align: right;
+    left: 300px;
+    bottom: 150px;
+
+  }
+  .img1 img{
+    z-index: 99;
+    position: absolute;
+    width: 100%;
+  }
+
+  @media (max-width: 992px) {
+    .img1 {
+
+      left: 0px;
+      margin: auto;
+     opacity: 0;
+    }
+  }
+
+  @keyframes show {
+    from {
+      opacity: 0;
+      scale: 25%;
+    }
+    to {
+      opacity: 1;
+      scale: 100%;
+    }
+  }
+
+  .gallery img {
+    view-timeline-name: --image;
+    view-timeline-axis: block;
+    animation-timeline: --image;
+    animation-name: show;
+
+    animation-range: entry 25% cover 50%;
+  }
+
+  @keyframes rotar {
+    from{
+      rotate: 0deg;
+    }
+    to{
+      rotate: 60deg;
+    }
+  }
+
+  .img1 img {
+    view-timeline-name: --image;
+    view-timeline-axis: block;
+    animation-timeline: --image;
+    animation-name: rotar;
+
+    animation-range: entry 25% cover 100%;
+  }
+  .follow{
+    max-width: 800px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: auto;
+  }
+  .follow h2{
+    font-family: helado;
+    color: #E5017D;
+  }
+  .follow .colum2 img{
+    width: 350px;
+  }
+
+  @media (max-width: 992px) {
+    .follow{
+      justify-content: center;
+    }
+  }
+  .banner{
+
+    width: 100%;
+    height: 650px;
+    margin-bottom: 120px;
+  }
+  .banner img{
+    width: 100%;
+  }
+  @media (max-width: 992px) {
+    .banner{
+      height:180px;
+    }
+  }
+
+  .social-icons {
+    list-style: none;
+    max-width: 800px;
+
+    text-align: center;
+    display: flex;
+    align-items: flex-start;
+
+  }
+
+  .social-icons li {
+    margin: 0 10px;
+  }
+
+  .social-icons a {
+    text-decoration: none;
+  }
+
+  .social-icons img {
+    width: 60px; /* Ajusta el tamaño según tus preferencias */
+    height: 60px;
+    filter: grayscale(0.8);
+  }
+
+  .social-icons img:hover {
+    opacity: 0.7; /* Cambia la opacidad al pasar el ratón sobre el icono */
+  }
+
+
+
+.contact-info .social-icons{
+   width: 10px; /* Ajusta el tamaño según tus preferencias */
+    height: 10px;
+  margin:0px;
+}
+
+  #fb:hover{
+    filter: none;
+  }
+  #wa:hover{
+    filter: grayscale(0);
+  }
+  #tik:hover{
+    filter: grayscale(0);
+  }
+
+  footer .social-icons{
+    text-align: center;
+    margin: auto;
+    justify-content: center;
+    align-items: center;
+  }
+
+#menu{
+    margin-top: 130px;
+  }
+ @media (max-width: 992px) {
+    #menu {
+      margin-top:50px;
+      margin-bottom:20px;
+    }
+  }
+
+#iconosnav{
+    width: 100%;
+    height:50px;
+      background: #E5017D;
+      margin: 0px;
+      top: 0;
+      left: 0;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+
+  }
+  #iconosnav .social-icons img{
+    width: 30px;
+    height: 30px;
+  }
+  .about{
+    max-width: 800px;
+    margin: auto;
+    text-align: center;
+  }
+
+</style>
+  <title>Los Barriles Ice Cream</title>
+</head>
+<body>
+  <header id="cabecera" data-label="Cabecera">
+    <div style="background:#E5017D;" id="iconosnav">
+      <ul  class="social-icons">
+        <li><a href="https://www.facebook.com/profile.php?id=100063484845817&mibextid=LQQJ4d" target="_blank"><img id="fb" src="https://barrilesicecream.online/assets/img/fb.png" alt="Facebook"></a></li>
+        <li><a href="https://wa.me/+14084012061" target="_blank"><img id="wa" src="https://barrilesicecream.online/assets/img/whatsappi.png" alt="WhatsApp"></a></li>
+        <li><a href="https://www.instagram.com/losbarriles408/?igsh=OGQ5ZDc2ODk2ZA%3D%3D&utm_source=qr" target="_blank"><img id="tik" src="https://barrilesicecream.online/assets/img/insta.png" alt="TikTok"></a></li>
+            <li><a href="https://barrilesicecream.online/index-en"><img src="https://barrilesicecream.online/assets/img/enes.png" alt="EN/ES"></a></li>
+      </ul>
+    </div>
+    <nav>
+      <div class="logo-container">
+        <img src="https://barrilesicecream.online/assets/img/LOS%20BARRILES.png" data-label="Logotipo">
+      </div>
+      <div class="contact-info">
+        <p>Llamanos: <a href="tel:14084012061" data-label="Teléfono Nav">1 408-401-2061</a></p>
+      </div>
+      <div class="mobile-menu">
+        <div class="hamburger-menu" onclick="toggleMenu()">
+          <div class="bar"></div>
+          <div class="bar"></div>
+          <div class="bar"></div>
+        </div>
+        <ul class="nav-links">
+          <li><a href="./index.html#inicio">Inicio</a></li>
+          <li><a href="./index.html#sobre-nosotros">Acerca de</a></li>
+          <li><a href="./menues.html">Menu</a></li>
+          <li><a href="./index.html#galeria">Galeria</a></li>
+          <li><a href="./index.html#contacto">Contactanos</a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+
+      <!-- Resto del código... -->
+
+     <script>
+        function toggleMenu() {
+          const navLinks = document.querySelector('.nav-links');
+          navLinks.classList.toggle('active');
+        }
+      </script>
+
+  <header class="hero" id="inicio" data-label="Hero">
+    <div class="overlay">
+      <h1 data-label="Título Hero">Los Barriles Ice Cream</h1>
+      <a href="https://barrilesicecream.online/menues" class="order-button" data-label="Botón Hero">Ver Menu</a>
+    </div>
+  </header>
+
+  <!--<div class="grilla">
+    <div class="item1"><img src="https://placehold.co/350x350" /></div>
+    <div class="item3"><img src="https://placehold.co/350x350" /></div>
+    <div class="item4"><button class="promoBoton">Boton</button></div>
+    <div class="item5"></div>
+  </div>-->
+
+  <!--<div class="img1"><img src="https://barrilesicecream.online/assets/img/img1.png"/></div>-->
+
+<section class="bienvenida" data-label="Bienvenida">
+  <img src="https://barrilesicecream.online/assets/img/bienvenida.png" data-label="Imagen Bienvenida"/>
+  <p data-label="Texto Bienvenida">Bienvenidos a los barriles Ice Cream
+Ven a disfrutar de una rica nieve de garrafa, estilo México, hecha de manera artesanal, con ingredientes 100% naturales.
+Además de una gran variedad de antojitos mexicanos como, mangonadas, tostilocos, salchipapas, esquites y mucho más.
+Te esperamos!</p>
+  </section>
+
+  <section class="cartas" data-label="Especialidades">
+    <div class="card"  id="card1">
+      <video src="https://menutechdeveloper.github.io/bddImg/assets/img/barrilesv1.mp4" autoplay muted playsinline loop data-label="Video 1"></video>
+      <div class="sombra"></div>
+      <h2 data-label="Título Carta 1">Dulces<br/>Delicias</h2>
+    </div>
+    <div class="card" id="card2">
+      <video src="https://menutechdeveloper.github.io/bddImg/assets/img/port2.mp4" autoplay muted playsinline loop data-label="Video 2"></video>
+      <div class="sombra"></div>
+      <h2 data-label="Título Carta 2">Delicias<br/>Heladas</h2>
+    </div>
+    <div class="card" id="card3">
+      <video src="https://menutechdeveloper.github.io/bddImg/assets/img/barrilesv3.mp4" autoplay muted playsinline loop data-label="Video 3"></video>
+      <div class="sombra"></div>
+      <h2 data-label="Título Carta 3">Sabores<br/>Frutales</h2>
+    </div>
+  </section>
+
+  <section id="sobre-nosotros" class="about" data-label="Sobre Nosotros">
+    <p>Los Barriles Ice Cream es un negocio familiar , donde nos enfocamos en mantener viva la tradición mexicana de las Nieves de garrafa, una nieve 100% natural y artesanal, estiló Jalisco, que te hará sentir que estás probando un pedacito de México.
+      Contamos con una variedad de más de 100 sabores, desde los clásicos como vainilla, limón, chocolate, fresa, hasta los más exóticos como guanábana, mamey, pitaya, tuna, arrayán … los cuales vamos rotando cada semana para que siempre tengas variedad y nuevos sabores a probar!</p>
+      <br/>
+      <p>Comenzamos en el 2014 vendiendo solamente nieves y a lo largo de los años hemos ido incorporando otros deliciosos antojitos mexicanos a nuestro menú, como los
+        salchipulpos, esquites, malteadas, mini pancakes, crepas, fresas con crema, biónicos, y muchos otros snacks!!!</p>
+      <br/>
+      <p>En Los Barriles Ice Cream somos abundantes y nos gusta darte tu orden bien servida y siempre usar los mejores ingredientes, gracias a esto hemos sido muy bien aceptados por nuestros clientes de San Jose y de toda el área de la bahía!</p>
+      <br/>
+      <p>También contamos con servicio para cualquier tipo de evento, fiestas infantiles, quinceañeras, bodas, festivales, empresas, etc.</p>
+      <br/>
+      <p>Así que si aún no nos conoces, te invitamos a visitar nuestra lonchera y próximamente nuestro local, te va a encantar!!!</p>
+  </section>
+
+  <section class="banner" data-label="Banner Publicitario">
+    <img src="https://barrilesicecream.online/assets/img/bannerice.jpg" data-label="Imagen Banner"/>
+  </section>
+
+  <!--<section class="about-us" id="sobre-nosotros">
+    <div class="container">
+      <h2>Sobre nosotros</h2>
+      <p>Paletas y helados de la mejor calidad, tenemos chascafrutas aguascalientes, sodas italianas, frappes y las ya famosas perlas explisivas entre otras cosas.</p>
+
+    </div>
+  </section>-->
+
+  <section class="follow" data-label="Redes Sociales">
+      <div class="colum1">
+        <h2 data-label="Título Social">Síguenos en nuestras redes sociales.</h2>
+        <p data-label="Texto Social">conoce las promociones que tenemos mes tras mes,<br/>
+          o el lanzamiento de nuevos productos en el menú</p>
+
+
+            <ul class="social-icons">
+              <li><a href="https://www.facebook.com/profile.php?id=100063484845817&mibextid=LQQJ4d" target="_blank"><img id="fb" src="https://barrilesicecream.online/assets/img/fb.png" alt="Facebook"></a></li>
+              <li><a href="https://wa.me/+14084012061" target="_blank"><img id="wa" src="https://barrilesicecream.online/assets/img/whatsappi.png" alt="WhatsApp"></a></li>
+              <li><a href="https://www.instagram.com/losbarriles408/?igsh=OGQ5ZDc2ODk2ZA%3D%3D&utm_source=qr" target="_blank"><img id="tik" src="https://barrilesicecream.online/assets/img/insta.png" alt="TikTok"></a></li>
+            </ul>
+
+
+      </div>
+      <div class="colum2">
+        <img src="https://barrilesicecream.online/assets/img/ins.png" data-label="Imagen Redes"/>
+      </div>
+  </section>
+
+
+
+
+  <section class="gallery" id="galeria" data-label="Galería">
+    <div class="container">
+      <h2 data-label="Título Galería">Galería</h2>
+      <div class="gallery-grid">
+        <img src="https://barrilesicecream.online/assets/img/bar1.png" alt="Galería 1" data-label="Foto 1">
+        <img src="https://barrilesicecream.online/assets/img/bar2.png" alt="Galería 2" data-label="Foto 2">
+        <img src="https://barrilesicecream.online/assets/img/bar3.png" alt="Galería 3" data-label="Foto 3">
+        <img src="https://barrilesicecream.online/assets/img/bar4.png" alt="Galería 4" data-label="Foto 4">
+        <img src="https://barrilesicecream.online/assets/img/bar5.png" alt="Galería 5" data-label="Foto 5">
+        <img src="https://barrilesicecream.online/assets/img/bar6.png" alt="Galería 6" data-label="Foto 6">
+        <img src="https://barrilesicecream.online/assets/img/bar7.png" alt="Galería 7" data-label="Foto 7">
+        <img src="https://barrilesicecream.online/assets/img/bar8.png" alt="Galería 8" data-label="Foto 8">
+        <img src="https://barrilesicecream.online/assets/img/bar9.png" alt="Galería 9" data-label="Foto 9">
+        <img src="https://barrilesicecream.online/assets/img/bar10.png" alt="Galería 10" data-label="Foto 10">
+        <img src="https://barrilesicecream.online/assets/img/bar11.png" alt="Galería 11" data-label="Foto 11">
+        <img src="https://barrilesicecream.online/assets/img/bar12.png" alt="Galería 12" data-label="Foto 12">
+      </div>
+    </div>
+  </section>
+
+  <section class="order-online" id="orden-en-linea" data-label="Orden en Línea">
+    <div class="container">
+      <h2 style="color: #E5017D; font-family: helado;" data-label="Título Orden">Ver el MENÚ y ordenar ahora</h2>
+      <p data-label="Texto Orden">¡Disfruta nuestro menú desde la comodidad de tu hogar! Realiza tu pedido ahora.</p>
+      <a href="https://barrilesicecream.online/menues" class="order-button" data-label="Botón Orden">Ver Menu</a>
+    </div>
+  </section>
+
+  <section class="contact" id="contacto" data-label="Contacto">
+    <div class="container">
+      <h2 style="color: #E5017D; font-family: helado;" data-label="Título Contacto">Contactanos</h2>
+      <p>Telefono: <a style="text-decoration:none; color:#000;" href="tel:14084012061" data-label="Teléfono Contacto">1 408-401-2061</a></p>
+      <p data-label="Dirección Contacto">1642 Mabury Rd San Jose Ca 95133</p>
+    </div>
+  </section>
+
+  <section class="facebook-video" data-label="Ubicación">
+    <div class="container">
+      <h2 style="color: #E5017D; font-family: helado;" data-label="Título Mapa">Visitanos</h2>
+      <div class="mapa">
+<iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d12684.116132640595!2d-121.870903!3d37.3654899!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fcd368120f6eb%3A0xd6aee4b8289c20d1!2sLos%20Barriles%20Ice%20Cream!5e0!3m2!1sen!2smx!4v1706006014685!5m2!1sen!2smx" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" data-label="Mapa Google"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <footer data-label="Pie de Página">
+    <div id="brand"> </div>
+<script>
+    var y = new Date().getFullYear();
+    const branding = document.getElementById("brand");
+
+    branding.innerHTML = `<p>Copyright © Made by <a href="https://menutech.xyz/" style="color:orange; text-decoration:none;" target="_blank">Menutech.xyz</a> ${y} </p>`;
+</script>
+
+<ul class="social-icons">
+  <li><a href="https://www.facebook.com/profile.php?id=100063484845817&mibextid=LQQJ4d" target="_blank"><img id="fb" src="https://barrilesicecream.online/assets/img/fb.png" alt="Facebook"></a></li>
+  <li><a href="https://wa.me/+14084012061" target="_blank"><img id="wa" src="https://barrilesicecream.online/assets/img/whatsappi.png" alt="WhatsApp"></a></li>
+  <li><a href="https://www.instagram.com/losbarriles408/?igsh=OGQ5ZDc2ODk2ZA%3D%3D&utm_source=qr" target="_blank"><img id="tik" src="https://barrilesicecream.online/assets/img/insta.png" alt="TikTok"></a></li>
+</ul>
+    <button id="scroll-to-top">↑</button>
+  </footer>
+
+  <script>
+    document.getElementById('scroll-to-top').addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  </script>
+</body>
+</html>
