@@ -62,20 +62,27 @@ async function getBusinesses(showAll = false) {
 }
 
 /**
- * Auth check helpers (Simplified for Custom Username/Password)
+ * Auth check helpers (Updated for Supabase Auth)
  */
 async function getLoggedInUser() {
-    // Simple sessionStorage based check
-    let localUser = sessionStorage.getItem('tragalero_user');
-    if (localUser) {
-        try {
-            return JSON.parse(localUser);
-        } catch (e) {
-            sessionStorage.removeItem('tragalero_user');
-            return null;
-        }
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+
+    if (error || !session) {
+        return null;
     }
-    return null;
+
+    // Fetch profile from public.usuarios
+    const { data: profile, error: profileError } = await supabaseClient
+        .from('usuarios')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+    if (profileError || !profile) {
+        return null;
+    }
+
+    return profile;
 }
 
 /**
@@ -92,7 +99,7 @@ function escapeHtml(unsafe) {
 }
 
 async function logout() {
-    sessionStorage.removeItem('tragalero_user');
+    await supabaseClient.auth.signOut();
     window.location.href = './login.html';
 }
 

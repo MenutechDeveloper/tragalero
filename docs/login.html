@@ -58,8 +58,8 @@
         <!-- Login Form -->
         <form id="loginForm">
             <div class="mb-3">
-                <label class="form-label small fw-bold">Usuario</label>
-                <input type="text" id="loginUsername" class="form-control" placeholder="Tu nombre de usuario" required>
+                <label class="form-label small fw-bold">Correo Electrónico</label>
+                <input type="email" id="loginEmail" class="form-control" placeholder="tu@email.com" required>
             </div>
             <div class="mb-4">
                 <label class="form-label small fw-bold">Contraseña</label>
@@ -76,8 +76,12 @@
         <!-- Register Form -->
         <form id="registerForm" class="d-none">
             <div class="mb-3">
-                <label class="form-label small fw-bold">Usuario</label>
-                <input type="text" id="regUsername" class="form-control" placeholder="Nombre de usuario" required>
+                <label class="form-label small fw-bold">Nombre de Usuario</label>
+                <input type="text" id="regUsername" class="form-control" placeholder="Tu nombre público" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Correo Electrónico</label>
+                <input type="email" id="regEmail" class="form-control" placeholder="tu@email.com" required>
             </div>
             <div class="mb-4">
                 <label class="form-label small fw-bold">Contraseña</label>
@@ -130,31 +134,33 @@
         // Login Logic
         forms.login.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('loginUsername').value;
+            const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPass').value;
             msg.classList.add('d-none');
 
             try {
-                const { data: profile, error } = await supabaseClient
-                    .from('usuarios')
-                    .select('*')
-                    .eq('name', username)
-                    .eq('password', pass)
-                    .single();
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: pass,
+                });
 
-                if (error || !profile) throw new Error('Usuario o contraseña incorrectos.');
+                if (error) throw error;
 
-                if (!profile.is_active) {
-                    throw new Error('Tu cuenta ha sido suspendida.');
+                if (data.user) {
+                    // Check if profile exists and is active
+                    const { data: profile, error: profileError } = await supabaseClient
+                        .from('usuarios')
+                        .select('*')
+                        .eq('id', data.user.id)
+                        .single();
+
+                    if (profile && !profile.is_active) {
+                        await supabaseClient.auth.signOut();
+                        throw new Error('Tu cuenta ha sido suspendida.');
+                    }
+
+                    window.location.href = (profile && profile.role === 'Admin') ? './admin.html' : './directorymap.html';
                 }
-
-                sessionStorage.setItem('tragalero_user', JSON.stringify({
-                    id: profile.id,
-                    name: profile.name,
-                    role: profile.role
-                }));
-
-                window.location.href = profile.role === 'Admin' ? './admin.html' : './directorymap.html';
             } catch (err) {
                 showMessage(err.message);
             }
@@ -164,39 +170,26 @@
         forms.register.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
             const pass = document.getElementById('regPass').value;
             msg.classList.add('d-none');
 
             try {
-                // Check if username exists
-                const { data: existing, error: checkError } = await supabaseClient
-                    .from('usuarios')
-                    .select('id')
-                    .eq('name', username)
-                    .maybeSingle();
-
-                if (existing) throw new Error('El nombre de usuario ya está en uso.');
-
-                const { data, error } = await supabaseClient
-                    .from('usuarios')
-                    .insert([{
-                        name: username,
-                        password: pass,
-                        role: 'Owner'
-                    }])
-                    .select()
-                    .single();
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: pass,
+                    options: {
+                        data: {
+                            name: username
+                        }
+                    }
+                });
 
                 if (error) throw error;
 
-                if (data) {
-                    sessionStorage.setItem('tragalero_user', JSON.stringify({
-                        id: data.id,
-                        name: data.name,
-                        role: data.role
-                    }));
-                    showMessage('¡Cuenta creada con éxito! Redirigiendo...', 'success');
-                    setTimeout(() => window.location.href = './directorymap.html', 1500);
+                if (data.user) {
+                    showMessage('¡Cuenta creada con éxito! Si activaste la confirmación, revisa tu correo. Redirigiendo...', 'success');
+                    setTimeout(() => window.location.href = './directorymap.html', 2000);
                 }
             } catch (err) {
                 showMessage(err.message);

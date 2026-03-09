@@ -96,11 +96,8 @@
                 <div class="d-flex justify-content-between align-items-center mb-4 animate-fade-in">
                     <div>
                         <h2 class="fw-bold mb-1">Gestión de Usuarios</h2>
-                        <p class="text-muted small mb-0">Administra cuentas, permisos y configuraciones personalizadas.</p>
+                        <p class="text-muted small mb-0">Administra cuentas y permisos. Los nuevos usuarios deben registrarse desde el formulario de login.</p>
                     </div>
-                    <button class="btn btn-custom-primary px-4 shadow-sm" style="border-radius: 15px; height: 45px;" onclick="openUserModal()">
-                        Nuevo Usuario
-                    </button>
                 </div>
 
                 <div class="user-card-container animate-fade-in delay-1">
@@ -109,6 +106,7 @@
                             <thead>
                                 <tr>
                                     <th class="border-0">Usuario</th>
+                                    <th class="border-0">Correo</th>
                                     <th class="border-0">Rol</th>
                                     <th class="border-0">Negocios</th>
                                     <th class="border-0">Límite</th>
@@ -130,12 +128,12 @@
         </div>
     </main>
 
-    <!-- User Modal (Create/Edit) -->
+    <!-- User Modal (Edit) -->
     <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
                 <div class="modal-header border-0 p-4">
-                    <h5 class="modal-title fw-bold" id="modalTitle">Nuevo Usuario</h5>
+                    <h5 class="modal-title fw-bold" id="modalTitle">Editar Usuario</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4 pt-0">
@@ -224,6 +222,7 @@
                                 </div>
                             </div>
                         </td>
+                        <td class="border-0 small">${escapeHtml(u.email || 'N/A')}</td>
                         <td class="border-0">
                             <span class="badge-role ${u.role === 'Admin' ? 'bg-danger bg-opacity-10 text-danger' : 'bg-success bg-opacity-10 text-success'}">
                                 ${u.role}
@@ -285,28 +284,11 @@
             }
         }
 
-        function openUserModal(id = '', name = '', role = 'Owner', limit = 1) {
+        function openUserModal(id, name, role, limit) {
             document.getElementById('userId').value = id;
             document.getElementById('userName').value = name;
             document.getElementById('userRole').value = role;
             document.getElementById('userLimit').value = limit;
-
-            // For simple auth, we add a password field if it's a new user
-            let passField = document.getElementById('userPassword');
-            if (!passField) {
-                const div = document.createElement('div');
-                div.className = 'mb-3';
-                div.id = 'passwordContainer';
-                div.innerHTML = `
-                    <label class="form-label small fw-bold text-muted">Contraseña</label>
-                    <input type="password" id="userPassword" class="form-control bg-light border-0 py-3 px-4" style="border-radius: 15px;">
-                `;
-                document.getElementById('userName').parentElement.after(div);
-                passField = document.getElementById('userPassword');
-            }
-
-            document.getElementById('passwordContainer').style.display = id ? 'none' : 'block';
-            document.getElementById('modalTitle').textContent = id ? 'Editar Usuario' : 'Nuevo Usuario';
 
             userModal.show();
         }
@@ -320,21 +302,10 @@
                 max_businesses: parseInt(document.getElementById('userLimit').value)
             };
 
-            const password = document.getElementById('userPassword')?.value;
-
             try {
-                if (id) {
-                    const { error } = await supabaseClient.from('usuarios').update(userData).eq('id', id);
-                    if (error) throw error;
-                } else {
-                    if (!password) {
-                        alert("La contraseña es obligatoria para nuevos usuarios.");
-                        return;
-                    }
-                    userData.password = password;
-                    const { error } = await supabaseClient.from('usuarios').insert([userData]);
-                    if (error) throw error;
-                }
+                const { error } = await supabaseClient.from('usuarios').update(userData).eq('id', id);
+                if (error) throw error;
+
                 userModal.hide();
                 loadUsers();
             } catch (err) {
@@ -353,7 +324,7 @@
         }
 
         async function deleteUser(id) {
-            if (!confirm("¿Estás seguro de eliminar este usuario? Se perderán permanentemente todos sus negocios registrados y su configuración de panel (Bento Grid).")) return;
+            if (!confirm("¿Estás seguro de eliminar este usuario? Para eliminarlo completamente del sistema Auth, deberás hacerlo manualmente desde el panel de Supabase.")) return;
             try {
                 const { error } = await supabaseClient.from('usuarios').delete().eq('id', id);
                 if (error) throw error;
