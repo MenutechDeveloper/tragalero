@@ -1,0 +1,14 @@
+-- Tabla para guardar la configuración de las plantillas por usuario
+-- Requerido para webBuilding.html
+
+CREATE TABLE IF NOT EXISTS public.user_websites (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.usuarios(id) ON DELETE CASCADE,
+    config JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id)
+);
+
+-- Deshabilitar RLS para permitir acceso directo con el anon key
+ALTER TABLE public.user_websites DISABLE ROW LEVEL SECURITY;
