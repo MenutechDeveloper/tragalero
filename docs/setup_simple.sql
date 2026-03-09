@@ -72,14 +72,25 @@ CREATE TABLE IF NOT EXISTS public.digital_cards (
     UNIQUE(user_id)
 );
 
--- 5. Seed an initial admin user
+-- 5. Create the user_websites table
+CREATE TABLE IF NOT EXISTS public.user_websites (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.usuarios(id) ON DELETE CASCADE,
+    config JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id)
+);
+
+-- 6. Seed an initial admin user
 -- NOTE: In this simplified version, passwords are stored in plain text as requested.
 INSERT INTO public.usuarios (name, password, role)
 VALUES ('admin', 'admin123', 'Admin')
 ON CONFLICT (name) DO NOTHING;
 
--- 6. Disable RLS on all tables (to be certain)
+-- 7. Disable RLS on all tables (to be certain)
 ALTER TABLE public.usuarios DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.businesses DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bento_grid DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.digital_cards DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_websites DISABLE ROW LEVEL SECURITY;
