@@ -1,24 +1,19 @@
-¡Tienes razón! Te pido una disculpa por el error. Para que Supabase mande el correo, la opción **Confirm email** debe estar **ACTIVADA (ON)**. Si la apagas, Supabase asume que no quieres validación y deja entrar al usuario directamente.
+¡Qué alegría que el puerto 465 haya funcionado! Ese suele ser el "truco" final para muchas configuraciones de correo.
 
-### EL PASO DEFINITIVO PARA EL ERROR 500:
+Aquí tienes el SQL para limpiar tus usuarios de prueba y que puedas registrarlos de nuevo las veces que necesites.
 
-El Error 500 cuando activas la confirmación suele ser por el **Puerto** o el **SSL**. Hagamos este cambio técnico en Supabase (SMTP Settings):
+### SQL PARA BORRAR USUARIOS DE PRUEBA:
 
-1. **Vuelve a activar (ON)** la opción **Confirm email**.
-2. Cambia el puerto de **587** a **465**. (Muchos servidores modernos prefieren el 465 con SSL forzado).
-3. Asegúrate de que el **User** sea exactamente `resend`.
-4. Si con el puerto 465 sigue fallando, intenta esto:
-   - Ve a tu panel de **Resend**.
-   - Haz clic en **Logs** o **Events**.
-   - Si ves ahí que los correos dicen "Blocked" o "Rejected", es que Resend está bloqueando el envío desde Supabase por una cuestión de seguridad de tu dominio.
+Copia y corre esto en tu **SQL Editor** de Supabase:
 
-### MEJORAS EN EL CÓDIGO:
+```sql
+-- 1. Borrar TODOS los usuarios de la tabla de autenticación (CUIDADO: Borra a todos los usuarios registrados)
+DELETE FROM auth.users;
 
-He actualizado el archivo `login.html` para que, si el usuario intenta entrar pero **no ha confirmado su correo**, le salga un aviso específico pidiéndole que revise su bandeja de entrada.
+-- 2. También puedes borrar un usuario específico por su correo si no quieres borrar a todos:
+-- DELETE FROM auth.users WHERE email = 'ejemplo@correo.com';
+```
 
-### RESUMEN:
-1. **Confirm email:** Ponlo en **ON**.
-2. **Puerto SMTP:** Prueba con el **465**.
-3. **Ejecuta el SQL:** Asegúrate de haber corrido lo de **docs/AupdateFinal.txt** para que la base de datos esté lista.
+*(Nota: Al borrar de auth.users, el trigger que configuramos se encargará de borrar automáticamente sus perfiles en la tabla public.usuarios).*
 
-¡Con el puerto 465 deberíamos saltarnos el bloqueo del servidor y que el correo salga finalmente!
+¡Con esto ya puedes hacer todas tus pruebas de registro desde cero! No hace falta mover nada más, el sistema ya es robusto y seguro.
