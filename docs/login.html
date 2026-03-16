@@ -159,7 +159,7 @@
                         throw new Error('Tu cuenta ha sido suspendida.');
                     }
 
-                    window.location.href = (profile && profile.role === 'Admin') ? './admin.html' : './directorymap.html';
+                    window.location.href = './admin.html';
                 }
             } catch (err) {
                 showMessage(err.message);
@@ -189,8 +189,20 @@
                 if (error) throw error;
 
                 if (data.user) {
-                    showMessage('¡Cuenta creada con éxito! Si activaste la confirmación, revisa tu correo. Redirigiendo...', 'success');
-                    setTimeout(() => window.location.href = './directorymap.html', 2000);
+                    // Check if email confirmation is required (identities will be empty if not confirmed yet in some cases,
+                    // or user.identities[0].identity_data.email_verified will be false)
+                    const confirmed = data.user.identities && data.user.identities.length > 0;
+
+                    if (data.session) {
+                        // User is already logged in (confirmation was likely disabled)
+                        showMessage('¡Cuenta creada con éxito! Redirigiendo...', 'success');
+                        setTimeout(() => window.location.href = './admin.html', 2000);
+                    } else {
+                        // Confirmation is required
+                        showMessage('¡Registro casi completo! Por favor, revisa tu correo electrónico para confirmar tu cuenta antes de iniciar sesión.', 'info');
+                        forms.register.reset();
+                        setTimeout(() => showForm('login'), 5000);
+                    }
                 }
             } catch (err) {
                 console.error("Error completo de registro:", err);

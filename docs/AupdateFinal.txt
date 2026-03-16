@@ -1,8 +1,8 @@
 -- ==========================================================
--- SCRIPT DE RESCATE Y RLS CORREGIDO - TRAGALERO
+-- SCRIPT DE PRODUCCIÓN Y SEGURIDAD TOTAL - TRAGALERO
 -- ==========================================================
 
--- 1. LIMPIEZA DE TRIGGERS
+-- 1. LIMPIEZA DE DISPARADORES
 DO $$
 DECLARE
     r RECORD;
@@ -14,33 +14,42 @@ BEGIN
     END LOOP;
 END $$;
 
--- 2. TABLA USUARIOS
+-- 2. TABLA USUARIOS (Estructura Final)
 CREATE TABLE IF NOT EXISTS public.usuarios (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    email TEXT,
-    role TEXT DEFAULT 'Owner',
+    email TEXT UNIQUE,
+    role TEXT DEFAULT 'Owner' CHECK (role IN ('Owner', 'Admin')),
     is_active BOOLEAN DEFAULT TRUE,
     max_businesses INTEGER DEFAULT 1,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3. TRIGGER DE SINCRONIZACIÓN (SECURITY DEFINER es clave aquí)
+-- 3. TRIGGER DE SINCRONIZACIÓN PROFESIONAL
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+    base_name TEXT;
+    final_name TEXT;
+    counter INTEGER := 0;
 BEGIN
-  INSERT INTO public.usuarios (id, name, email, role)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'username', 'Usuario'),
-    NEW.email,
-    'Owner'
-  )
-  ON CONFLICT (id) DO UPDATE SET
-    email = EXCLUDED.email;
-  RETURN NEW;
-EXCEPTION WHEN OTHERS THEN
-  RETURN NEW;
+    base_name := COALESCE(
+        NEW.raw_user_meta_data->>'full_name',
+        NEW.raw_user_meta_data->>'username',
+        SPLIT_PART(NEW.email, '@', 1)
+    );
+    final_name := base_name;
+
+    WHILE EXISTS (SELECT 1 FROM public.usuarios WHERE name = final_name AND id != NEW.id) LOOP
+        counter := counter + 1;
+        final_name := base_name || counter;
+    END LOOP;
+
+    INSERT INTO public.usuarios (id, name, email, role)
+    VALUES (NEW.id, final_name, NEW.email, 'Owner')
+    ON CONFLICT (id) DO UPDATE SET
+        email = EXCLUDED.email;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
@@ -48,10 +57,14 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 4. POLÍTICAS RLS CORREGIDAS (Para evitar que te saque de la sesión)
+-- 4. SEGURIDAD RLS DE PRODUCCIÓN
 ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bento_grid ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.digital_cards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_websites ENABLE ROW LEVEL SECURITY;
 
+-- Limpieza de políticas
 DO $$
 DECLARE pol record;
 BEGIN
@@ -60,21 +73,29 @@ BEGIN
     END LOOP;
 END $$;
 
--- Política vital: Permitir que el usuario lea su propio perfil (Sin esto, getLoggedInUser falla)
-CREATE POLICY "Permitir_lectura_propia"
-ON public.usuarios FOR SELECT
-USING (auth.uid() = id);
+-- Función Admin Segura
+CREATE OR REPLACE FUNCTION public.check_is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.usuarios
+        WHERE id = auth.uid() AND role = 'Admin'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- Política para que los admins vean todo
-CREATE POLICY "Admins_ver_todo"
-ON public.usuarios FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM public.usuarios
-    WHERE id = auth.uid() AND role = 'Admin'
-  )
-);
+-- Políticas de Usuarios
+CREATE POLICY "Lectura_Propia" ON public.usuarios FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Admin_Ver_Todo" ON public.usuarios FOR SELECT USING (public.check_is_admin());
+CREATE POLICY "Admin_Modificar_Todo" ON public.usuarios FOR UPDATE USING (public.check_is_admin());
 
--- Negocios (Permitir lectura pública y gestión propia)
-CREATE POLICY "Negocios_Ver_Publico" ON public.businesses FOR SELECT USING (TRUE);
-CREATE POLICY "Negocios_Gestion_Dueno" ON public.businesses FOR ALL USING (auth.uid() = owner_id);
+-- Políticas de Negocios
+CREATE POLICY "Publico_Ver_Negocios" ON public.businesses FOR SELECT USING (is_visible = TRUE);
+CREATE POLICY "Dueno_Gestion_Negocio" ON public.businesses FOR ALL USING (auth.uid() = owner_id);
+CREATE POLICY "Admin_Todo_Negocios" ON public.businesses FOR ALL USING (public.check_is_admin());
+
+-- Políticas de Bento/Cards/Webs
+CREATE POLICY "Dueno_Todo_Bento" ON public.bento_grid FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Publico_Ver_Cards" ON public.digital_cards FOR SELECT USING (TRUE);
+CREATE POLICY "Dueno_Todo_Cards" ON public.digital_cards FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Dueno_Todo_Webs" ON public.user_websites FOR ALL USING (auth.uid() = user_id);
