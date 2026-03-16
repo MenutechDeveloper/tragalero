@@ -1,19 +1,15 @@
-¡Qué alegría que el puerto 465 haya funcionado! Ese suele ser el "truco" final para muchas configuraciones de correo.
+¡Excelente! He actualizado el código para que el enlace del correo te mande directo a la administración.
 
-Aquí tienes el SQL para limpiar tus usuarios de prueba y que puedas registrarlos de nuevo las veces que necesites.
+### PASO FINAL PARA LA REDIRECCIÓN:
 
-### SQL PARA BORRAR USUARIOS DE PRUEBA:
+Para que Supabase permita que el correo mande al usuario a `/admin.html`, debes registrar esa dirección en tu panel de control:
 
-Copia y corre esto en tu **SQL Editor** de Supabase:
+1. Ve a **Authentication** -> **URL Configuration**.
+2. En la sección **Redirect URLs**, haz clic en **Add URL**.
+3. Pega exactamente esto: `https://tragalero.com/admin.html`
+4. Dale a **Save**.
 
-```sql
--- 1. Borrar TODOS los usuarios de la tabla de autenticación (CUIDADO: Borra a todos los usuarios registrados)
-DELETE FROM auth.users;
+### Cambios en el código:
+He modificado el archivo `login.html` para que, al momento del registro, le pida a Supabase que el botón del correo redirija a la página de administración.
 
--- 2. También puedes borrar un usuario específico por su correo si no quieres borrar a todos:
--- DELETE FROM auth.users WHERE email = 'ejemplo@correo.com';
-```
-
-*(Nota: Al borrar de auth.users, el trigger que configuramos se encargará de borrar automáticamente sus perfiles en la tabla public.usuarios).*
-
-¡Con esto ya puedes hacer todas tus pruebas de registro desde cero! No hace falta mover nada más, el sistema ya es robusto y seguro.
+¡Con esto ya tienes el flujo perfecto de principio a fin!
