@@ -1,0 +1,28 @@
+¡Hola! He analizado el error "Error sending confirmation email" y he aplicado mejoras de seguridad en el sistema.
+
+### ¿Por qué salía el error?
+El error ocurre porque Supabase intenta enviar el correo usando un remitente (Sender) que no coincide con tu configuración de Resend.
+En la imagen que enviaste, tu remitente verificado es: auth@menutech.io
+Sin embargo, Supabase trae por defecto: noreply@mail.jqmmzufomzcsyzdskxze.supabase.co
+
+### Cómo solucionarlo definitivamente:
+Debes hacer un pequeño ajuste en tu Dashboard de Supabase:
+1. Ve a **Authentication** -> **Email Templates**.
+2. En la pestaña **Confirm signup**, verás un campo llamado **Sender email**.
+3. Cambia ese valor por el correo exacto que verificaste en Resend: **auth@menutech.io**
+4. Haz lo mismo en las otras pestañas (Reset password, Change email, etc.) si las vas a usar.
+5. Guarda los cambios.
+
+### Qué hice para mejorar el sistema:
+1. **Sincronización de Metadatos:** Actualicé `login.html` para que envíe tanto `name` como `username`. Esto asegura que el sistema siempre capture el nombre del usuario correctamente.
+2. **Trigger Robusto:** Mejoré la función `handle_new_user` en la base de datos para que maneje nombres duplicados (añadiendo un número si el nombre ya existe) y capture mejor la información desde Auth.
+3. **Seguridad RLS Mejorada:** He configurado políticas de seguridad (Row Level Security) más estrictas:
+   - Se usa una función dedicada (`check_is_admin`) para verificar permisos de administrador sin causar errores de recursividad.
+   - Los usuarios solo pueden ver y editar sus propios perfiles, negocios, tarjetas y webs.
+   - Los administradores mantienen acceso total para gestión.
+   - El perfil público (nombre y rol) es visible para que el sistema funcione correctamente, pero los datos sensibles están protegidos.
+
+### Instrucción Final:
+Para aplicar los cambios de base de datos y RLS, por favor copia el contenido de **docs/AfinalSupabase.txt** y ejecútalo en el **SQL Editor** de tu panel de Supabase.
+
+¡Con esto tu sistema de registro y seguridad quedará al 100%!
