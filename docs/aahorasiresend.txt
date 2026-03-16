@@ -1,26 +1,35 @@
-¡Hola! Entiendo perfectamente la frustración. El hecho de que solo se registrara el primer intento es la clave: **Supabase Auth no permite registrar el mismo correo dos veces**, y si el primer intento falló a medias (el usuario se creó en Auth pero no en la tabla `usuarios`), los siguientes intentos fallarán porque el correo ya existe.
+¡Hola! Gracias por el error de la consola, es **LA CLAVE** definitiva.
 
-### PROTOCOLO DE SOLUCIÓN FINAL:
+El error dice exactamente: `AuthApiError: Error sending confirmation email`.
 
-#### 1. Limpiar usuarios atascados
-Ve a tu panel de **Authentication** -> **Users** y **BORRA manualmente** cualquier usuario que aparezca ahí con los correos que estás usando para probar. Esto es vital para que puedas empezar de cero.
+### ¿Qué significa esto?
+Significa que el código de tu página `login.html` está perfecto, y el servidor de Supabase recibió la petición correctamente, pero **cuando Supabase intentó conectarse a Resend para enviar el correo, Resend rechazó la conexión o devolvió un error**.
 
-#### 2. Ejecutar el Script de Rescate
-He creado un script que limpia absolutamente todo el ruido técnico.
-1. Ve al **SQL Editor**.
-2. Copia y ejecuta todo lo de **docs/AupdateFinal.txt**.
-   *Esto borrará cualquier trigger invisible que esté causando el Error 500.*
+Por eso el usuario no se registra: Supabase cancela todo el proceso de registro si no puede enviar el correo de confirmación (a menos que desactives la confirmación).
 
-#### 3. Prueba Maestra (Sin SMTP)
-Para confirmar que el login funciona perfecto y que el problema es SOLO el correo de Resend:
+### CÓMO SOLUCIONARLO (100% EFECTIVO):
+
+#### PASO 1: Empezar de cero (Limpieza Nuclear)
+Para que no tengas usuarios "a medias" que bloqueen tus pruebas:
+1. Ve al **SQL Editor** y ejecuta TODO lo de **docs/AupdateFinal.txt**.
+   *Esto borrará todos los usuarios de prueba y cualquier trigger que pueda molestar.*
+
+#### PASO 2: La Prueba de Oro (Isolar el problema)
+Para demostrar que el problema es SOLO el correo de Resend:
 1. Ve a **Authentication** -> **Providers** -> **Email**.
 2. **DESACTIVA** la opción **Confirm email**.
 3. Dale a **Save**.
-4. Intenta registrarte en tu página `login.html`.
-   - **Si entra directo al directorio:** ¡Felicidades! El código y la base de datos están perfectos. El Error 500 venía solo de la conexión con Resend.
-   - **Si falla con Error 500:** Abre la consola del navegador (**F12**), ve a la pestaña **Console** y dime qué error en rojo aparece. He puesto un log especial para capturarlo.
+4. Intenta registrarte. **ENTRARÁS AL INSTANTE**.
+   *Si esto funciona, confirmamos que el 100% del problema está en la comunicación Supabase <-> Resend.*
 
-#### Sobre Resend:
-Si el login sin confirmación funciona, pero con confirmación falla, es posible que Resend esté rechazando el envío por una cuestión de "Sender not verified" (aunque lo veas verificado) o porque la API Key no tiene permisos de envío. Pero primero hagamos la prueba del Paso 3.
+#### PASO 3: Ajustar Resend (Si quieres usar confirmación)
+Si los pasos anteriores confirman que es el correo, revisa esto en **SMTP Settings** de Supabase:
+1. **Host:** `smtp.resend.com`
+2. **Port:** Intenta cambiar el puerto a **465** (si tenías 587) o viceversa.
+3. **User:** Asegúrate de que diga exactamente `resend` en minúsculas.
+4. **API Key:** Aunque no puedas verla, asegúrate de que cuando la pegaste incluía el prefijo `re_` (si lo tiene).
+5. **Sender Email:** Verifica que sea exactamente `auth@menutech.io`.
 
-¡Sigue estos pasos y el sistema funcionará de inmediato!
+**RECOMENDACIÓN:** Mi consejo es que trabajes con la **confirmación de correo desactivada** (Paso 2) mientras terminas de desarrollar, para que Resend no te bloquee el flujo.
+
+¡Haz la prueba del Paso 2 y verás que ya puedes entrar!

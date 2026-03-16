@@ -180,7 +180,7 @@
                     password: pass,
                     options: {
                         data: {
-                            name: username,
+                            full_name: username,
                             username: username
                         }
                     }
@@ -195,8 +195,10 @@
             } catch (err) {
                 console.error("Error completo de registro:", err);
                 let errorMsg = err.message;
-                if (err.status === 500) {
-                    errorMsg = "Error 500: Fallo en el servidor. Revisa la consola (F12) para ver el detalle técnico. Esto suele ser un problema de SMTP o de un Trigger bloqueado.";
+                if (errorMsg.includes("Error sending confirmation email")) {
+                    errorMsg = "El servidor de Supabase no pudo enviar el correo a través de Resend. Esto confirma que el problema está en los SMTP Settings de Supabase o en los permisos de tu API Key de Resend.";
+                } else if (err.status === 500) {
+                    errorMsg = "Error 500: Fallo en el servidor. Revisa la consola (F12). Probablemente sea un problema de configuración SMTP o un Trigger corrupto.";
                 }
                 showMessage(errorMsg);
             }
