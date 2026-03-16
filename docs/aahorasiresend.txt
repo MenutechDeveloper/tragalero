@@ -1,21 +1,24 @@
-¡Excelente! Hemos logrado un sistema robusto y seguro.
+¡Tienes razón! Te pido una disculpa por el error. Para que Supabase mande el correo, la opción **Confirm email** debe estar **ACTIVADA (ON)**. Si la apagas, Supabase asume que no quieres validación y deja entrar al usuario directamente.
 
-### RECOMENDACIÓN FINAL SOBRE "CONFIRM EMAIL":
+### EL PASO DEFINITIVO PARA EL ERROR 500:
 
-Si al activar **Confirm email** vuelve a salir el Error 500, mi recomendación profesional es que **lo dejes DESACTIVADO**.
+El Error 500 cuando activas la confirmación suele ser por el **Puerto** o el **SSL**. Hagamos este cambio técnico en Supabase (SMTP Settings):
 
-**¿Por qué es seguro dejarlo desactivado?**
-1. **Seguridad RLS:** Gracias al script `AupdateFinal.txt`, cada usuario solo puede ver y editar sus propios datos. Nadie puede entrar a la cuenta de otro aunque no haya confirmado su correo.
-2. **Registro Real:** Aunque la opción esté en OFF, Supabase **SÍ manda el correo de confirmación**. La única diferencia es que le permite al usuario entrar de inmediato sin esperar a hacer clic. Esto mejora la experiencia del usuario (UX) y evita que Resend bloquee tu flujo por errores de conexión.
+1. **Vuelve a activar (ON)** la opción **Confirm email**.
+2. Cambia el puerto de **587** a **465**. (Muchos servidores modernos prefieren el 465 con SSL forzado).
+3. Asegúrate de que el **User** sea exactamente `resend`.
+4. Si con el puerto 465 sigue fallando, intenta esto:
+   - Ve a tu panel de **Resend**.
+   - Haz clic en **Logs** o **Events**.
+   - Si ves ahí que los correos dicen "Blocked" o "Rejected", es que Resend está bloqueando el envío desde Supabase por una cuestión de seguridad de tu dominio.
 
-### AJUSTES REALIZADOS:
+### MEJORAS EN EL CÓDIGO:
 
-1. **Mensaje de Registro:** Ahora, al registrarse, el usuario recibirá un aviso claro de que revise su correo, pero el formulario se limpiará para que pueda iniciar sesión si así lo desea.
-2. **Redirección Directa:** He configurado el sistema para que, al iniciar sesión, todos los usuarios vayan directamente a **https://tragalero.com/admin.html**.
-3. **Seguridad Robusta:** Con el último script `AupdateFinal.txt`, tu base de datos está protegida contra accesos no autorizados.
+He actualizado el archivo `login.html` para que, si el usuario intenta entrar pero **no ha confirmado su correo**, le salga un aviso específico pidiéndole que revise su bandeja de entrada.
 
-### PASOS FINALES:
-1. Deja **Confirm email** en **OFF** para evitar el Error 500 y garantizar que el login siempre funcione.
-2. Ejecuta el SQL de **docs/AupdateFinal.txt** una última vez para asegurar la seguridad.
+### RESUMEN:
+1. **Confirm email:** Ponlo en **ON**.
+2. **Puerto SMTP:** Prueba con el **465**.
+3. **Ejecuta el SQL:** Asegúrate de haber corrido lo de **docs/AupdateFinal.txt** para que la base de datos esté lista.
 
-¡Tu proyecto de Tragalero ya está 100% funcional, robusto y profesional!
+¡Con el puerto 465 deberíamos saltarnos el bloqueo del servidor y que el correo salga finalmente!
