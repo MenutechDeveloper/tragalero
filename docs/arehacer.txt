@@ -2,10 +2,10 @@
 -- SCRIPT DE REPARACIÓN INTEGRAL PARA SUPABASE - TRAGALERO
 -- ==========================================================
 -- Este script limpia, recrea y asegura que el esquema sea funcional.
--- EJECUTAR ESTO EN EL "SQL EDITOR" DE SUPABASE.
+-- EJECUTAR ESTO EN EL "SQL EDITOR" DE SUPABASE SI TIENES PROBLEMAS.
 
--- 0. LIMPIEZA TOTAL DE USUARIO ESPECÍFICO (PARA EMPEZAR DE CERO)
--- Esto elimina al usuario tanto de auth.users como de usuarios.
+-- 0. LIMPIEZA TOTAL DE USUARIO ESPECÍFICO (OPCIONAL, DESCOMENTAR SI ES NECESARIO)
+/*
 DO $$
 DECLARE
     target_email TEXT := 'francisco.menutech@gmail.com';
@@ -17,12 +17,12 @@ BEGIN
         RAISE NOTICE 'Usuario % eliminado correctamente.', target_email;
     END IF;
 END $$;
+*/
 
 -- 1. EXTENSIONES Y FUNCIONES DE APOYO
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Función segura para verificar si es Admin (EVITA RECURSIVIDAD RLS)
--- El error "Database error querying schema" ocurre cuando una política se consulta a sí misma.
 CREATE OR REPLACE FUNCTION public.check_is_admin()
 RETURNS BOOLEAN AS $$
 BEGIN
@@ -38,14 +38,15 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 -- Tabla de Usuarios
 CREATE TABLE IF NOT EXISTS public.usuarios (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL, -- Eliminamos UNIQUE aquí para evitar fallos en el trigger, o manejamos el conflicto
+    name TEXT NOT NULL,
+    email TEXT UNIQUE,
     role TEXT DEFAULT 'Owner' CHECK (role IN ('Owner', 'Admin')),
     is_active BOOLEAN DEFAULT TRUE,
     max_businesses INTEGER DEFAULT 1,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Asegurar que el nombre sea único pero de forma manejable
+-- Asegurar que el nombre sea único
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'usuarios_name_key') THEN
@@ -111,11 +112,21 @@ CREATE TABLE IF NOT EXISTS public.digital_cards (
     UNIQUE(user_id)
 );
 
+CREATE TABLE IF NOT EXISTS public.user_websites (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES public.usuarios(id) ON DELETE CASCADE,
+    config JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id)
+);
+
 -- 3. SEGURIDAD (RLS)
 ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bento_grid ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.digital_cards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_websites ENABLE ROW LEVEL SECURITY;
 
 -- Limpieza de políticas antiguas
 DO $$
@@ -143,8 +154,10 @@ CREATE POLICY "Public card view" ON public.digital_cards FOR SELECT USING (TRUE)
 CREATE POLICY "Owner manage card" ON public.digital_cards FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Admin full access card" ON public.digital_cards FOR ALL USING (public.check_is_admin());
 
+CREATE POLICY "Owner manage web" ON public.user_websites FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Admin full access web" ON public.user_websites FOR ALL USING (public.check_is_admin());
+
 -- 4. DISPARADOR DE REGISTRO (TRIGGER)
--- Mejorado para evitar fallos por nombres duplicados
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -152,19 +165,24 @@ DECLARE
     final_name TEXT;
     counter INTEGER := 0;
 BEGIN
-    base_name := COALESCE(NEW.raw_user_meta_data->>'username', NEW.raw_user_meta_data->>'full_name', SPLIT_PART(NEW.email, '@', 1));
+    base_name := COALESCE(
+        NEW.raw_user_meta_data->>'name',
+        NEW.raw_user_meta_data->>'username',
+        NEW.raw_user_meta_data->>'full_name',
+        SPLIT_PART(NEW.email, '@', 1)
+    );
     final_name := base_name;
 
-    -- Bucle para encontrar un nombre único si ya existe
     WHILE EXISTS (SELECT 1 FROM public.usuarios WHERE name = final_name) LOOP
         counter := counter + 1;
         final_name := base_name || counter;
     END LOOP;
 
-    INSERT INTO public.usuarios (id, name, role)
-    VALUES (NEW.id, final_name, 'Owner')
+    INSERT INTO public.usuarios (id, name, email, role)
+    VALUES (NEW.id, final_name, NEW.email, 'Owner')
     ON CONFLICT (id) DO UPDATE SET
-        name = EXCLUDED.name;
+        email = EXCLUDED.email,
+        name = COALESCE(public.usuarios.name, EXCLUDED.name);
 
     RETURN NEW;
 END;
@@ -174,9 +192,3 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
--- 5. NOTA FINAL PARA EL USUARIO
--- Si después de correr esto sigue el error:
--- 1. Ve a "Settings" -> "API".
--- 2. Clic en "Reload PostgREST schema".
--- 3. Asegúrate de que no haya otros triggers personalizados en la tabla auth.users.
