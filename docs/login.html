@@ -162,7 +162,11 @@
                     window.location.href = './admin.html';
                 }
             } catch (err) {
-                showMessage(err.message);
+                if (err.message.includes("Email not confirmed")) {
+                    showMessage("Tu correo aún no ha sido confirmado. Por favor, revisa tu bandeja de entrada y haz clic en el enlace de confirmación.", "warning");
+                } else {
+                    showMessage(err.message);
+                }
             }
         });
 
