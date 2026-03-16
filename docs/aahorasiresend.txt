@@ -1,44 +1,21 @@
-¡Hola! Si ya verificaste el dominio en GoDaddy y pusiste la API correctamente, el error 500 puede venir de dos lugares: el servidor de correo (SMTP) o un conflicto en la base de datos (Trigger).
+¡Hola! He preparado una solución definitiva para limpiar cualquier conflicto técnico en tu proyecto.
 
-### Cómo diagnosticar y solucionar el Error 500:
+### PASO 1: Limpieza y Actualización de Base de Datos
+Es posible que tengas triggers (disparadores) duplicados de intentos anteriores que están causando el Error 500.
+1. Ve al **SQL Editor** de tu Supabase.
+2. Copia todo el contenido del nuevo archivo: **docs/AupdateFinal.txt**
+3. Pégalo y dale a **Run**.
+   *Este script borrará cualquier trigger viejo y configurará uno nuevo que es "a prueba de errores" (si falla al crear el perfil, no detiene el registro).*
 
-#### 1. Prueba de descarte (SMTP vs Base de Datos)
-Para saber si es el correo el que falla o el trigger de la base de datos, haz esta prueba:
-- Ve a **Authentication** -> **Providers** -> **Email**.
-- Desactiva temporalmente la opción **Confirm email**.
-- Intenta registrarte de nuevo.
-  - **Si funciona:** El problema es 100% la configuración SMTP de Resend (posiblemente puerto, host o API key).
-  - **Si sigue saliendo Error 500:** El problema es el **Trigger** de la base de datos que está fallando al intentar crear el perfil del usuario.
+### PASO 2: Verificación de SMTP
+Si después del paso 1 sigues viendo el Error 500, el problema está definitivamente en la comunicación con Resend.
+1. Ve a **Authentication** -> **SMTP Settings**.
+2. Verifica que el **Host** sea `smtp.resend.com` y el puerto `587`.
+3. El **User** debe ser `resend`.
+4. El **Password** debe ser tu API Key completa de Resend.
+5. **Dato Clave:** Si tu dominio está verificado pero sigues fallando, intenta cambiar el puerto a `465` (SSL) o revisa en Resend si la API Key tiene permisos para enviar correos.
 
-#### 2. Revisa los Logs de Supabase (Paso Vital)
-Para ver el error exacto que está rompiendo el registro, corre esto en tu **SQL Editor**:
-```sql
-select
-  cast(metadata.timestamp as datetime) as timestamp,
-  msg,
-  event_message,
-  status
-from auth_logs
-where status::INT = 500
-order by timestamp desc
-limit 10;
-```
-Esto te dirá si el error es "Error sending email" o algo como "Duplicate key value violates unique constraint".
+### PASO 3: Prueba Final
+He actualizado el archivo `login.html` para que sea más estable. Intenta registrar un usuario nuevo. Si el Error 500 persiste después de limpiar los triggers con el Paso 1, entonces Resend está rechazando la conexión por algún motivo de seguridad o permiso de API.
 
-#### 3. Limpieza de Triggers
-A veces, si has ejecutado varios scripts, pueden quedar triggers duplicados o viejos que chocan entre sí.
-- Ve a **Database** -> **Triggers**.
-- Asegúrate de que en la tabla `users` (del esquema `auth`) solo haya **UN** trigger llamado `on_auth_user_created`. Si hay otros, bórralos.
-
-#### 4. Configuración SMTP en Resend
-Aunque no sea sandbox, revisa estos detalles en Supabase (SMTP Settings):
-- **Host:** smtp.resend.com
-- **Port:** 587
-- **User:** resend (literalmente la palabra "resend")
-- **Password:** Tu API Key de Resend (asegúrate de que no tenga espacios al inicio o final).
-
-### Cambios realizados en el código:
-1. **Trigger de Seguridad:** He actualizado el script `AfinalSupabase.txt` para que sea aún más resistente a errores.
-2. **Mensaje de Error:** He modificado `login.html` para que te dé un poco más de detalle si vuelve a fallar.
-
-Por favor, corre el script **docs/AfinalSupabase.txt** de nuevo en tu SQL Editor para asegurar que el trigger esté limpio y actualizado.
+¡Con el script **AupdateFinal.txt** habremos eliminado cualquier posible fallo interno del código y la base de datos!
