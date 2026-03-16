@@ -193,9 +193,10 @@
                     setTimeout(() => window.location.href = './directorymap.html', 2000);
                 }
             } catch (err) {
+                console.error("Error completo de registro:", err);
                 let errorMsg = err.message;
                 if (err.status === 500) {
-                    errorMsg = "Error del servidor (500). Esto suele ocurrir por un conflicto en el envío del correo de confirmación o en el proceso de creación del perfil. Por favor, intenta de nuevo o contacta al administrador.";
+                    errorMsg = "Error 500: Fallo en el servidor. Revisa la consola (F12) para ver el detalle técnico. Esto suele ser un problema de SMTP o de un Trigger bloqueado.";
                 }
                 showMessage(errorMsg);
             }
