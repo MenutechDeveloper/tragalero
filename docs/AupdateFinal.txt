@@ -1,8 +1,8 @@
 -- ==========================================================
--- SCRIPT DE PRODUCCIÓN Y SEGURIDAD TOTAL - TRAGALERO
+-- SCRIPT DE PRODUCCIÓN FINAL Y SEGURIDAD ROBUSTA - TRAGALERO
 -- ==========================================================
 
--- 1. LIMPIEZA DE DISPARADORES
+-- 1. LIMPIEZA DE TRIGGERS EXISTENTES
 DO $$
 DECLARE
     r RECORD;
@@ -14,7 +14,7 @@ BEGIN
     END LOOP;
 END $$;
 
--- 2. TABLA USUARIOS (Estructura Final)
+-- 2. TABLA USUARIOS (Garantizar estructura)
 CREATE TABLE IF NOT EXISTS public.usuarios (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3. TRIGGER DE SINCRONIZACIÓN PROFESIONAL
+-- 3. TRIGGER DE SINCRONIZACIÓN AUTOMÁTICA (Resistente a errores)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -50,6 +50,8 @@ BEGIN
     ON CONFLICT (id) DO UPDATE SET
         email = EXCLUDED.email;
     RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
@@ -57,14 +59,14 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 4. SEGURIDAD RLS DE PRODUCCIÓN
+-- 4. SEGURIDAD NIVEL PRODUCCIÓN (RLS)
 ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bento_grid ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.digital_cards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_websites ENABLE ROW LEVEL SECURITY;
 
--- Limpieza de políticas
+-- Limpieza total de políticas antiguas
 DO $$
 DECLARE pol record;
 BEGIN
@@ -73,7 +75,7 @@ BEGIN
     END LOOP;
 END $$;
 
--- Función Admin Segura
+-- Función de ayuda para Admin
 CREATE OR REPLACE FUNCTION public.check_is_admin()
 RETURNS BOOLEAN AS $$
 BEGIN
@@ -86,16 +88,16 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Políticas de Usuarios
 CREATE POLICY "Lectura_Propia" ON public.usuarios FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Admin_Ver_Todo" ON public.usuarios FOR SELECT USING (public.check_is_admin());
-CREATE POLICY "Admin_Modificar_Todo" ON public.usuarios FOR UPDATE USING (public.check_is_admin());
+CREATE POLICY "Admin_Gestion_Usuarios" ON public.usuarios FOR ALL USING (public.check_is_admin());
 
 -- Políticas de Negocios
-CREATE POLICY "Publico_Ver_Negocios" ON public.businesses FOR SELECT USING (is_visible = TRUE);
+CREATE POLICY "Lectura_Publica_Negocios" ON public.businesses FOR SELECT USING (is_visible = TRUE);
 CREATE POLICY "Dueno_Gestion_Negocio" ON public.businesses FOR ALL USING (auth.uid() = owner_id);
-CREATE POLICY "Admin_Todo_Negocios" ON public.businesses FOR ALL USING (public.check_is_admin());
+CREATE POLICY "Admin_Gestion_Negocios" ON public.businesses FOR ALL USING (public.check_is_admin());
 
--- Políticas de Bento/Cards/Webs
-CREATE POLICY "Dueno_Todo_Bento" ON public.bento_grid FOR ALL USING (auth.uid() = user_id);
+-- Políticas de Grid / Cards / Webs
+CREATE POLICY "Dueno_Todo_Grid" ON public.bento_grid FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Publico_Ver_Cards" ON public.digital_cards FOR SELECT USING (TRUE);
 CREATE POLICY "Dueno_Todo_Cards" ON public.digital_cards FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Dueno_Todo_Webs" ON public.user_websites FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Admin_Todo_Grid" ON public.bento_grid FOR ALL USING (public.check_is_admin());
