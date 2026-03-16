@@ -1,28 +1,24 @@
-¡Hola! He analizado el error "Error sending confirmation email" y he aplicado mejoras de seguridad en el sistema.
+¡Hola! Tienes razón, te pido una disculpa por la confusión en el paso anterior. En la versión actual de Supabase, el remitente se configura de forma global y no por plantilla.
 
-### ¿Por qué salía el error?
-El error ocurre porque Supabase intenta enviar el correo usando un remitente (Sender) que no coincide con tu configuración de Resend.
-En la imagen que enviaste, tu remitente verificado es: auth@menutech.io
-Sin embargo, Supabase trae por defecto: noreply@mail.jqmmzufomzcsyzdskxze.supabase.co
+### Cómo corregir el error del remitente (Sender):
 
-### Cómo solucionarlo definitivamente:
-Debes hacer un pequeño ajuste en tu Dashboard de Supabase:
-1. Ve a **Authentication** -> **Email Templates**.
-2. En la pestaña **Confirm signup**, verás un campo llamado **Sender email**.
-3. Cambia ese valor por el correo exacto que verificaste en Resend: **auth@menutech.io**
-4. Haz lo mismo en las otras pestañas (Reset password, Change email, etc.) si las vas a usar.
-5. Guarda los cambios.
+1. En el menú de la izquierda, ve a **Authentication**.
+2. Bajo la sección **CONFIGURATION**, busca y haz clic en **SMTP Settings** (es donde tomaste la primera captura que me enviaste).
+3. Asegúrate de que los campos sean:
+   - **Sender email address:** auth@menutech.io
+   - **Sender name:** Tragalero
+4. **IMPORTANTE:** Si esos campos ya están correctos y sigue fallando, revisa esto:
+   - **Límite de Sandbox de Resend:** Si tu cuenta de Resend es nueva y está en modo "Sandbox", **solo te permitirá enviar correos a la misma dirección con la que te registraste en Resend**. Si intentas registrar un usuario con otro correo (como uno de Gmail personal), Resend bloqueará el envío y Supabase dará ese error.
+   - **Permisos de la API Key:** Asegúrate de que la API Key que creaste en Resend tenga permisos de "Full Access" o al menos "Sending".
 
-### Qué hice para mejorar el sistema:
-1. **Sincronización de Metadatos:** Actualicé `login.html` para que envíe tanto `name` como `username`. Esto asegura que el sistema siempre capture el nombre del usuario correctamente.
-2. **Trigger Robusto:** Mejoré la función `handle_new_user` en la base de datos para que maneje nombres duplicados (añadiendo un número si el nombre ya existe) y capture mejor la información desde Auth.
-3. **Seguridad RLS Mejorada:** He configurado políticas de seguridad (Row Level Security) más estrictas:
-   - Se usa una función dedicada (`check_is_admin`) para verificar permisos de administrador sin causar errores de recursividad.
-   - Los usuarios solo pueden ver y editar sus propios perfiles, negocios, tarjetas y webs.
-   - Los administradores mantienen acceso total para gestión.
-   - El perfil público (nombre y rol) es visible para que el sistema funcione correctamente, pero los datos sensibles están protegidos.
+### Cómo verificar el error exacto:
+Si después de ajustar el SMTP sigue fallando, puedes ver exactamente qué dice el servidor de correo:
+1. Ve a **Authentication** -> **Audit Logs**.
+2. Busca las entradas que digan "error" o "500". Ahí Supabase te dirá el mensaje exacto que le devuelve Resend (por ejemplo: "Unauthorized" o "Sender not verified").
 
-### Instrucción Final:
-Para aplicar los cambios de base de datos y RLS, por favor copia el contenido de **docs/AfinalSupabase.txt** y ejecútalo en el **SQL Editor** de tu panel de Supabase.
+### Resumen de mejoras aplicadas en el código:
+He dejado todo listo para que, una vez pase el correo, el resto funcione perfecto:
+1. **login.html:** Ya envía los metadatos correctos para el nombre de usuario.
+2. **AfinalSupabase.txt / arehacer.txt:** Contienen el trigger mejorado que evita errores de nombres duplicados y las políticas de seguridad (RLS) para proteger tus tablas. Solo los dueños pueden ver sus datos y los admins tienen control total.
 
-¡Con esto tu sistema de registro y seguridad quedará al 100%!
+Recuerda ejecutar el contenido de **docs/AfinalSupabase.txt** en tu SQL Editor para activar toda la seguridad.
