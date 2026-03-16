@@ -193,7 +193,11 @@
                     setTimeout(() => window.location.href = './directorymap.html', 2000);
                 }
             } catch (err) {
-                showMessage(err.message);
+                let errorMsg = err.message;
+                if (err.status === 500) {
+                    errorMsg = "Error del servidor (500). Por favor revisa los logs en Supabase o verifica tu configuración SMTP/Trigger.";
+                }
+                showMessage(errorMsg);
             }
         });
     </script>
