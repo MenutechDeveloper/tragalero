@@ -1,35 +1,20 @@
-¡Hola! Gracias por el error de la consola, es **LA CLAVE** definitiva.
+¡Excelente noticia! Si ya pudiste registrarte y confirmar el correo, el 90% del problema está resuelto.
 
-El error dice exactamente: `AuthApiError: Error sending confirmation email`.
+### ¿Por qué parece que te saca de la sesión?
+Esto ocurre porque después de confirmar el correo e iniciar sesión, el código busca tu perfil en la tabla `public.usuarios`. Si la seguridad (RLS) de esa tabla está muy cerrada, el código no encuentra tu perfil y piensa que no has iniciado sesión, mandándote de vuelta al login.
 
-### ¿Qué significa esto?
-Significa que el código de tu página `login.html` está perfecto, y el servidor de Supabase recibió la petición correctamente, pero **cuando Supabase intentó conectarse a Resend para enviar el correo, Resend rechazó la conexión o devolvió un error**.
+### SOLUCIÓN:
 
-Por eso el usuario no se registra: Supabase cancela todo el proceso de registro si no puede enviar el correo de confirmación (a menos que desactives la confirmación).
+#### 1. Corregir Permisos de Lectura
+He actualizado el script para que te permita leer tu propio perfil.
+1. Ve al **SQL Editor**.
+2. Ejecuta todo lo de **docs/AupdateFinal.txt**.
+   *Esto habilitará la política "Permitir_lectura_propia" para que el sistema reconozca tu sesión.*
 
-### CÓMO SOLUCIONARLO (100% EFECTIVO):
+#### 2. Mejora en el Código
+He modificado `supabase_logic.js` para que sea más inteligente: ahora, si por alguna razón no puede leer tu perfil de la tabla, usará tus datos básicos de correo para dejarte entrar y que no te saque al login.
 
-#### PASO 1: Empezar de cero (Limpieza Nuclear)
-Para que no tengas usuarios "a medias" que bloqueen tus pruebas:
-1. Ve al **SQL Editor** y ejecuta TODO lo de **docs/AupdateFinal.txt**.
-   *Esto borrará todos los usuarios de prueba y cualquier trigger que pueda molestar.*
+#### 3. Prueba Final
+Una vez ejecutes el script del Paso 1, intenta loguearte de nuevo. Ya no debería sacarte, sino llevarte directamente a `directorymap.html` o `restaurantapp.html`.
 
-#### PASO 2: La Prueba de Oro (Isolar el problema)
-Para demostrar que el problema es SOLO el correo de Resend:
-1. Ve a **Authentication** -> **Providers** -> **Email**.
-2. **DESACTIVA** la opción **Confirm email**.
-3. Dale a **Save**.
-4. Intenta registrarte. **ENTRARÁS AL INSTANTE**.
-   *Si esto funciona, confirmamos que el 100% del problema está en la comunicación Supabase <-> Resend.*
-
-#### PASO 3: Ajustar Resend (Si quieres usar confirmación)
-Si los pasos anteriores confirman que es el correo, revisa esto en **SMTP Settings** de Supabase:
-1. **Host:** `smtp.resend.com`
-2. **Port:** Intenta cambiar el puerto a **465** (si tenías 587) o viceversa.
-3. **User:** Asegúrate de que diga exactamente `resend` en minúsculas.
-4. **API Key:** Aunque no puedas verla, asegúrate de que cuando la pegaste incluía el prefijo `re_` (si lo tiene).
-5. **Sender Email:** Verifica que sea exactamente `auth@menutech.io`.
-
-**RECOMENDACIÓN:** Mi consejo es que trabajes con la **confirmación de correo desactivada** (Paso 2) mientras terminas de desarrollar, para que Resend no te bloquee el flujo.
-
-¡Haz la prueba del Paso 2 y verás que ya puedes entrar!
+¡Ya casi lo tienes! Con este ajuste de permisos la sesión se mantendrá estable.
