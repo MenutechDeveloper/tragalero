@@ -195,7 +195,7 @@
             } catch (err) {
                 let errorMsg = err.message;
                 if (err.status === 500) {
-                    errorMsg = "Error del servidor (500). Por favor revisa los logs en Supabase o verifica tu configuración SMTP/Trigger.";
+                    errorMsg = "Error del servidor (500). Esto suele ocurrir por un conflicto en el envío del correo de confirmación o en el proceso de creación del perfil. Por favor, intenta de nuevo o contacta al administrador.";
                 }
                 showMessage(errorMsg);
             }

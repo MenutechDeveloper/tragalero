@@ -1,0 +1,119 @@
+-- ==========================================================
+-- SCRIPT DEFINITIVO DE ACTUALIZACIÓN Y SEGURIDAD - TRAGALERO
+-- ==========================================================
+-- 1. LIMPIEZA TOTAL DE TRIGGERS (ELIMINA CUALQUIER ERROR PREVIO)
+DO $$
+DECLARE
+    t_name RECORD;
+BEGIN
+    FOR t_name IN (SELECT trigger_name FROM information_schema.triggers WHERE event_object_table = 'users' AND event_object_schema = 'auth') LOOP
+        EXECUTE format('DROP TRIGGER IF EXISTS %I ON auth.users', t_name.trigger_name);
+    END LOOP;
+END $$;
+
+-- 2. FUNCIÓN DE ADMIN SEGURA
+CREATE OR REPLACE FUNCTION public.check_is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.usuarios
+        WHERE id = auth.uid() AND role = 'Admin'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- 3. ACTUALIZACIÓN DE TABLA USUARIOS
+CREATE TABLE IF NOT EXISTS public.usuarios (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE,
+    role TEXT DEFAULT 'Owner' CHECK (role IN ('Owner', 'Admin')),
+    is_active BOOLEAN DEFAULT TRUE,
+    max_businesses INTEGER DEFAULT 1,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Asegurar restricción de nombre único de forma segura
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'usuarios_name_key') THEN
+        ALTER TABLE public.usuarios ADD CONSTRAINT usuarios_name_key UNIQUE (name);
+    END IF;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'La restricción de nombre único ya existe o no se pudo crear.';
+END $$;
+
+-- 4. DISPARADOR DE REGISTRO (TRIGGER) ULTRA RESISTENTE
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+DECLARE
+    base_name TEXT;
+    final_name TEXT;
+    counter INTEGER := 0;
+BEGIN
+    -- Extraer nombre: prioridad metadatos 'name', luego 'username', luego parte del email
+    base_name := COALESCE(
+        NEW.raw_user_meta_data->>'name',
+        NEW.raw_user_meta_data->>'username',
+        SPLIT_PART(NEW.email, '@', 1),
+        'Usuario'
+    );
+    final_name := base_name;
+
+    -- Garantizar que el nombre sea único en la tabla public.usuarios
+    WHILE EXISTS (SELECT 1 FROM public.usuarios WHERE name = final_name AND id != NEW.id) LOOP
+        counter := counter + 1;
+        final_name := base_name || counter;
+    END LOOP;
+
+    -- Insertar o Actualizar el perfil
+    INSERT INTO public.usuarios (id, name, email, role)
+    VALUES (NEW.id, final_name, NEW.email, 'Owner')
+    ON CONFLICT (id) DO UPDATE SET
+        email = EXCLUDED.email,
+        name = COALESCE(public.usuarios.name, EXCLUDED.name);
+
+    RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+    -- MUY IMPORTANTE: Si el trigger falla, NO bloqueamos el registro en Auth.
+    -- Esto evita el Error 500 en el login.
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Crear el trigger limpio
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 5. CONFIGURACIÓN DE SEGURIDAD (RLS)
+ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bento_grid ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.digital_cards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_websites ENABLE ROW LEVEL SECURITY;
+
+-- Limpieza y recreación de políticas
+DO $$
+DECLARE pol record;
+BEGIN
+    FOR pol IN (SELECT policyname, tablename FROM pg_policies WHERE schemaname = 'public') LOOP
+        EXECUTE format('DROP POLICY IF EXISTS %I ON %I', pol.policyname, pol.tablename);
+    END LOOP;
+END $$;
+
+-- Políticas de Usuarios
+CREATE POLICY "Usuarios_Ver_Todos" ON public.usuarios FOR SELECT USING (TRUE);
+CREATE POLICY "Usuarios_Editar_Propio" ON public.usuarios FOR ALL USING (auth.uid() = id);
+CREATE POLICY "Admins_Todo_Usuarios" ON public.usuarios FOR ALL USING (public.check_is_admin());
+
+-- Políticas de Negocios
+CREATE POLICY "Negocios_Ver_Publico" ON public.businesses FOR SELECT USING (is_visible = TRUE);
+CREATE POLICY "Negocios_Gestion_Dueno" ON public.businesses FOR ALL USING (auth.uid() = owner_id);
+CREATE POLICY "Admins_Todo_Negocios" ON public.businesses FOR ALL USING (public.check_is_admin());
+
+-- Políticas de Otros (Bento, Cards, Webs)
+CREATE POLICY "Bento_Dueno" ON public.bento_grid FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Cards_Ver_Publico" ON public.digital_cards FOR SELECT USING (TRUE);
+CREATE POLICY "Cards_Dueno" ON public.digital_cards FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Webs_Dueno" ON public.user_websites FOR ALL USING (auth.uid() = user_id);
