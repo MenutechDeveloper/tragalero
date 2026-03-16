@@ -1,35 +1,31 @@
 -- ==========================================================
--- SCRIPT DE LIMPIEZA NUCLEAR Y REPARACIÓN - TRAGALERO
+-- SCRIPT DE RESCATE Y RLS CORREGIDO - TRAGALERO
 -- ==========================================================
 
--- 1. ELIMINAR TODOS LOS USUARIOS DE PRUEBA (Para empezar de cero totalmente)
--- Esto limpia tanto la tabla de autenticación como la de perfiles públicos.
-DELETE FROM auth.users;
-DELETE FROM public.usuarios;
-
--- 2. ELIMINAR CUALQUIER TRIGGER QUE ESTÉ BLOQUEANDO EL SISTEMA
+-- 1. LIMPIEZA DE TRIGGERS
 DO $$
 DECLARE
     r RECORD;
 BEGIN
-    FOR r IN (SELECT trigger_name, event_object_table
+    FOR r IN (SELECT trigger_name
               FROM information_schema.triggers
               WHERE event_object_schema = 'auth' AND event_object_table = 'users') LOOP
         EXECUTE format('DROP TRIGGER IF EXISTS %I ON auth.users', r.trigger_name);
     END LOOP;
 END $$;
 
--- 3. RECREAR TABLA USUARIOS (Estructura mínima garantizada)
+-- 2. TABLA USUARIOS
 CREATE TABLE IF NOT EXISTS public.usuarios (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     email TEXT,
     role TEXT DEFAULT 'Owner',
     is_active BOOLEAN DEFAULT TRUE,
+    max_businesses INTEGER DEFAULT 1,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. TRIGGER ULTRA-BÁSICO (Mínimo riesgo)
+-- 3. TRIGGER DE SINCRONIZACIÓN (SECURITY DEFINER es clave aquí)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -40,10 +36,11 @@ BEGIN
     NEW.email,
     'Owner'
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email;
   RETURN NEW;
 EXCEPTION WHEN OTHERS THEN
-  RETURN NEW; -- Ignorar errores para no romper el registro en Auth
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
@@ -51,7 +48,7 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 5. SEGURIDAD RLS (Permisivo para pruebas rápidas)
+-- 4. POLÍTICAS RLS CORREGIDAS (Para evitar que te saque de la sesión)
 ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
 
@@ -63,5 +60,21 @@ BEGIN
     END LOOP;
 END $$;
 
-CREATE POLICY "Acceso_Pruebas_Usuarios" ON public.usuarios FOR ALL USING (TRUE);
-CREATE POLICY "Acceso_Pruebas_Negocios" ON public.businesses FOR ALL USING (TRUE);
+-- Política vital: Permitir que el usuario lea su propio perfil (Sin esto, getLoggedInUser falla)
+CREATE POLICY "Permitir_lectura_propia"
+ON public.usuarios FOR SELECT
+USING (auth.uid() = id);
+
+-- Política para que los admins vean todo
+CREATE POLICY "Admins_ver_todo"
+ON public.usuarios FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM public.usuarios
+    WHERE id = auth.uid() AND role = 'Admin'
+  )
+);
+
+-- Negocios (Permitir lectura pública y gestión propia)
+CREATE POLICY "Negocios_Ver_Publico" ON public.businesses FOR SELECT USING (TRUE);
+CREATE POLICY "Negocios_Gestion_Dueno" ON public.businesses FOR ALL USING (auth.uid() = owner_id);

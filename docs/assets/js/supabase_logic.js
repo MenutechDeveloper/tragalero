@@ -78,8 +78,16 @@ async function getLoggedInUser() {
         .eq('id', session.user.id)
         .single();
 
-    if (profileError || !profile) {
-        return null;
+    if (profileError) {
+        console.warn("No se pudo obtener el perfil de public.usuarios:", profileError.message);
+        // Si el perfil no existe en la tabla usuarios pero hay sesión,
+        // devolvemos datos básicos del auth para no romper la navegación.
+        return {
+            id: session.user.id,
+            name: session.user.user_metadata?.full_name || session.user.email,
+            role: 'Owner',
+            is_temporary: true
+        };
     }
 
     return profile;
