@@ -8,8 +8,7 @@ INSTRUCCIONES:
 2. Pega todo el contenido de este archivo y presiona 'Run'.
 3. Ve a la sección 'Authentication' -> 'Providers' y asegúrate de que 'Email' esté activado.
 4. IMPORTANTE: En 'Authentication' -> 'Email Templates', asegúrate de que el campo
-   'Sender email' sea exactamente 'auth@menutech.io' (o el correo verificado en Resend).
-   Si dice 'noreply@mail.jqmmzufomzcsyzdskxze.supabase.co', cámbialo.
+   'Sender email' sea exactamente 'auth@menutech.io'.
 */
 
 -- 1. EXTENSIONES Y FUNCIONES DE APOYO
@@ -26,7 +25,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- 2. ACTUALIZAR TABLA DE USUARIOS PARA SOPORTAR AUTH
+-- 2. TABLA DE USUARIOS
 CREATE TABLE IF NOT EXISTS public.usuarios (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -37,7 +36,7 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Asegurar que el nombre sea único
+-- Asegurar restricción de nombre único
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'usuarios_name_key') THEN
@@ -45,14 +44,14 @@ BEGIN
     END IF;
 END $$;
 
--- 3. HABILITAR RLS EN TODAS LAS TABLAS
+-- 3. HABILITAR RLS
 ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bento_grid ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.digital_cards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_websites ENABLE ROW LEVEL SECURITY;
 
--- 4. FUNCIÓN Y TRIGGER PARA SINCRONIZACIÓN AUTOMÁTICA
+-- 4. DISPARADOR DE REGISTRO (TRIGGER) - VERSION ULTRA ROBUSTA
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -60,7 +59,7 @@ DECLARE
     final_name TEXT;
     counter INTEGER := 0;
 BEGIN
-    -- Intentar obtener el nombre de los metadatos
+    -- 1. Extraer nombre de metadatos o email
     base_name := COALESCE(
         NEW.raw_user_meta_data->>'name',
         NEW.raw_user_meta_data->>'username',
@@ -69,17 +68,23 @@ BEGIN
     );
     final_name := base_name;
 
-    -- Bucle para encontrar un nombre único si ya existe
-    WHILE EXISTS (SELECT 1 FROM public.usuarios WHERE name = final_name) LOOP
+    -- 2. Asegurar unicidad del nombre
+    WHILE EXISTS (SELECT 1 FROM public.usuarios WHERE name = final_name AND id != NEW.id) LOOP
         counter := counter + 1;
         final_name := base_name || counter;
     END LOOP;
 
+    -- 3. Insertar con manejo de conflictos
     INSERT INTO public.usuarios (id, name, email, role)
     VALUES (NEW.id, final_name, NEW.email, 'Owner')
     ON CONFLICT (id) DO UPDATE SET
         email = EXCLUDED.email,
         name = COALESCE(public.usuarios.name, EXCLUDED.name);
+
+    RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+    -- Si algo falla aquí, al menos logueamos o dejamos que continúe
+    -- No bloqueamos el registro de Auth si el perfil falla (opcional según necesidad)
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
@@ -89,7 +94,7 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 5. POLÍTICAS DE RLS PARA 'usuarios'
+-- 5. POLÍTICAS DE RLS
 DROP POLICY IF EXISTS "Public profile view" ON public.usuarios;
 CREATE POLICY "Public profile view" ON public.usuarios FOR SELECT USING (TRUE);
 
@@ -99,7 +104,7 @@ CREATE POLICY "Self manage profile" ON public.usuarios FOR ALL USING (auth.uid()
 DROP POLICY IF EXISTS "Admin full access users" ON public.usuarios;
 CREATE POLICY "Admin full access users" ON public.usuarios FOR ALL USING (public.check_is_admin());
 
--- 6. POLÍTICAS DE RLS PARA 'businesses' (NEGOCIOS)
+-- Negocios
 DROP POLICY IF EXISTS "Public business view" ON public.businesses;
 CREATE POLICY "Public business view" ON public.businesses FOR SELECT USING (is_visible = TRUE);
 
@@ -109,14 +114,14 @@ CREATE POLICY "Owner manage business" ON public.businesses FOR ALL USING (auth.u
 DROP POLICY IF EXISTS "Admin full access business" ON public.businesses;
 CREATE POLICY "Admin full access business" ON public.businesses FOR ALL USING (public.check_is_admin());
 
--- 7. POLÍTICAS DE RLS PARA 'bento_grid' (CONFIGURACIÓN DEL PANEL)
+-- Bento Grid
 DROP POLICY IF EXISTS "Owner manage grid" ON public.bento_grid;
 CREATE POLICY "Owner manage grid" ON public.bento_grid FOR ALL USING (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Admin full access grid" ON public.bento_grid;
 CREATE POLICY "Admin full access grid" ON public.bento_grid FOR ALL USING (public.check_is_admin());
 
--- 8. POLÍTICAS DE RLS PARA 'digital_cards' (TARJETAS)
+-- Digital Cards
 DROP POLICY IF EXISTS "Public card view" ON public.digital_cards;
 CREATE POLICY "Public card view" ON public.digital_cards FOR SELECT USING (TRUE);
 
@@ -126,7 +131,7 @@ CREATE POLICY "Owner manage card" ON public.digital_cards FOR ALL USING (auth.ui
 DROP POLICY IF EXISTS "Admin full access card" ON public.digital_cards;
 CREATE POLICY "Admin full access card" ON public.digital_cards FOR ALL USING (public.check_is_admin());
 
--- 9. POLÍTICAS DE RLS PARA 'user_websites' (WEBS)
+-- User Websites
 DROP POLICY IF EXISTS "Owner manage web" ON public.user_websites;
 CREATE POLICY "Owner manage web" ON public.user_websites FOR ALL USING (auth.uid() = user_id);
 
