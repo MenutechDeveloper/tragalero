@@ -1,14 +1,13 @@
 -- ==========================================================
--- SCRIPT DE RESCATE Y LIMPIEZA FINAL - TRAGALERO
+-- SCRIPT DE LIMPIEZA NUCLEAR Y REPARACIÓN - TRAGALERO
 -- ==========================================================
 
--- 1. ELIMINAR USUARIOS DE PRUEBA (Para que puedas registrarte de nuevo con el mismo correo)
--- ADVERTENCIA: Esto borrará los usuarios actuales en Auth y en la tabla usuarios.
--- Descomenta la línea de abajo y pon tu correo si quieres borrarlo específicamente:
--- DELETE FROM auth.users WHERE email = 'tu@email.com';
+-- 1. ELIMINAR TODOS LOS USUARIOS DE PRUEBA (Para empezar de cero totalmente)
+-- Esto limpia tanto la tabla de autenticación como la de perfiles públicos.
+DELETE FROM auth.users;
+DELETE FROM public.usuarios;
 
--- 2. LIMPIEZA TOTAL DE TRIGGERS
--- Este bloque busca y destruye CUALQUIER trigger que esté tocando la tabla de auth.
+-- 2. ELIMINAR CUALQUIER TRIGGER QUE ESTÉ BLOQUEANDO EL SISTEMA
 DO $$
 DECLARE
     r RECORD;
@@ -20,7 +19,7 @@ BEGIN
     END LOOP;
 END $$;
 
--- 3. TABLA USUARIOS (Garantizar estructura limpia)
+-- 3. RECREAR TABLA USUARIOS (Estructura mínima garantizada)
 CREATE TABLE IF NOT EXISTS public.usuarios (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -30,22 +29,21 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. TRIGGER ULTRA-SIMPLIFICADO (Mínimo riesgo de Error 500)
--- Esta función solo inserta los datos básicos. Si falla, no detiene el registro.
+-- 4. TRIGGER ULTRA-BÁSICO (Mínimo riesgo)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.usuarios (id, name, email, role)
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'name', NEW.raw_user_meta_data->>'username', 'Usuario'),
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'username', 'Usuario'),
     NEW.email,
     'Owner'
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 EXCEPTION WHEN OTHERS THEN
-  RETURN NEW; -- Ignorar errores para no romper el registro
+  RETURN NEW; -- Ignorar errores para no romper el registro en Auth
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
@@ -53,7 +51,7 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 5. SEGURIDAD RLS (RESET COMPLETO)
+-- 5. SEGURIDAD RLS (Permisivo para pruebas rápidas)
 ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
 
@@ -65,6 +63,5 @@ BEGIN
     END LOOP;
 END $$;
 
--- Políticas ultra-permisivas para pruebas (luego las cerramos más)
-CREATE POLICY "Acceso_Total_Usuarios" ON public.usuarios FOR ALL USING (TRUE);
-CREATE POLICY "Acceso_Total_Negocios" ON public.businesses FOR ALL USING (TRUE);
+CREATE POLICY "Acceso_Pruebas_Usuarios" ON public.usuarios FOR ALL USING (TRUE);
+CREATE POLICY "Acceso_Pruebas_Negocios" ON public.businesses FOR ALL USING (TRUE);
