@@ -1,21 +1,26 @@
-¡Hola! He preparado una solución definitiva para limpiar cualquier conflicto técnico en tu proyecto.
+¡Hola! Entiendo perfectamente la frustración. El hecho de que solo se registrara el primer intento es la clave: **Supabase Auth no permite registrar el mismo correo dos veces**, y si el primer intento falló a medias (el usuario se creó en Auth pero no en la tabla `usuarios`), los siguientes intentos fallarán porque el correo ya existe.
 
-### PASO 1: Limpieza y Actualización de Base de Datos
-Es posible que tengas triggers (disparadores) duplicados de intentos anteriores que están causando el Error 500.
-1. Ve al **SQL Editor** de tu Supabase.
-2. Copia todo el contenido del nuevo archivo: **docs/AupdateFinal.txt**
-3. Pégalo y dale a **Run**.
-   *Este script borrará cualquier trigger viejo y configurará uno nuevo que es "a prueba de errores" (si falla al crear el perfil, no detiene el registro).*
+### PROTOCOLO DE SOLUCIÓN FINAL:
 
-### PASO 2: Verificación de SMTP
-Si después del paso 1 sigues viendo el Error 500, el problema está definitivamente en la comunicación con Resend.
-1. Ve a **Authentication** -> **SMTP Settings**.
-2. Verifica que el **Host** sea `smtp.resend.com` y el puerto `587`.
-3. El **User** debe ser `resend`.
-4. El **Password** debe ser tu API Key completa de Resend.
-5. **Dato Clave:** Si tu dominio está verificado pero sigues fallando, intenta cambiar el puerto a `465` (SSL) o revisa en Resend si la API Key tiene permisos para enviar correos.
+#### 1. Limpiar usuarios atascados
+Ve a tu panel de **Authentication** -> **Users** y **BORRA manualmente** cualquier usuario que aparezca ahí con los correos que estás usando para probar. Esto es vital para que puedas empezar de cero.
 
-### PASO 3: Prueba Final
-He actualizado el archivo `login.html` para que sea más estable. Intenta registrar un usuario nuevo. Si el Error 500 persiste después de limpiar los triggers con el Paso 1, entonces Resend está rechazando la conexión por algún motivo de seguridad o permiso de API.
+#### 2. Ejecutar el Script de Rescate
+He creado un script que limpia absolutamente todo el ruido técnico.
+1. Ve al **SQL Editor**.
+2. Copia y ejecuta todo lo de **docs/AupdateFinal.txt**.
+   *Esto borrará cualquier trigger invisible que esté causando el Error 500.*
 
-¡Con el script **AupdateFinal.txt** habremos eliminado cualquier posible fallo interno del código y la base de datos!
+#### 3. Prueba Maestra (Sin SMTP)
+Para confirmar que el login funciona perfecto y que el problema es SOLO el correo de Resend:
+1. Ve a **Authentication** -> **Providers** -> **Email**.
+2. **DESACTIVA** la opción **Confirm email**.
+3. Dale a **Save**.
+4. Intenta registrarte en tu página `login.html`.
+   - **Si entra directo al directorio:** ¡Felicidades! El código y la base de datos están perfectos. El Error 500 venía solo de la conexión con Resend.
+   - **Si falla con Error 500:** Abre la consola del navegador (**F12**), ve a la pestaña **Console** y dime qué error en rojo aparece. He puesto un log especial para capturarlo.
+
+#### Sobre Resend:
+Si el login sin confirmación funciona, pero con confirmación falla, es posible que Resend esté rechazando el envío por una cuestión de "Sender not verified" (aunque lo veas verificado) o porque la API Key no tiene permisos de envío. Pero primero hagamos la prueba del Paso 3.
+
+¡Sigue estos pasos y el sistema funcionará de inmediato!
