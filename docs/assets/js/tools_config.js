@@ -3,7 +3,7 @@
  * Aquí puedes agregar, quitar o editar los nombres y enlaces de las herramientas.
  */
 const TOOLS_CONFIG = [
-    { name: "Web Building", url: "https://tragalero.com/herramientas/web-building" },
+    { name: "Web Building", url: "./choiseTemplate.html" },
     { name: "Marketing kit", url: "https://tragalero.com/herramientas/marketing-kit" },
     { name: "Directorio", url: "https://tragalero.com/directorio" },
     { name: "Forms", url: "https://tragalero.com/herramientas/forms" },

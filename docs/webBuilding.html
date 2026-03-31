@@ -221,14 +221,20 @@
 
         await loadConfig();
 
-        // Determine active template: URL param > Saved config > Default
+        // Determine active template: URL param > Saved config
         const urlTemplate = urlParams.get('template');
         if (urlTemplate) {
             activeTemplateId = urlTemplate;
         } else if (webConfig && webConfig.templateId) {
             activeTemplateId = webConfig.templateId;
+            // If we loaded from config, update the URL without adding to history
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('template', activeTemplateId);
+            window.history.replaceState({}, '', newUrl);
         } else {
-            activeTemplateId = 'plantilla1.html';
+            // No template selected and none saved, must go to choice page
+            window.location.replace('./choiseTemplate.html');
+            return;
         }
 
         const iframe = document.getElementById('preview-frame');
@@ -251,10 +257,14 @@
             window.open(publicUrl, '_blank');
         };
 
-        // Update back button to preserve template context
+        // Update back button to ensure it always returns to choiceTemplate
+        // Using replace ensures we don't stack multiple templates in history
         const backBtn = document.querySelector('a[href="./choiseTemplate.html"]');
         if (backBtn) {
-            backBtn.href = `./choiseTemplate.html?lastTemplate=${activeTemplateId}`;
+            backBtn.onclick = (e) => {
+                e.preventDefault();
+                window.location.replace('./choiseTemplate.html');
+            };
         }
 
         // Hide loader after a delay to ensure iframe is ready

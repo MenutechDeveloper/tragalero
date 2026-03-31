@@ -638,7 +638,13 @@
                             alert("Acceso denegado: Se requiere rol de Administrador.");
                             return;
                         }
-                        window.location.href = item.link_url;
+
+                        // Redirect legacy Web Building URLs to the choice template page
+                        if (item.link_url.includes('web-building') || item.link_url.includes('webBuilding.html')) {
+                            window.location.href = './choiseTemplate.html';
+                        } else {
+                            window.location.href = item.link_url;
+                        }
                     }
                 };
                 gridContainer.appendChild(div);
