@@ -317,7 +317,7 @@
             // Security: only Admin can register for someone else
             if (ownerIdParam && ownerIdParam !== sessionUser.id && sessionUser.role !== 'Admin') {
                 alert("No tienes permiso para registrar negocios a otros usuarios.");
-                window.location.href = './directorymap.html';
+                window.location.href = './admin.html';
                 return;
             }
 
