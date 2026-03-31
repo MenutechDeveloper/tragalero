@@ -1,11 +1,14 @@
 -- ==========================================================
--- SCRIPT DE REPARACIÓN DE USUARIO Y PROMOCIÓN A ADMIN
+-- SCRIPT DE REPARACIÓN DE USUARIO - TRAGALERO
 -- ==========================================================
 -- Instrucciones:
 -- 1. Ve al SQL Editor de tu panel de Supabase.
 -- 2. Copia y pega este script.
 -- 3. IMPORTANTE: Cambia 'TU_EMAIL_AQUI@ejemplo.com' por el correo de tu cuenta.
 -- 4. Presiona 'Run'.
+
+-- 0. Corregir restricción de contraseña (permite sincronizar usuarios de Auth)
+ALTER TABLE public.usuarios ALTER COLUMN password DROP NOT NULL;
 
 DO $$
 DECLARE
@@ -23,13 +26,12 @@ BEGIN
         RAISE EXCEPTION 'No se encontró ningún usuario con el correo % en la tabla auth.users.', target_email;
     END IF;
 
-    -- 2. Insertar o actualizar en public.usuarios (Sin usar la columna email por compatibilidad)
+    -- 2. Insertar o actualizar en public.usuarios
     INSERT INTO public.usuarios (id, name, role)
-    VALUES (target_id, target_name, 'Admin')
+    VALUES (target_id, target_name, 'Owner')
     ON CONFLICT (id) DO UPDATE SET
-        role = 'Admin',
         name = COALESCE(public.usuarios.name, EXCLUDED.name);
 
-    RAISE NOTICE 'Usuario % (%) sincronizado y promovido a Admin con éxito.', target_name, target_email;
+    RAISE NOTICE 'Usuario % (%) sincronizado con éxito.', target_name, target_email;
 
 END $$;
