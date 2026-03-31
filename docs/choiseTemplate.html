@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Seleccionar Plantilla - Tragalero</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="./assets/css/pastel-theme.css">
+
+    <style>
+        :root {
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        .header-section {
+            padding: 4rem 0 2rem;
+            background: linear-gradient(180deg, var(--bs-secondary-bg) 0%, var(--bs-body-bg) 100%);
+            text-align: center;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 2rem 0;
+        }
+
+        .template-card {
+            border-radius: 20px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        [data-bs-theme="dark"] .template-card {
+            background: #1e293b;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .template-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-color: var(--bs-primary);
+        }
+
+        .template-img-container {
+            height: 200px;
+            overflow: hidden;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .template-img-container i {
+            font-size: 4rem;
+            color: #ccc;
+        }
+
+        .template-info {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .template-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--bs-primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Modal Preview */
+        .preview-iframe-container {
+            width: 100%;
+            height: 60vh;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+            background: white;
+        }
+
+        #preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .back-btn {
+            border-radius: 12px;
+            padding: 8px 15px;
+            transition: 0.2s;
+            background: rgba(0,0,0,0.05);
+            color: var(--bs-body-color);
+            border: none;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .back-btn:hover {
+            background: var(--bs-primary);
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        .theme-switcher-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="theme-switcher-container d-flex align-items-center bg-white bg-opacity-10 p-2 rounded-pill shadow-sm">
+        <div id="authButtons" class="me-3 ps-2">
+            <!-- Unified User Menu -->
+        </div>
+        <div class="theme-switcher-bar d-flex">
+            <button class="theme-btn" data-theme-value="light" title="Modo Amarillo"><i class="bi bi-sun-fill"></i></button>
+            <button class="theme-btn" data-theme-value="dark" title="Modo Oscuro"><i class="bi bi-moon-stars-fill"></i></button>
+            <button class="theme-btn" data-theme-value="medio" title="Modo Suave"><i class="bi bi-palette-fill"></i></button>
+        </div>
+    </div>
+
+    <section class="header-section">
+        <div class="container">
+            <a href="./admin.html" class="back-btn mb-4">
+                <i class="bi bi-arrow-left me-2"></i>Volver al Panel
+            </a>
+            <h1 class="fw-bold">Elige una Plantilla</h1>
+            <p class="text-muted">Selecciona el diseño base para tu sitio web. Podrás personalizarlo totalmente después.</p>
+        </div>
+    </section>
+
+    <div class="container pb-5">
+        <div class="template-grid" id="templateGrid">
+            <!-- Template 1: Foodie -->
+            <div class="template-card" onclick="openPreview('plantilla1.html', 'Foodie - Restaurante')">
+                <span class="template-badge">Popular</span>
+                <div class="template-img-container">
+                    <i class="bi bi-shop"></i>
+                </div>
+                <div class="template-info">
+                    <h5 class="fw-bold mb-1">Foodie</h5>
+                    <p class="small text-muted mb-0">Ideal para restaurantes, cafeterías y comida rápida.</p>
+                </div>
+            </div>
+
+            <!-- Template 2: Professional -->
+            <div class="template-card" onclick="openPreview('plantilla2.html', 'Profesional - Negocios')">
+                <span class="template-badge bg-info">Nuevo</span>
+                <div class="template-img-container">
+                    <i class="bi bi-briefcase"></i>
+                </div>
+                <div class="template-info">
+                    <h5 class="fw-bold mb-1">Profesional</h5>
+                    <p class="small text-muted mb-0">Diseño moderno para agencias, consultoras y servicios.</p>
+                </div>
+            </div>
+
+            <!-- Template 3: Heladería -->
+            <div class="template-card" onclick="openPreview('plantilla3.html', 'Heladería - Negocios')">
+                <span class="template-badge bg-warning">Recomendado</span>
+                <div class="template-img-container">
+                    <i class="bi bi-ice-cream"></i>
+                </div>
+                <div class="template-info">
+                    <h5 class="fw-bold mb-1">Heladería</h5>
+                    <p class="small text-muted mb-0">Colorido y divertido, ideal para heladerías y dulcerías.</p>
+                </div>
+            </div>
+
+            <!-- Future templates placeholders -->
+            <div class="template-card opacity-50" style="cursor: default;">
+                <div class="template-img-container">
+                    <i class="bi bi-plus-circle"></i>
+                </div>
+                <div class="template-info">
+                    <h5 class="fw-bold mb-1">Próximamente</h5>
+                    <p class="small text-muted mb-0">Nuevos diseños profesionales muy pronto.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content custom-modal">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="modalTitle">Vista Previa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="preview-iframe-container">
+                        <iframe id="preview-iframe" src=""></iframe>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <a href="./webBuilding.html" id="editButton" class="btn btn-custom-primary rounded-pill px-5 d-flex align-items-center justify-content-center" style="height: 50px;">
+                        <i class="bi bi-pencil-square me-2"></i> Editar esta Plantilla
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./assets/js/theme.js"></script>
+    <script src="./assets/js/supabase_logic.js"></script>
+
+    <script>
+        // Auth Check
+        const currentUser = getLoggedInUser();
+        if (!currentUser) {
+            window.location.href = './login.html';
+        }
+
+        const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+        const previewIframe = document.getElementById('preview-iframe');
+        const modalTitle = document.getElementById('modalTitle');
+        const editButton = document.getElementById('editButton');
+
+        function openPreview(url, title) {
+            modalTitle.textContent = 'Vista Previa: ' + title;
+            previewIframe.src = url;
+            // Pass the template URL to the editor
+            editButton.href = `./webBuilding.html?template=${url}`;
+            previewModal.show();
+        }
+
+        // Clean iframe src when modal hides
+        document.getElementById('previewModal').addEventListener('hidden.bs.modal', function () {
+            previewIframe.src = '';
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderUserMenu('authButtons');
+        });
+    </script>
+</body>
+
+</html>
