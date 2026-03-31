@@ -23,12 +23,11 @@ BEGIN
         RAISE EXCEPTION 'No se encontró ningún usuario con el correo % en la tabla auth.users.', target_email;
     END IF;
 
-    -- 2. Insertar o actualizar en public.usuarios
-    INSERT INTO public.usuarios (id, name, email, role)
-    VALUES (target_id, target_name, target_email, 'Admin')
+    -- 2. Insertar o actualizar en public.usuarios (Sin usar la columna email por compatibilidad)
+    INSERT INTO public.usuarios (id, name, role)
+    VALUES (target_id, target_name, 'Admin')
     ON CONFLICT (id) DO UPDATE SET
         role = 'Admin',
-        email = EXCLUDED.email,
         name = COALESCE(public.usuarios.name, EXCLUDED.name);
 
     RAISE NOTICE 'Usuario % (%) sincronizado y promovido a Admin con éxito.', target_name, target_email;
