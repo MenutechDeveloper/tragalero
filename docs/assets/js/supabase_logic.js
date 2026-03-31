@@ -86,7 +86,8 @@ async function getLoggedInUser() {
             id: session.user.id,
             name: session.user.user_metadata?.full_name || session.user.email,
             role: 'Owner',
-            is_temporary: true
+            is_temporary: true,
+            is_missing_profile: true
         };
     }
 
