@@ -42,7 +42,113 @@
         .sidebar-content {
             flex: 1;
             overflow-y: auto;
+            padding: 0;
+        }
+        .sidebar-nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .sidebar-nav-tabs button {
+            flex: 1;
+            border: none;
+            background: none;
+            padding: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid transparent;
+        }
+        .sidebar-nav-tabs button.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            background: white;
+        }
+        .tab-content-pane {
+            display: none;
             padding: 1.5rem;
+        }
+        .tab-content-pane.active {
+            display: block;
+        }
+
+        /* Promotions Styles */
+        .promo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .promo-slot {
+            aspect-ratio: 1/1;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+            transition: all 0.3s;
+        }
+        .promo-slot:hover {
+            border-color: var(--primary-color);
+            background: #f0f1ff;
+        }
+        .promo-slot.active {
+            border-color: var(--primary-color);
+            background: #f0f1ff;
+            border-style: solid;
+        }
+        .promo-slot i {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        .promo-slot.active i {
+            color: var(--primary-color);
+        }
+        .promo-slot span {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* Gallery Styles */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .gallery-item {
+            aspect-ratio: 1/1;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .gallery-item .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255,0,0,0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
         }
         /* Preview */
         #preview-container {
@@ -157,8 +263,53 @@
         </div>
 
         <div class="sidebar-content">
-            <div id="edit-sections" class="accordion">
-                <!-- Dynamic Sections will be injected here -->
+            <div class="sidebar-nav-tabs">
+                <button class="active" onclick="switchTab('editor')">Editor</button>
+                <button onclick="switchTab('gallery')">Galería</button>
+                <button onclick="switchTab('promos')">Promociones</button>
+            </div>
+
+            <!-- Tab Editor -->
+            <div id="tab-editor" class="tab-content-pane active">
+                <div id="edit-sections" class="accordion">
+                    <!-- Dynamic Sections will be injected here -->
+                </div>
+            </div>
+
+            <!-- Tab Gallery -->
+            <div id="tab-gallery" class="tab-content-pane">
+                <h6 class="fw-bold mb-3">Galería de Imágenes</h6>
+                <div class="upload-zone mb-3" onclick="triggerGalleryUpload()">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <p class="mb-0 small text-muted">Añadir a la Galería</p>
+                </div>
+                <div id="gallery-container" class="gallery-grid">
+                    <!-- Images here -->
+                </div>
+            </div>
+
+            <!-- Tab Promos -->
+            <div id="tab-promos" class="tab-content-pane">
+                <h6 class="fw-bold mb-3">Promociones Especiales</h6>
+                <div class="promo-grid">
+                    <div class="promo-slot" id="slot-christmas" onclick="openPromoModal('christmas')">
+                        <i class="bi bi-gift"></i>
+                        <span>Navidad</span>
+                    </div>
+                    <div class="promo-slot" id="slot-halloween" onclick="openPromoModal('halloween')">
+                        <i class="bi bi-ghost"></i>
+                        <span>Halloween</span>
+                    </div>
+                    <div class="promo-slot" id="slot-valentine" onclick="openPromoModal('valentine')">
+                        <i class="bi bi-heart"></i>
+                        <span>San Valentín</span>
+                    </div>
+                    <div class="promo-slot" id="slot-president" onclick="openPromoModal('president')">
+                        <i class="bi bi-megaphone"></i>
+                        <span>Anuncio</span>
+                    </div>
+                </div>
+                <p class="small text-muted">Configura ventanas emergentes (popups) para eventos especiales.</p>
             </div>
         </div>
 
@@ -189,6 +340,42 @@
     </main>
 </div>
 
+<!-- Promo Modal -->
+<div class="modal fade" id="promoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="promoModalTitle">Configurar Promo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="upload-zone mb-3" onclick="triggerPromoImageUpload()">
+                    <img id="promoPreview" class="d-none w-100 rounded mb-2" style="max-height: 200px; object-fit: cover;">
+                    <div id="promoUploadPlaceholder">
+                        <i class="bi bi-cloud-arrow-up"></i>
+                        <p class="mb-0 small text-muted">Subir imagen de la promoción</p>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Fecha Inicio</label>
+                    <input type="date" id="promoStartDate" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Fecha Fin</label>
+                    <input type="date" id="promoEndDate" class="form-control">
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="promoActive">
+                    <label class="form-check-label fw-bold" for="promoActive">Promoción Activa</label>
+                </div>
+
+                <button class="btn btn-primary w-100 rounded-pill py-3 fw-bold" id="savePromoBtn">Guardar Promoción</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- JS Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -207,6 +394,24 @@
     let iframeDoc = null;
     let activeTemplateId = 'plantilla1.html';
 
+    let localGallery = [];
+    let localPromos = [];
+    let currentPromoEvent = null;
+
+    // Tab Switching
+    window.switchTab = (tab) => {
+        document.querySelectorAll('.sidebar-nav-tabs button').forEach(btn => {
+            btn.classList.toggle('active', btn.innerText.toLowerCase().includes(tab));
+        });
+        document.querySelectorAll('.tab-content-pane').forEach(pane => {
+            pane.classList.remove('active');
+        });
+        document.getElementById(`tab-${tab}`).classList.add('active');
+
+        if (tab === 'gallery') renderGallery();
+        if (tab === 'promos') updatePromoGrid();
+    };
+
     // Initialization
     window.addEventListener('load', async () => {
         if (!isViewOnly && !user) {
@@ -220,6 +425,8 @@
         }
 
         await loadConfig();
+        await loadGallery();
+        await loadPromos();
 
         // Determine active template: URL param > Saved config > Default
         const urlTemplate = urlParams.get('template');
@@ -245,6 +452,7 @@
         setupDeviceSwitcher();
 
         document.getElementById('save-btn').onclick = saveConfig;
+        document.getElementById('savePromoBtn').onclick = savePromo;
         document.getElementById('btn-view-public').onclick = () => {
             const userId = isViewOnly ? viewUserId : user.id;
             const publicUrl = `${window.location.origin}${window.location.pathname}?user=${userId}&template=${activeTemplateId}`;
@@ -301,17 +509,170 @@
         webConfig.templateId = activeTemplateId;
 
         try {
+            // Save Editor Config
             const { error } = await supabaseClient
                 .from('user_websites')
                 .upsert([{ user_id: user.id, config: webConfig }], { onConflict: 'user_id' });
 
             if (error) throw error;
+
+            // Save Gallery
+            const { error: delError } = await supabaseClient.from('galeria').delete().eq('user_id', user.id);
+            if (delError) throw delError;
+
+            if (localGallery.length > 0) {
+                const toInsert = localGallery.map(url => ({
+                    user_id: user.id,
+                    image_url: url
+                }));
+                const { error: insError } = await supabaseClient.from('galeria').insert(toInsert);
+                if (insError) throw insError;
+            }
+
             alert("¡Cambios guardados con éxito!");
         } catch (err) {
             alert("Error al guardar: " + err.message);
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Guardar';
+        }
+    }
+
+    // --- Gallery Logic ---
+    async function loadGallery() {
+        const targetId = viewUserId || user.id;
+        try {
+            const { data } = await supabaseClient.from('galeria').select('image_url').eq('user_id', targetId).order('created_at', { ascending: false });
+            localGallery = (data || []).map(i => i.image_url);
+            renderGallery();
+        } catch (e) { console.error(e); }
+    }
+
+    function renderGallery() {
+        const container = document.getElementById('gallery-container');
+        container.innerHTML = localGallery.map((url, idx) => `
+            <div class="gallery-item">
+                <img src="${url}">
+                <button class="delete-btn" onclick="removeGalleryImage(${idx})"><i class="bi bi-x"></i></button>
+            </div>
+        `).join('');
+    }
+
+    window.triggerGalleryUpload = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                try {
+                    const url = await uploadToCloudinary(file);
+                    localGallery.unshift(url);
+                    renderGallery();
+                } catch (err) { alert(err.message); }
+            }
+        };
+        input.click();
+    };
+
+    window.removeGalleryImage = (idx) => {
+        localGallery.splice(idx, 1);
+        renderGallery();
+    };
+
+    // --- Promos Logic ---
+    async function loadPromos() {
+        const targetId = viewUserId || user.id;
+        try {
+            const { data } = await supabaseClient.from('promos').select('*').eq('user_id', targetId);
+            localPromos = data || [];
+            updatePromoGrid();
+        } catch (e) { console.error(e); }
+    }
+
+    function updatePromoGrid() {
+        const events = ['christmas', 'halloween', 'valentine', 'president'];
+        events.forEach(ev => {
+            const slot = document.getElementById(`slot-${ev}`);
+            const promo = localPromos.find(p => p.event_type === ev);
+            slot.classList.toggle('active', promo && promo.is_active);
+        });
+    }
+
+    window.openPromoModal = (eventType) => {
+        currentPromoEvent = eventType;
+        const promo = localPromos.find(p => p.event_type === eventType) || {
+            event_type: eventType,
+            image_url: '',
+            start_date: '',
+            end_date: '',
+            is_active: false
+        };
+
+        document.getElementById('promoModalTitle').innerText = `Promo: ${eventType.toUpperCase()}`;
+        const preview = document.getElementById('promoPreview');
+        const placeholder = document.getElementById('promoUploadPlaceholder');
+
+        if (promo.image_url) {
+            preview.src = promo.image_url;
+            preview.classList.remove('d-none');
+            placeholder.classList.add('d-none');
+        } else {
+            preview.classList.add('d-none');
+            placeholder.classList.remove('d-none');
+        }
+
+        document.getElementById('promoStartDate').value = promo.start_date || '';
+        document.getElementById('promoEndDate').value = promo.end_date || '';
+        document.getElementById('promoActive').checked = promo.is_active;
+
+        const modal = new bootstrap.Modal(document.getElementById('promoModal'));
+        modal.show();
+    };
+
+    window.triggerPromoImageUpload = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                try {
+                    const url = await uploadToCloudinary(file);
+                    const preview = document.getElementById('promoPreview');
+                    preview.src = url;
+                    preview.classList.remove('d-none');
+                    document.getElementById('promoUploadPlaceholder').classList.add('d-none');
+                } catch (err) { alert(err.message); }
+            }
+        };
+        input.click();
+    };
+
+    async function savePromo() {
+        const btn = document.getElementById('savePromoBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
+
+        const promoData = {
+            user_id: user.id,
+            event_type: currentPromoEvent,
+            image_url: document.getElementById('promoPreview').src,
+            start_date: document.getElementById('promoStartDate').value || null,
+            end_date: document.getElementById('promoEndDate').value || null,
+            is_active: document.getElementById('promoActive').checked
+        };
+
+        try {
+            const { error } = await supabaseClient.from('promos').upsert(promoData, { onConflict: 'user_id, event_type' });
+            if (error) throw error;
+            await loadPromos();
+            bootstrap.Modal.getInstance(document.getElementById('promoModal')).hide();
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Guardar Promoción';
         }
     }
 
@@ -699,7 +1060,10 @@
         formData.append('folder', `websites/${user.id}`);
 
         const response = await fetch(url, { method: 'POST', body: formData });
-        if (!response.ok) throw new Error("Cloudinary upload failed");
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error?.message || "Upload failed");
+        }
         const data = await response.json();
         return data.secure_url;
     }

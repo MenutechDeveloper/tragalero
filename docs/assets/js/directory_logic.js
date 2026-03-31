@@ -118,7 +118,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     function initCategories() {
         if (!categoryContainer) return;
 
-        const categories = ['Todos', 'Cerca de mí', ...new Set(allDirectoryData.map(item => item.category))];
+        // Simplified categories for Restaurant-only app
+        const categories = ['Todos', 'Cerca de mí'];
         categoryContainer.innerHTML = '';
 
         categories.forEach(cat => {
@@ -182,7 +183,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const itemCitySlug = slugify(item.city);
                 const matchesCity = !cityFilter || itemCitySlug === cityFilter;
                 const isNearMeFilter = catFilter === 'Cerca de mí';
-                const matchesCategory = !catFilter || isNearMeFilter || item.category === catFilter;
+
+                // Restrict to restaurants only
+                const isRestaurant = item.category === 'Restaurantes' || item.is_restaurant;
+                const matchesCategory = isRestaurant && (!catFilter || isNearMeFilter || item.category === catFilter);
 
                 const matchesProximity = !isNearMeFilter || item.distance !== null;
 

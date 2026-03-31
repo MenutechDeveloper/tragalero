@@ -136,12 +136,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Categoría</label>
                                 <select id="bizCategory" class="form-select" required>
-                                    <option value="" selected disabled>Elige una...</option>
-                                    <option value="Restaurantes">Restaurantes</option>
-                                    <option value="Hogar">Hogar</option>
-                                    <option value="Construcción">Construcción</option>
-                                    <option value="Servicios Técnicos">Servicios Técnicos</option>
-                                    <option value="Varios">Varios</option>
+                                    <option value="Restaurantes" selected>Restaurantes</option>
                                 </select>
                             </div>
                             <div class="col-md-12">
@@ -361,14 +356,8 @@
             };
         }
 
-        // Category Toggle
-        bizCategory.addEventListener('change', () => {
-            if (bizCategory.value === 'Restaurantes') {
-                restaurantFields.style.display = 'block';
-            } else {
-                restaurantFields.style.display = 'none';
-            }
-        });
+        // Category Toggle (Always on for restaurants)
+        restaurantFields.style.display = 'block';
 
         // Drag & Drop Handlers
         dropZone.onclick = () => fileInput.click();
