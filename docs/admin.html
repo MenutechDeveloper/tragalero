@@ -650,6 +650,7 @@
 
         let sortableInstance = null;
         function initSortable() {
+            if (!gridContainer) return;
             if (sortableInstance) sortableInstance.destroy();
             if (!isEditMode) return;
 
@@ -835,7 +836,15 @@
                 }, 1000);
             } catch (err) {
                 console.error("Supabase Save Error:", err);
-                status.innerHTML = `Error: ${err.message || 'Verifica la conexión o permisos'}<br><small>Reintenta en unos segundos.</small>`;
+                let displayMsg = err.message || 'Verifica la conexión o permisos';
+
+                // Specific check for Foreign Key violation (Postgres code 23503)
+                // This happens when the user_id doesn't exist in public.usuarios
+                if (err.code === '23503' || (err.message && err.message.includes('foreign key constraint'))) {
+                    displayMsg = 'Tu perfil no está sincronizado en la base de datos. Por favor, ejecuta el script de reparación (docs/repair_user.sql) en el panel de Supabase.';
+                }
+
+                status.innerHTML = `Error: ${displayMsg}<br><small>Reintenta en unos segundos.</small>`;
                 status.className = 'small text-center mt-2 text-danger';
             }
         };
