@@ -1,0 +1,80 @@
+-- ==========================================================
+-- SQL PARA ADMIN CUSTOMER - TRAGALERO
+-- ==========================================================
+
+-- 1. ASEGURAR TABLA USUARIOS Y COLUMNAS
+CREATE TABLE IF NOT EXISTS public.usuarios (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL UNIQUE,
+    email TEXT UNIQUE,
+    role TEXT DEFAULT 'Owner' CHECK (role IN ('Owner', 'Admin', 'Developer')),
+    domain TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Asegurar columnas si ya existe la tabla
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='usuarios' AND column_name='email') THEN
+        ALTER TABLE public.usuarios ADD COLUMN email TEXT UNIQUE;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='usuarios' AND column_name='domain') THEN
+        ALTER TABLE public.usuarios ADD COLUMN domain TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='usuarios' AND column_name='role') THEN
+        ALTER TABLE public.usuarios ADD COLUMN role TEXT DEFAULT 'Owner' CHECK (role IN ('Owner', 'Admin', 'Developer'));
+    END IF;
+END $$;
+
+-- 2. FUNCIÓN PARA CHEQUEAR ADMIN (EVITAR RECURSIVIDAD RLS)
+CREATE OR REPLACE FUNCTION public.check_is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.usuarios
+        WHERE id = auth.uid() AND role = 'Admin'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- 3. HABILITAR RLS
+ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
+
+-- 4. POLÍTICAS DE RLS
+DROP POLICY IF EXISTS "Public profile view" ON public.usuarios;
+CREATE POLICY "Public profile view" ON public.usuarios FOR SELECT USING (TRUE);
+
+DROP POLICY IF EXISTS "Self manage profile" ON public.usuarios;
+CREATE POLICY "Self manage profile" ON public.usuarios FOR ALL USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Admin full access users" ON public.usuarios;
+CREATE POLICY "Admin full access users" ON public.usuarios FOR ALL USING (public.check_is_admin());
+
+-- 5. VISTA PARA COMBINAR CON EMAILS DE AUTH (OPCIONAL PERO RECOMENDADO PARA ADMINS)
+-- Nota: Requiere permisos especiales en Supabase o ejecutarse como superuser
+-- CREATE OR REPLACE VIEW public.usuarios_con_email AS
+-- SELECT u.*, a.email
+-- FROM public.usuarios u
+-- JOIN auth.users a ON u.id = a.id;
+
+-- 6. CONFIGURAR USUARIO ADMIN ESPECÍFICO
+DO $$
+DECLARE
+    target_user_id UUID;
+    user_email TEXT := 'francisco.menutech@gmail.com';
+BEGIN
+    -- Buscar el ID en auth.users
+    SELECT id INTO target_user_id FROM auth.users WHERE email = user_email;
+
+    IF target_user_id IS NOT NULL THEN
+        -- Asegurar que el perfil exista en public.usuarios y sea Admin
+        INSERT INTO public.usuarios (id, name, email, role)
+        VALUES (target_user_id, 'Francisco', user_email, 'Admin')
+        ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, role = 'Admin';
+
+        RAISE NOTICE 'Usuario % promovido a Admin correctamente.', user_email;
+    ELSE
+        RAISE NOTICE 'El usuario % no existe en auth.users. Debe registrarse primero.', user_email;
+    END IF;
+END $$;
