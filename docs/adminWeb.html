@@ -563,7 +563,7 @@
             if (userRole === 'Admin') { const { data } = await sb.from('usuarios').select('*'); allOwners = data || []; }
             else { const { data: access } = await sb.from('developer_access').select('owner_id').eq('developer_id', user.id); const ids = (access || []).map(a => a.owner_id); const { data } = await sb.from('usuarios').select('*').in('id', ids); allOwners = data || []; }
             renderOwners(allOwners);
-            search.oninput = () => { const term = search.value.toLowerCase(); const filtered = allOwners.filter(o => (o.username || '').toLowerCase().includes(term) || (o.domain || '').toLowerCase().includes(term)); renderOwners(filtered); };
+            search.oninput = () => { const term = search.value.toLowerCase(); const filtered = allOwners.filter(o => (o.name || '').toLowerCase().includes(term) || (o.domain || '').toLowerCase().includes(term)); renderOwners(filtered); };
             const passedId = sessionStorage.getItem('mt_edit_owner_id');
             if (passedId) { sessionStorage.removeItem('mt_edit_owner_id'); window.switchContext(passedId); }
         }

@@ -20,6 +20,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 CREATE TABLE IF NOT EXISTS public.usuarios (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL UNIQUE,
+    email TEXT UNIQUE,
     role TEXT DEFAULT 'Owner' CHECK (role IN ('Owner', 'Admin', 'Developer')),
     is_active BOOLEAN DEFAULT TRUE,
     max_businesses INTEGER DEFAULT 1,
@@ -31,6 +32,9 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
 -- Asegurar columnas si ya existe la tabla usuarios
 DO $$
 BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='usuarios' AND column_name='email') THEN
+        ALTER TABLE public.usuarios ADD COLUMN email TEXT UNIQUE;
+    END IF;
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='usuarios' AND column_name='domain') THEN
         ALTER TABLE public.usuarios ADD COLUMN domain TEXT;
     END IF;
@@ -148,9 +152,9 @@ BEGIN
 
     IF target_user_id IS NOT NULL THEN
         -- Asegurar que el perfil exista en public.usuarios y sea Admin
-        INSERT INTO public.usuarios (id, name, role)
-        VALUES (target_user_id, 'Francisco', 'Admin')
-        ON CONFLICT (id) DO UPDATE SET role = 'Admin';
+        INSERT INTO public.usuarios (id, name, email, role)
+        VALUES (target_user_id, 'Francisco', user_email, 'Admin')
+        ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, role = 'Admin';
 
         RAISE NOTICE 'Usuario % promovido a Admin correctamente.', user_email;
     ELSE
