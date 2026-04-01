@@ -434,7 +434,7 @@
                     <div id="upload-status" style="text-align:center; margin-bottom:40px; font-weight: 600; font-size: 0.9rem;"></div>
                     <div id="gallery-container">
                         <script src="https://tragalero.com/tragaleroUI.js"></script>
-                        <tragalero_gallery id="main-gallery" admin-mode></tragalero_gallery>
+                        <tragalero-gallery id="main-gallery" admin-mode></tragalero-gallery>
                     </div>
                 </div>
             </div>
@@ -570,7 +570,7 @@
 
         function renderOwners(owners) {
             const list = document.getElementById('client-list');
-            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.username || 'User'}</span><span class="domain">${o.domain || (o.username ? '' : o.id.substring(0,8))}</span></div>`).join('');
+            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.name || 'User'}</span><span class="domain">${o.domain || (o.name ? '' : o.id.substring(0,8))}</span></div>`).join('');
         }
 
         window.switchContext = (ownerId) => {
@@ -578,7 +578,7 @@
             if (!owner) return;
             activeOwnerId = ownerId; activeDomain = owner.domain;
             document.getElementById('view-domain-title').textContent = activeDomain || "No Domain Set";
-            document.getElementById('active-project-name').textContent = owner.username || owner.email;
+            document.getElementById('active-project-name').textContent = owner.name || owner.email || owner.id.substring(0,8);
             document.getElementById('project-info').classList.remove('hidden');
             renderOwners(allOwners); loadGallery(); loadPromos();
         }
@@ -609,7 +609,7 @@
             window.logout = async () => { if(sb) await sb.auth.signOut(); location.href = "index.html"; };
             document.getElementById('btn-copy-code').onclick = () => {
                 if (!activeDomain) return showToast("Assign a domain to this project first.", "warning");
-                const snippet = `<!-- Tragalero Gallery -->\n<script src="https://tragalero.com/tragaleroUI.js"><\/script>\n<tragalero_gallery domain="${activeDomain}"></tragalero_gallery>`;
+                const snippet = `<!-- Tragalero Gallery -->\n<script src="https://tragalero.com/tragaleroUI.js"><\/script>\n<tragalero-gallery domain="${activeDomain}"></tragalero-gallery>`;
                 navigator.clipboard.writeText(snippet).then(() => { const btn = document.getElementById('btn-copy-code'); const old = btn.textContent; btn.textContent = "COPIED!"; setTimeout(() => btn.textContent = old, 2000); });
             };
 
@@ -645,7 +645,8 @@
                 syncGalleryComponent();
             };
 
-            const mainGallery = document.getElementById('main-gallery');
+            const mainGallery = document.querySelector('tragalero-gallery#main-gallery');
+            if (!mainGallery) return;
             mainGallery.addEventListener('delete-image', (e) => {
                 removeLocalImage(e.detail.index);
             });
@@ -830,7 +831,8 @@
         }
 
         function syncGalleryComponent() {
-            const gallery = document.getElementById('main-gallery');
+            const gallery = document.querySelector('tragalero-gallery#main-gallery');
+            if (!gallery) return;
             if (localGallery.length === 0) {
                 gallery.setAttribute('images-list', '');
                 gallery.setAttribute('type', currentGalleryType);
