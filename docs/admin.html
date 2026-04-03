@@ -169,10 +169,17 @@
                 </a>
 
                 <!-- Configurar Negocio -->
-                <a href="./directorymap.html" class="bento-item animate-fade-in" style="grid-column: span 6; grid-row: span 1; background-color: #fbe0e0; animation-delay: 0.3s;">
+                <a href="./directorymap.html" class="bento-item animate-fade-in" style="grid-column: span 3; grid-row: span 1; background-color: #fbe0e0; animation-delay: 0.3s;">
                     <i class="bi bi-gear-wide-connected fs-1"></i>
                     <div class="fs-5">Configurar Negocio</div>
                     <div class="small opacity-75 fw-normal">Datos y ubicación</div>
+                </a>
+
+                <!-- Clientes (Solo Admin) -->
+                <a href="./adminCustomer.html" id="adminOnlySlot" class="bento-item animate-fade-in hidden" style="grid-column: span 3; grid-row: span 1; background-color: #fef4e2; animation-delay: 0.4s;">
+                    <i class="bi bi-people-fill"></i>
+                    <div class="fs-5">Clientes</div>
+                    <div class="small opacity-75 fw-normal">Gestión de usuarios</div>
                 </a>
             </div>
         </div>
@@ -195,6 +202,10 @@
             }
 
             document.getElementById('userNameText').textContent = currentUser?.name || "Usuario";
+
+            if (currentUser?.role === 'Admin') {
+                document.getElementById('adminOnlySlot')?.classList.remove('hidden');
+            }
         });
     </script>
 </body>
