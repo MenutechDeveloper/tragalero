@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gallery Admin | Tragalero</title>
-    <link rel="icon" type="image/png" href="https://tragalero.com/assets/img/tragalero.png">
-<link rel="shortcut icon" href="https://tragalero.com/assets/img/tragalero.png">
-    <script src="https://tragalero.com/tragaleroUI.js"></script>
+    <title>Gallery Admin | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+<link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 
         :root {
             --orange: #ff9533;
-            --bg: #fffbf2;
+            --bg: #fffcf0;
             --card: #ffffff;
             --input: #fffef5;
             --text: #1a1c1e;
@@ -76,13 +75,13 @@
         }
         .sidebar-tab:hover { width: 55px; padding-left: 10px; }
 
-        .component-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        .component-header h2 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 700; color: #1a1c1e; }
+        .component-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .component-header h2 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 700; }
 
         .drop-zone {
-            width: 100%; height: 260px; border-radius: 50px; border: 2px dashed #f0e0d0; background: rgba(255,255,255,0.4);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.5s ease;
-            margin-bottom: 60px;
+            width: 100%; height: 200px; border-radius: 36px; border: 2px dashed var(--border); background: var(--card);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-bottom: 40px;
         }
         .drop-zone:hover { border-color: var(--orange); background: rgba(255, 149, 51, 0.03); transform: scale(1.01); }
         .drop-zone p { font-weight: 700; font-size: 1.1rem; color: var(--text); }
@@ -154,45 +153,35 @@
 
         .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
         .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
-        .btn-copy {
-            background: #fef4e2;
-            border: 1px solid #ff9533;
-            color: #ff9533;
-            padding: 14px 28px;
-            border-radius: 14px;
-            font-size: 0.85rem;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .btn-copy:hover { background: #ff9533; color: #fff; }
+        .btn-copy { background: rgba(255, 149, 51, 0.1); border: 1px solid rgba(255, 149, 51, 0.3); color: var(--orange); padding: 8px 16px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 15px; width: 100%; }
+        .btn-copy:hover { background: var(--orange); color: #000; }
 
         /* Segmented Control for Gallery Style */
         .segmented-control {
             display: flex;
-            background: #f8f8f8;
+            background: var(--input);
             padding: 4px;
-            border-radius: 18px;
-            border: 1px solid #f0f0f0;
-            gap: 2px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            gap: 4px;
         }
         .segment-btn {
-            padding: 8px 20px;
-            border-radius: 15px;
+            flex: 1;
+            padding: 8px 16px;
+            border-radius: 12px;
             border: none;
             background: transparent;
-            color: #888;
-            font-size: 0.85rem;
-            font-weight: 600;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            font-weight: 700;
             cursor: pointer;
             transition: 0.3s;
+            white-space: nowrap;
         }
         .segment-btn.active {
-            background: #fff;
-            color: #ff9533;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            background: var(--card);
+            color: var(--orange);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
 
@@ -217,10 +206,10 @@
 
         /* Floating Footer */
         #floating-footer {
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-            background: #fff;
-            padding: 20px 40px; border-radius: 35px; border: 1px solid var(--border);
-            display: flex; gap: 24px; box-shadow: 0 15px 45px rgba(0,0,0,0.1);
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px);
+            padding: 16px 32px; border-radius: 30px; border: 1.5px solid var(--border);
+            display: flex; gap: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
             z-index: 7000; animation: footerSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
         body.dark-mode #floating-footer { background: rgba(28, 31, 38, 0.8); }
@@ -228,13 +217,13 @@
         @keyframes footerSlideUp { from { bottom: -100px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
 
         .btn-footer {
-            padding: 16px 36px; border-radius: 20px; font-weight: 900; font-size: 1rem;
-            text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 1.2px;
+            padding: 14px 28px; border-radius: 18px; font-weight: 800; font-size: 0.85rem;
+            text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 1px;
         }
-        .btn-save-all { background: #ff9533; color: #fff; box-shadow: 0 10px 25px rgba(255,149,51,0.4); }
-        .btn-save-all:hover { transform: scale(1.05); }
-        .btn-visit { background: #fff; color: #000; border: 1.5px solid #f0f0f0; }
-        .btn-visit:hover { background: #f9f9f9; transform: scale(1.05); }
+        .btn-save-all { background: var(--orange); color: #fff; box-shadow: 0 8px 20px rgba(255,149,51,0.3); }
+        .btn-save-all:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255,149,51,0.4); }
+        .btn-visit { background: var(--input); color: var(--text); border: 1px solid var(--border); }
+        .btn-visit:hover { background: var(--border); transform: translateY(-3px); }
 
         /* Promotions Styles */
         .promo-grid {
@@ -338,18 +327,6 @@
         .btn-modal { flex: 1; padding: 16px; border-radius: 16px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; border: none; transition: 0.3s; }
         .btn-modal-save { background: var(--orange); color: #fff; }
         .btn-modal-cancel { background: var(--input); color: var(--text); border: 1px solid var(--border); }
-
-        #gallery-container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-            display: flex;
-            justify-content: center;
-        }
-        tragalero-gallery {
-            width: 100%;
-            display: block;
-        }
     </style>
 </head>
 <body>
@@ -380,13 +357,13 @@
     </div>
 
     <div id="floating-footer" class="hidden">
-        <button class="btn-footer btn-save-all" onclick="saveChanges()">SAVE CHANGES</button>
-        <button class="btn-footer btn-visit" onclick="visitSite()">VISIT SITE</button>
+        <button class="btn-footer btn-save-all" onclick="saveChanges()">Save Changes</button>
+        <button class="btn-footer btn-visit" onclick="visitSite()">Visit Site</button>
     </div>
 
     <div class="container hidden" id="main-app">
         <header>
-            <img src="https://tragalero.com/assets/img/tragalero.png" class="logo-main" alt="Tragalero Logo">
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
             <p id="view-domain-title" style="font-weight: 700; color: var(--orange); font-size: 0.85rem; letter-spacing: 1px;"></p>
         </header>
 
@@ -454,9 +431,10 @@
                         <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
                     </div>
 
-                    <div id="upload-status" style="text-align:center; margin-bottom:40px; font-weight: 600; font-size: 1.1rem; color: #1a1c1e;"></div>
+                    <div id="upload-status" style="text-align:center; margin-bottom:40px; font-weight: 600; font-size: 0.9rem;"></div>
                     <div id="gallery-container">
-                        <tragalero-gallery id="main-gallery" admin-mode></tragalero-gallery>
+                        <script src="./menutechUI.js"></script>
+                        <menutech-gallery id="main-gallery" admin-mode></menutech-gallery>
                     </div>
                 </div>
             </div>
@@ -508,10 +486,9 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./assets/js/supabase_logic.js"></script>
-    <script>
-        const sb = supabaseClient;
+    <script type="module">
+        import { MT_CONFIG } from './config.js';
+        import { supabase as sb } from './supabase.js';
         let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
         let localGallery = [];
         let localPromos = [];
@@ -541,40 +518,30 @@
             if (error || !session) { location.href = "index.html"; return; }
 
             user = session.user;
-            const { data: profile, error: pError } = await sb.from('usuarios').select('*').eq('id', user.id).single();
+            const { data: profile, error: pError } = await sb.from('profiles').select('*').eq('id', user.id).single();
 
             if (pError || !profile) {
-                userRole = 'Owner'; activeOwnerId = user.id; showApp(null); return;
+                userRole = 'owner'; activeOwnerId = user.id; showApp(null); return;
             }
 
             userRole = profile.role;
-            const allowedRoles = ['Admin', 'Developer', 'Owner'];
+            const allowedRoles = ['admin', 'developer', 'owner'];
             if (!allowedRoles.includes(userRole)) {
                 location.href = "index.html";
                 return;
             }
 
-            if (userRole === 'Admin' || userRole === 'Developer') {
+            if (userRole === 'admin' || userRole === 'developer') {
                 const sidebarContainer = document.getElementById('sidebar-container');
                 sidebarContainer.classList.remove('hidden');
                 sidebarContainer.classList.add('collapsed');
-
-                if (userRole === 'Admin') {
-                    document.getElementById('btn-copy-code').classList.remove('hidden');
-                    document.getElementById('btn-copy-promo').classList.remove('hidden');
-                }
-
+                document.getElementById('btn-copy-code').classList.remove('hidden');
+                document.getElementById('btn-copy-promo').classList.remove('hidden');
                 await setupContextSwitcher();
-                if (!activeOwnerId) {
-                    activeOwnerId = user.id;
-                    activeDomain = profile.domain;
-                    document.getElementById('view-domain-title').textContent = activeDomain || "Admin Workspace";
-                }
+                if (!activeOwnerId) { activeOwnerId = user.id; activeDomain = profile.domain; document.getElementById('view-domain-title').textContent = activeDomain || "Admin Workspace"; }
                 showApp(profile);
             } else {
-                activeOwnerId = user.id;
-                activeDomain = profile.domain;
-                showApp(profile);
+                activeOwnerId = user.id; activeDomain = profile.domain; showApp(profile);
             }
         }
 
@@ -582,17 +549,17 @@
         async function setupContextSwitcher() {
             const list = document.getElementById('client-list');
             const search = document.getElementById('client-search');
-            if (userRole === 'Admin') { const { data } = await sb.from('usuarios').select('*'); allOwners = data || []; }
-            else { const { data: access } = await sb.from('developer_access').select('owner_id').eq('developer_id', user.id); const ids = (access || []).map(a => a.owner_id); const { data } = await sb.from('usuarios').select('*').in('id', ids); allOwners = data || []; }
+            if (userRole === 'admin') { const { data } = await sb.from('profiles').select('*'); allOwners = data || []; }
+            else { const { data: access } = await sb.from('developer_access').select('owner_id').eq('developer_id', user.id); const ids = (access || []).map(a => a.owner_id); const { data } = await sb.from('profiles').select('*').in('id', ids); allOwners = data || []; }
             renderOwners(allOwners);
-            search.oninput = () => { const term = search.value.toLowerCase(); const filtered = allOwners.filter(o => (o.name || '').toLowerCase().includes(term) || (o.domain || '').toLowerCase().includes(term)); renderOwners(filtered); };
+            search.oninput = () => { const term = search.value.toLowerCase(); const filtered = allOwners.filter(o => (o.username || '').toLowerCase().includes(term) || (o.domain || '').toLowerCase().includes(term)); renderOwners(filtered); };
             const passedId = sessionStorage.getItem('mt_edit_owner_id');
             if (passedId) { sessionStorage.removeItem('mt_edit_owner_id'); window.switchContext(passedId); }
         }
 
         function renderOwners(owners) {
             const list = document.getElementById('client-list');
-            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.name || 'User'}</span><span class="domain">${o.domain || (o.name ? '' : o.id.substring(0,8))}</span></div>`).join('');
+            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.username || 'User'}</span><span class="domain">${o.domain || (o.username ? '' : o.id.substring(0,8))}</span></div>`).join('');
         }
 
         window.switchContext = (ownerId) => {
@@ -600,7 +567,7 @@
             if (!owner) return;
             activeOwnerId = ownerId; activeDomain = owner.domain;
             document.getElementById('view-domain-title').textContent = activeDomain || "No Domain Set";
-            document.getElementById('active-project-name').textContent = owner.name || owner.email || owner.id.substring(0,8);
+            document.getElementById('active-project-name').textContent = owner.username || owner.email;
             document.getElementById('project-info').classList.remove('hidden');
             renderOwners(allOwners); loadGallery(); loadPromos();
         }
@@ -611,10 +578,10 @@
             const pill = document.getElementById('user-display-pill');
 
             if (profile) {
-                document.getElementById('user-name').textContent = profile.name || user.email.split('@')[0];
+                document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
                 document.getElementById('user-role-label').textContent = profile.role || 'User';
-                if (profile.role === 'Admin') pill.classList.add('admin-glow');
-                else if (profile.role === 'Developer') pill.classList.add('dev-glow');
+                if (profile.role === 'admin') pill.classList.add('admin-glow');
+                else if (profile.role === 'developer') pill.classList.add('dev-glow');
                 else pill.classList.add('owner-glow');
             }
 
@@ -631,7 +598,7 @@
             window.logout = async () => { if(sb) await sb.auth.signOut(); location.href = "index.html"; };
             document.getElementById('btn-copy-code').onclick = () => {
                 if (!activeDomain) return showToast("Assign a domain to this project first.", "warning");
-                const snippet = `<!-- Tragalero Gallery -->\n<script src="https://tragalero.com/tragaleroUI.js"><\/script>\n<tragalero-gallery domain="${activeDomain}"></tragalero-gallery>`;
+                const snippet = `<!-- Menutech Gallery -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-gallery domain="${activeDomain}"></menutech-gallery>`;
                 navigator.clipboard.writeText(snippet).then(() => { const btn = document.getElementById('btn-copy-code'); const old = btn.textContent; btn.textContent = "COPIED!"; setTimeout(() => btn.textContent = old, 2000); });
             };
 
@@ -640,15 +607,8 @@
                 const activeEvents = localPromos.filter(p => p.is_active).map(p => p.event_type);
                 if (activeEvents.length === 0) return showToast("No active promos to copy.", "warning");
 
-                const eventToTag = {
-                    'christmas': 'tragalero-navidad',
-                    'halloween': 'tragalero-halloween',
-                    'valentine': 'tragalero-valentin',
-                    'president': 'tragalero-presidentes'
-                };
-
-                const tags = activeEvents.map(ev => `<${eventToTag[ev] || ev} domain="${activeDomain}"></${eventToTag[ev] || ev}>`).join('\n');
-                const snippet = `<!-- Tragalero Promotions -->\n<script src="https://tragalero.com/tragaleroUI.js"><\/script>\n${tags}`;
+                const tags = activeEvents.map(ev => `<menutech-${ev} domain="${activeDomain}"></menutech-${ev}>`).join('\n');
+                const snippet = `<!-- Menutech Promotions -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n${tags}`;
 
                 navigator.clipboard.writeText(snippet).then(() => {
                     const btn = document.getElementById('btn-copy-promo');
@@ -667,8 +627,7 @@
                 syncGalleryComponent();
             };
 
-            const mainGallery = document.querySelector('tragalero-gallery#main-gallery');
-            if (!mainGallery) return;
+            const mainGallery = document.getElementById('main-gallery');
             mainGallery.addEventListener('delete-image', (e) => {
                 removeLocalImage(e.detail.index);
             });
@@ -709,30 +668,27 @@
 
         async function uploadFiles(files) {
             if (!activeOwnerId) return showToast("Select a project first.", "warning");
-
-            let uploadedCount = 0;
+            const s = document.getElementById('upload-status');
+            s.innerHTML = '<div class="loader"></div>';
             for (const f of files) {
+                const fd = new FormData(); fd.append('file', f); fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
                 try {
-                    const d = await uploadToCloudinary(f);
-                    localGallery.unshift({ image_url: d.url, isNew: true });
-                    uploadedCount++;
-                } catch (e) {
-                    console.error("Upload error", e);
-                    showToast("Error uploading: " + f.name, "error");
-                }
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
+                    const d = await res.json();
+                    localGallery.unshift({ image_url: d.secure_url, isNew: true });
+                } catch (e) { console.error("Upload error", e); }
             }
-
-            if (uploadedCount > 0) {
-                syncGalleryComponent();
-                document.getElementById('floating-footer').classList.remove('hidden');
-            }
+            s.textContent = "Images added locally"; setTimeout(() => s.textContent = "", 3000);
+            syncGalleryComponent();
+            document.getElementById('floating-footer').classList.remove('hidden');
         }
 
         async function loadGallery() {
             const { data, error } = await sb.from('galeria').select('*').eq('user_id', activeOwnerId).order('created_at', { ascending: false });
             localGallery = data || [];
 
-            const { data: profile } = await sb.from('usuarios').select('gallery_type').eq('id', activeOwnerId).maybeSingle();
+            // Load gallery type from profile
+            const { data: profile } = await sb.from('profiles').select('gallery_type').eq('id', activeOwnerId).maybeSingle();
             currentGalleryType = (profile && profile.gallery_type) ? profile.gallery_type : 'grid';
 
             document.querySelectorAll('.segment-btn').forEach(b => {
@@ -805,10 +761,15 @@
             const placeholder = document.getElementById('promo-drop-placeholder');
             placeholder.innerHTML = '<div class="loader"></div>';
 
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
+
             try {
-                const d = await uploadToCloudinary(file);
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
+                const d = await res.json();
                 const preview = document.getElementById('promo-preview');
-                preview.src = d.url;
+                preview.src = d.secure_url;
                 preview.classList.remove('hidden');
                 placeholder.classList.add('hidden');
                 placeholder.innerHTML = '<p>Drag & Drop Promo Image</p><span style="font-size:0.75rem; color:var(--text-dim)">or click to select</span>';
@@ -858,38 +819,15 @@
         }
 
         function syncGalleryComponent() {
-            const container = document.getElementById('gallery-container');
+            const gallery = document.getElementById('main-gallery');
+            if (localGallery.length === 0) {
+                gallery.setAttribute('images-list', '');
+                gallery.setAttribute('type', currentGalleryType);
+                return;
+            }
             const imagesList = localGallery.map(it => it.image_url).join(',');
-
-            // We recreate the component to ensure it picks up the new attributes immediately
-            container.innerHTML = `<tragalero-gallery id="main-gallery" admin-mode type="${currentGalleryType}" images-list="${imagesList}"></tragalero-gallery>`;
-
-            // Give a small delay for the component to be ready before attaching listeners
-            setTimeout(() => {
-                const gallery = document.getElementById('main-gallery');
-                if (!gallery) return;
-
-                gallery.addEventListener('delete-image', (e) => {
-                    removeLocalImage(e.detail.index);
-                });
-
-                gallery.addEventListener('update-layout', (e) => {
-                    const { index, layout } = e.detail;
-                    if (localGallery[index]) {
-                        const baseUrl = localGallery[index].image_url.split('#')[0];
-                        localGallery[index].image_url = `${baseUrl}#s=${layout.s}`;
-                        document.getElementById('floating-footer').classList.remove('hidden');
-                    }
-                });
-
-                gallery.addEventListener('reorder-images', (e) => {
-                    const { from, to } = e.detail;
-                    const item = localGallery.splice(from, 1)[0];
-                    localGallery.splice(to, 0, item);
-                    syncGalleryComponent();
-                    document.getElementById('floating-footer').classList.remove('hidden');
-                });
-            }, 100);
+            gallery.setAttribute('type', currentGalleryType);
+            gallery.setAttribute('images-list', imagesList);
         }
 
         window.removeLocalImage = (idx) => {
@@ -922,7 +860,7 @@
                 }
 
                 // 3. Save gallery style to profile
-                const { error: upError } = await sb.from('usuarios').update({ gallery_type: currentGalleryType }).eq('id', activeOwnerId);
+                const { error: upError } = await sb.from('profiles').update({ gallery_type: currentGalleryType }).eq('id', activeOwnerId);
                 if (upError) throw upError;
 
                 showToast("Changes saved successfully!", "success");
