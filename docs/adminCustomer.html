@@ -162,21 +162,24 @@
     </div>
 
     <div id="app" class="hidden">
-        <header><img src="https://tragalero.com/assets/img/tragalero.png" class="logo-main" alt="Tragalero Logo"></header>
+        <header><img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo"></header>
         <div class="container">
             <div id="admin-tools" class="hidden">
                 <div class="section-title">All Users</div>
                 <div style="margin-bottom: 30px;"><input type="text" id="user-search" placeholder="Search users or domains..." style="width: 100%; max-width: 400px; background: var(--input); border: 1px solid var(--border); border-radius: 14px; padding: 14px 20px; color: var(--text);"></div>
                 <div id="user-list" class="user-list"></div>
             </div>
+            <div id="dev-tools" class="hidden">
+                <div class="section-title">Assigned Projects</div>
+                <div id="assigned-list" class="user-list"></div>
+            </div>
             <div id="loading" class="loader"></div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./assets/js/supabase_logic.js"></script>
-    <script>
-        const sb = supabaseClient;
+    <script type="module">
+        import { MT_CONFIG } from './config.js';
+        import { supabase as sb } from './supabase.js';
         let user = null, userRole = null;
 
         window.showToast = (message, type = 'success') => {
@@ -196,66 +199,69 @@
         });
 
         async function checkAuth() {
-            const profile = await getLoggedInUser();
-            if (!profile) { location.href = "index.html"; return; }
-
-            userRole = profile.role;
-            // Strict Admin Access as requested
-            if (userRole !== 'Admin') { document.getElementById('no-access').classList.remove('hidden'); }
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { location.href = "index.html"; return; }
+            user = session.user;
+            const { data } = await sb.from('profiles').select('role, username').eq('id', user.id).single();
+            const allowedRoles = ['admin', 'developer'];
+            if (!data || !allowedRoles.includes(data.role)) { document.getElementById('no-access').classList.remove('hidden'); }
             else {
+                userRole = data.role;
                 const pill = document.getElementById('user-display-pill');
-                document.getElementById('user-name').textContent = profile.name || profile.email;
-                document.getElementById('user-role-label').textContent = profile.role;
-                pill.classList.add('admin-glow');
+                document.getElementById('user-name').textContent = data.username || user.email.split('@')[0];
+                document.getElementById('user-role-label').textContent = data.role;
+                if (data.role === 'admin') pill.classList.add('admin-glow');
+                else if (data.role === 'developer') pill.classList.add('dev-glow');
+                else pill.classList.add('owner-glow');
 
                 document.getElementById('app').classList.remove('hidden');
                 document.getElementById('top-nav').classList.remove('hidden');
 
-                document.getElementById('admin-tools').classList.remove('hidden');
-                loadAllUsers();
+                if (userRole === 'admin') { document.getElementById('admin-tools').classList.remove('hidden'); loadAllUsers(); }
+                else if (userRole === 'developer') { document.getElementById('dev-tools').classList.remove('hidden'); loadAssignedOwners(); }
             }
         }
 
         async function loadAllUsers() {
-            const { data } = await sb.from('usuarios').select('*').order('role', { ascending: true });
+            const { data } = await sb.from('profiles').select('*').order('role', { ascending: true });
             document.getElementById('loading').classList.add('hidden');
-            renderList(data, 'user-list');
+            renderList(data, 'user-list', true);
             document.getElementById('user-search').oninput = (e) => {
                 const term = e.target.value.toLowerCase();
-                const filtered = data.filter(u => (u.name||'').toLowerCase().includes(term) || (u.domain||'').toLowerCase().includes(term));
-                renderList(filtered, 'user-list');
+                const filtered = data.filter(u => (u.username||'').toLowerCase().includes(term) || (u.domain||'').toLowerCase().includes(term));
+                renderList(filtered, 'user-list', true);
             };
         }
 
-        function renderList(users, targetId) {
+        async function loadAssignedOwners() {
+            const { data: access } = await sb.from('developer_access').select('owner_id').eq('developer_id', user.id);
+            const ids = (access || []).map(a => a.owner_id);
+            const { data } = await sb.from('profiles').select('*').in('id', ids);
+            document.getElementById('loading').classList.add('hidden');
+            renderList(data, 'assigned-list', false);
+        }
+
+        function renderList(users, targetId, isAdminView) {
             const list = document.getElementById(targetId);
             list.innerHTML = (users || []).map(u => `
                 <div class="user-card">
-                    <div class="user-info"><h3>${u.name || 'No Name'}</h3>${u.domain ? `<div style="font-size: 0.75rem; color: var(--orange); font-weight: 600;">${u.domain}</div>` : ''}</div>
-                    <div class="controls">
-                        <input type="text" value="${u.name || ''}" id="user-${u.id}" placeholder="Name">
-                        <input type="text" value="${u.domain || ''}" id="dom-${u.id}" placeholder="Domain">
-                    </div>
+                    <div class="user-info"><h3>${u.username || 'No Name'}</h3>${u.domain ? `<div style="font-size: 0.75rem; color: var(--orange); font-weight: 600;">${u.domain}</div>` : ''}</div>
+                    <div class="controls"><input type="text" value="${u.username || ''}" id="user-${u.id}" ${!isAdminView ? 'disabled' : ''}><input type="text" value="${u.domain || ''}" id="dom-${u.id}" ${!isAdminView ? 'disabled' : ''}></div>
                     <div class="badge-container">
-                        <select id="role-${u.id}" style="width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">
-                            <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
-                            <option value="Developer" ${u.role === 'Developer' ? 'selected' : ''}>Developer</option>
-                            <option value="Owner" ${u.role === 'Owner' ? 'selected' : ''}>Owner</option>
-                            <option value="Design" ${u.role === 'Design' ? 'selected' : ''}>Design</option>
-                            <option value="CS" ${u.role === 'CS' ? 'selected' : ''}>CS</option>
-                            <option value="Sales" ${u.role === 'Sales' ? 'selected' : ''}>Sales</option>
-                            <option value="Support" ${u.role === 'Support' ? 'selected' : ''}>Support</option>
-                        </select>
-                        <select id="mode-${u.id}" style="margin-top: 8px; width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">
-                            <option value="grid" ${u.gallery_type === 'grid' ? 'selected' : ''}>GRID</option>
-                            <option value="slider" ${u.gallery_type === 'slider' ? 'selected' : ''}>SLIDER</option>
-                            <option value="bento" ${u.gallery_type === 'bento' ? 'selected' : ''}>BENTO</option>
-                        </select>
+                        ${isAdminView ? `
+                            <select id="role-${u.id}" style="width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">
+                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                <option value="developer" ${u.role === 'developer' ? 'selected' : ''}>Developer</option>
+                                <option value="owner" ${u.role === 'owner' ? 'selected' : ''}>Owner</option>
+                                <option value="design" ${u.role === 'design' ? 'selected' : ''}>Design</option>
+                                <option value="adminDesign" ${u.role === 'adminDesign' ? 'selected' : ''}>Admin Design</option>
+                                <option value="CS" ${u.role === 'CS' ? 'selected' : ''}>CS</option>
+                                <option value="adminCS" ${u.role === 'adminCS' ? 'selected' : ''}>Admin CS</option>
+                                <option value="retention" ${u.role === 'retention' ? 'selected' : ''}>Retention</option>
+                            </select>
+                        ` : `<span class="badge badge-${u.role}">${u.role}</span>`}
                     </div>
-                    <div class="actions">
-                        <button class="btn btn-save" onclick="updateUser('${u.id}')">SAVE</button>
-                        <button class="btn btn-access" onclick="manageGallery('${u.id}')">GALLERY</button>
-                    </div>
+                    <div class="actions">${isAdminView ? `<button class="btn btn-save" onclick="updateUser('${u.id}')">SAVE</button>` : ''}<button class="btn btn-access" onclick="manageGallery('${u.id}')">GALLERY</button></div>
                 </div>`).join('');
         }
 
@@ -263,8 +269,7 @@
             const u = document.getElementById(`user-${id}`).value;
             const d = document.getElementById(`dom-${id}`).value;
             const r = document.getElementById(`role-${id}`).value;
-            const m = document.getElementById(`mode-${id}`).value;
-            const { error } = await sb.from('usuarios').update({ name: u, domain: d, role: r, gallery_type: m }).eq('id', id);
+            const { error } = await sb.from('profiles').update({ username: u, domain: d, role: r }).eq('id', id);
 
             if (error) {
                 window.showToast(error.message, "error");
