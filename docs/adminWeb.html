@@ -6,12 +6,13 @@
     <title>Gallery Admin | Tragalero</title>
     <link rel="icon" type="image/png" href="https://tragalero.com/assets/img/tragalero.png">
 <link rel="shortcut icon" href="https://tragalero.com/assets/img/tragalero.png">
+    <script src="https://tragalero.com/tragaleroUI.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 
         :root {
             --orange: #ff9533;
-            --bg: #fffcf0;
+            --bg: #fffbf2;
             --card: #ffffff;
             --input: #fffef5;
             --text: #1a1c1e;
@@ -75,13 +76,13 @@
         }
         .sidebar-tab:hover { width: 55px; padding-left: 10px; }
 
-        .component-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .component-header h2 { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 700; }
+        .component-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .component-header h2 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 700; color: #1a1c1e; }
 
         .drop-zone {
-            width: 100%; height: 200px; border-radius: 36px; border: 2px dashed var(--border); background: var(--card);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            margin-bottom: 40px;
+            width: 100%; height: 260px; border-radius: 50px; border: 2px dashed #f0e0d0; background: rgba(255,255,255,0.4);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.5s ease;
+            margin-bottom: 60px;
         }
         .drop-zone:hover { border-color: var(--orange); background: rgba(255, 149, 51, 0.03); transform: scale(1.01); }
         .drop-zone p { font-weight: 700; font-size: 1.1rem; color: var(--text); }
@@ -153,35 +154,45 @@
 
         .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
         .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
-        .btn-copy { background: rgba(255, 149, 51, 0.1); border: 1px solid rgba(255, 149, 51, 0.3); color: var(--orange); padding: 8px 16px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 15px; width: 100%; }
-        .btn-copy:hover { background: var(--orange); color: #000; }
+        .btn-copy {
+            background: #fef4e2;
+            border: 1px solid #ff9533;
+            color: #ff9533;
+            padding: 14px 28px;
+            border-radius: 14px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-copy:hover { background: #ff9533; color: #fff; }
 
         /* Segmented Control for Gallery Style */
         .segmented-control {
             display: flex;
-            background: var(--input);
+            background: #f8f8f8;
             padding: 4px;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            gap: 4px;
+            border-radius: 18px;
+            border: 1px solid #f0f0f0;
+            gap: 2px;
         }
         .segment-btn {
-            flex: 1;
-            padding: 8px 16px;
-            border-radius: 12px;
+            padding: 8px 20px;
+            border-radius: 15px;
             border: none;
             background: transparent;
-            color: var(--text-dim);
-            font-size: 0.8rem;
-            font-weight: 700;
+            color: #888;
+            font-size: 0.85rem;
+            font-weight: 600;
             cursor: pointer;
             transition: 0.3s;
-            white-space: nowrap;
         }
         .segment-btn.active {
-            background: var(--card);
-            color: var(--orange);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background: #fff;
+            color: #ff9533;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
 
@@ -206,10 +217,10 @@
 
         /* Floating Footer */
         #floating-footer {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px);
-            padding: 16px 32px; border-radius: 30px; border: 1.5px solid var(--border);
-            display: flex; gap: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+            background: #fff;
+            padding: 20px 40px; border-radius: 35px; border: 1px solid var(--border);
+            display: flex; gap: 24px; box-shadow: 0 15px 45px rgba(0,0,0,0.1);
             z-index: 7000; animation: footerSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
         body.dark-mode #floating-footer { background: rgba(28, 31, 38, 0.8); }
@@ -217,13 +228,13 @@
         @keyframes footerSlideUp { from { bottom: -100px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
 
         .btn-footer {
-            padding: 14px 28px; border-radius: 18px; font-weight: 800; font-size: 0.85rem;
-            text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 1px;
+            padding: 16px 36px; border-radius: 20px; font-weight: 900; font-size: 1rem;
+            text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 1.2px;
         }
-        .btn-save-all { background: var(--orange); color: #fff; box-shadow: 0 8px 20px rgba(255,149,51,0.3); }
-        .btn-save-all:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255,149,51,0.4); }
-        .btn-visit { background: var(--input); color: var(--text); border: 1px solid var(--border); }
-        .btn-visit:hover { background: var(--border); transform: translateY(-3px); }
+        .btn-save-all { background: #ff9533; color: #fff; box-shadow: 0 10px 25px rgba(255,149,51,0.4); }
+        .btn-save-all:hover { transform: scale(1.05); }
+        .btn-visit { background: #fff; color: #000; border: 1.5px solid #f0f0f0; }
+        .btn-visit:hover { background: #f9f9f9; transform: scale(1.05); }
 
         /* Promotions Styles */
         .promo-grid {
@@ -369,8 +380,8 @@
     </div>
 
     <div id="floating-footer" class="hidden">
-        <button class="btn-footer btn-save-all" onclick="saveChanges()">Save Changes</button>
-        <button class="btn-footer btn-visit" onclick="visitSite()">Visit Site</button>
+        <button class="btn-footer btn-save-all" onclick="saveChanges()">SAVE CHANGES</button>
+        <button class="btn-footer btn-visit" onclick="visitSite()">VISIT SITE</button>
     </div>
 
     <div class="container hidden" id="main-app">
@@ -443,11 +454,10 @@
                         <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
                     </div>
 
-                    <div id="upload-status" style="text-align:center; margin-bottom:40px; font-weight: 600; font-size: 0.9rem;"></div>
+                    <div id="upload-status" style="text-align:center; margin-bottom:40px; font-weight: 600; font-size: 1.1rem; color: #1a1c1e;"></div>
                     <div id="gallery-container">
                         <tragalero-gallery id="main-gallery" admin-mode></tragalero-gallery>
                     </div>
-                    <script src="https://tragalero.com/tragaleroUI.js"></script>
                 </div>
             </div>
         </div>
@@ -699,24 +709,29 @@
 
         async function uploadFiles(files) {
             if (!activeOwnerId) return showToast("Select a project first.", "warning");
-            const s = document.getElementById('upload-status');
-            s.innerHTML = '<div class="loader"></div>';
+
+            let uploadedCount = 0;
             for (const f of files) {
                 try {
                     const d = await uploadToCloudinary(f);
                     localGallery.unshift({ image_url: d.url, isNew: true });
-                } catch (e) { console.error("Upload error", e); }
+                    uploadedCount++;
+                } catch (e) {
+                    console.error("Upload error", e);
+                    showToast("Error uploading: " + f.name, "error");
+                }
             }
-            s.textContent = "Images added locally"; setTimeout(() => s.textContent = "", 3000);
-            syncGalleryComponent();
-            document.getElementById('floating-footer').classList.remove('hidden');
+
+            if (uploadedCount > 0) {
+                syncGalleryComponent();
+                document.getElementById('floating-footer').classList.remove('hidden');
+            }
         }
 
         async function loadGallery() {
             const { data, error } = await sb.from('galeria').select('*').eq('user_id', activeOwnerId).order('created_at', { ascending: false });
             localGallery = data || [];
 
-            // Load gallery type from profile
             const { data: profile } = await sb.from('usuarios').select('gallery_type').eq('id', activeOwnerId).maybeSingle();
             currentGalleryType = (profile && profile.gallery_type) ? profile.gallery_type : 'grid';
 
@@ -843,16 +858,38 @@
         }
 
         function syncGalleryComponent() {
-            const gallery = document.querySelector('tragalero-gallery#main-gallery');
-            if (!gallery) return;
-            if (localGallery.length === 0) {
-                gallery.setAttribute('images-list', '');
-                gallery.setAttribute('type', currentGalleryType);
-                return;
-            }
+            const container = document.getElementById('gallery-container');
             const imagesList = localGallery.map(it => it.image_url).join(',');
-            gallery.setAttribute('type', currentGalleryType);
-            gallery.setAttribute('images-list', imagesList);
+
+            // We recreate the component to ensure it picks up the new attributes immediately
+            container.innerHTML = `<tragalero-gallery id="main-gallery" admin-mode type="${currentGalleryType}" images-list="${imagesList}"></tragalero-gallery>`;
+
+            // Give a small delay for the component to be ready before attaching listeners
+            setTimeout(() => {
+                const gallery = document.getElementById('main-gallery');
+                if (!gallery) return;
+
+                gallery.addEventListener('delete-image', (e) => {
+                    removeLocalImage(e.detail.index);
+                });
+
+                gallery.addEventListener('update-layout', (e) => {
+                    const { index, layout } = e.detail;
+                    if (localGallery[index]) {
+                        const baseUrl = localGallery[index].image_url.split('#')[0];
+                        localGallery[index].image_url = `${baseUrl}#s=${layout.s}`;
+                        document.getElementById('floating-footer').classList.remove('hidden');
+                    }
+                });
+
+                gallery.addEventListener('reorder-images', (e) => {
+                    const { from, to } = e.detail;
+                    const item = localGallery.splice(from, 1)[0];
+                    localGallery.splice(to, 0, item);
+                    syncGalleryComponent();
+                    document.getElementById('floating-footer').classList.remove('hidden');
+                });
+            }, 100);
         }
 
         window.removeLocalImage = (idx) => {
