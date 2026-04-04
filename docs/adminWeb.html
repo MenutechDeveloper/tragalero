@@ -327,6 +327,18 @@
         .btn-modal { flex: 1; padding: 16px; border-radius: 16px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; border: none; transition: 0.3s; }
         .btn-modal-save { background: var(--orange); color: #fff; }
         .btn-modal-cancel { background: var(--input); color: var(--text); border: 1px solid var(--border); }
+
+        #gallery-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: center;
+        }
+        tragalero-gallery {
+            width: 100%;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -433,9 +445,9 @@
 
                     <div id="upload-status" style="text-align:center; margin-bottom:40px; font-weight: 600; font-size: 0.9rem;"></div>
                     <div id="gallery-container">
-                        <script src="https://tragalero.com/tragaleroUI.js"></script>
                         <tragalero-gallery id="main-gallery" admin-mode></tragalero-gallery>
                     </div>
+                    <script src="https://tragalero.com/tragaleroUI.js"></script>
                 </div>
             </div>
         </div>
