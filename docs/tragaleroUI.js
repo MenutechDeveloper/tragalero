@@ -1,14 +1,14 @@
 /**
- * Menutech Gallery Web Component
- * Usage: <menutech-gallery domain="yoursite.com"></menutech-gallery>
+ * Tragalero Gallery Web Component
+ * Usage: <tragalero-gallery domain="yoursite.com"></tragalero-gallery>
  */
-class MenutechGallery extends HTMLElement {
+class TragaleroGallery extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
         this.config = {
-            url: "https://eemqyrysdgasfjlitads.supabase.co",
-            key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY"
+            url: "https://jqmmzufomzcsyzdskxze.supabase.co",
+            key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxbW16dWZvbXpjc3l6ZHNreHplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE1NTgsImV4cCI6MjA4ODMxNzU1OH0.mAd28JHZmLZGLd4Z3r59SgtSdeEpMyZd_WJdrD381Vs"
         };
         this.supabase = null;
     }
@@ -34,7 +34,7 @@ class MenutechGallery extends HTMLElement {
             const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
             this.supabase = createClient(this.config.url, this.config.key);
         } catch (err) {
-            console.error("MenutechGallery Supabase Init Error:", err);
+            console.error("TragaleroGallery Supabase Init Error:", err);
         }
     }
 
@@ -66,7 +66,7 @@ class MenutechGallery extends HTMLElement {
             const typePromise = attrType
                 ? Promise.resolve({ data: { gallery_type: attrType } })
                 : this.supabase
-                    .from('profiles')
+                    .from('usuarios')
                     .select('gallery_type')
                     .eq('domain', domain)
                     .limit(1)
@@ -83,7 +83,7 @@ class MenutechGallery extends HTMLElement {
 
             return result;
         } catch (err) {
-            console.error("MenutechGallery Fetch Error:", err);
+            console.error("TragaleroGallery Fetch Error:", err);
             return result;
         }
     }
@@ -676,22 +676,22 @@ class MenutechGallery extends HTMLElement {
 }
 
 // Expose the class for potential manual interaction
-window.MenutechGallery = MenutechGallery;
-if (!customElements.get('menutech-gallery')) {
-    customElements.define('menutech-gallery', MenutechGallery);
+window.TragaleroGallery = TragaleroGallery;
+if (!customElements.get('tragalero-gallery')) {
+    customElements.define('tragalero-gallery', TragaleroGallery);
 }
 
 /**
- * Menutech Promotions Web Component Base Class
+ * Tragalero Promotions Web Component Base Class
  */
-class MenutechPromoBase extends HTMLElement {
+class TragaleroPromoBase extends HTMLElement {
     constructor(eventType) {
         super();
         this.attachShadow({ mode: 'open' });
         this.eventType = eventType;
         this.config = {
-            url: "https://eemqyrysdgasfjlitads.supabase.co",
-            key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY"
+            url: "https://jqmmzufomzcsyzdskxze.supabase.co",
+            key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxbW16dWZvbXpjc3l6ZHNreHplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE1NTgsImV4cCI6MjA4ODMxNzU1OH0.mAd28JHZmLZGLd4Z3r59SgtSdeEpMyZd_WJdrD381Vs"
         };
         this.supabase = null;
     }
@@ -707,7 +707,7 @@ class MenutechPromoBase extends HTMLElement {
             const { createClient } = await import("https://esm.sh/@supabase/supabase-js");
             this.supabase = createClient(this.config.url, this.config.key);
         } catch (err) {
-            console.error("MenutechPromo Supabase Init Error:", err);
+            console.error("TragaleroPromo Supabase Init Error:", err);
         }
     }
 
@@ -909,7 +909,7 @@ class MenutechPromoBase extends HTMLElement {
     }
 }
 
-customElements.define('menutech-christmas', class extends MenutechPromoBase { constructor() { super('christmas'); } });
-customElements.define('menutech-halloween', class extends MenutechPromoBase { constructor() { super('halloween'); } });
-customElements.define('menutech-valentine', class extends MenutechPromoBase { constructor() { super('valentine'); } });
-customElements.define('menutech-president', class extends MenutechPromoBase { constructor() { super('president'); } });
+customElements.define('tragalero-navidad', class extends TragaleroPromoBase { constructor() { super('christmas'); } });
+customElements.define('tragalero-halloween', class extends TragaleroPromoBase { constructor() { super('halloween'); } });
+customElements.define('tragalero-valentin', class extends TragaleroPromoBase { constructor() { super('valentine'); } });
+customElements.define('tragalero-presidentes', class extends TragaleroPromoBase { constructor() { super('president'); } });
