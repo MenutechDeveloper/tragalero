@@ -162,6 +162,78 @@
         @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; } }
 
+        /* Gallery Layouts */
+        .manual-gallery { margin-bottom: 80px; }
+
+        .gallery-grid-container {
+            display: grid;
+            gap: 20px;
+            transition: all 0.5s ease;
+        }
+
+        /* GRID Mode */
+        .gallery-grid-container.grid {
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        }
+
+        /* BENTO Mode - Matches admin.html dashboard style */
+        .gallery-grid-container.bento {
+            grid-template-columns: repeat(6, 1fr);
+            grid-auto-rows: 160px;
+        }
+
+        @media (max-width: 768px) {
+            .gallery-grid-container.bento {
+                grid-template-columns: repeat(2, 1fr);
+                grid-auto-rows: 180px;
+            }
+            .gallery-grid-container.bento .gallery-card {
+                grid-column: span 2 !important;
+                grid-row: span 1 !important;
+            }
+        }
+
+        /* SLIDER Mode */
+        .gallery-grid-container.slider {
+            display: flex;
+            overflow-x: auto;
+            padding: 20px 0;
+            scroll-snap-type: x mandatory;
+            gap: 30px;
+        }
+        .gallery-grid-container.slider .gallery-card {
+            flex: 0 0 320px;
+            height: 400px;
+            scroll-snap-align: center;
+        }
+
+        .gallery-card {
+            background: var(--card);
+            border-radius: 30px; /* Matched to admin.html bento-item */
+            overflow: hidden;
+            border: 1px solid rgba(255, 149, 51, 0.1);
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            cursor: grab;
+        }
+        .gallery-card:active { cursor: grabbing; }
+        .gallery-card:hover { transform: translateY(-10px) scale(1.02); border-color: var(--orange); box-shadow: 0 20px 45px rgba(255,149,51,0.2); z-index: 10; }
+
+        .gallery-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .gallery-card .card-actions {
+            position: absolute; top: 12px; right: 12px; display: flex; gap: 8px;
+            opacity: 0; transform: translateY(-10px); transition: 0.3s;
+        }
+        .gallery-card:hover .card-actions { opacity: 1; transform: translateY(0); }
+        .btn-del {
+            width: 28px; height: 28px; border-radius: 50%; background: rgba(220, 38, 38, 0.85);
+            color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .btn-del:hover { background: #dc2626; transform: scale(1.1); }
+
         .loader { border: 3px solid rgba(255, 149, 51, 0.1); width: 28px; height: 28px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 1s linear infinite; margin: 0 auto; }
         @keyframes rotate { to { transform: rotate(360deg); } }
         .hidden { display: none !important; }
@@ -462,30 +534,93 @@
 
             const cpCode = document.getElementById('btn-copy-code');
             if (cpCode) cpCode.onclick = () => {
-                if (!activeDomain) return showToast("Assign a domain first.", "warning");
-                const snippet = `<div style="max-width:1200px; margin:0 auto;"><!-- Tragalero Gallery -->\n<script src="https://tragalero.com/tragaleroUI.js"><\/script>\n<tragalero-gallery domain="${activeDomain}"></tragalero-gallery></div>`;
-                navigator.clipboard.writeText(snippet).then(() => showToast("Copied!"));
+                if (!activeDomain) return showToast("Asigna un dominio primero.", "warning");
+                const snippet = `<!-- Tragalero Web Gallery - Auto-generated -->
+<div class="tragalero-web-container" style="max-width: 1200px; margin: 60px auto; padding: 0 24px; width: 100%; box-sizing: border-box;">
+    <script src="https://tragalero.com/tragaleroUI.js"><\/script>
+    <tragalero-gallery domain="${activeDomain}"></tragalero-gallery>
+</div>
+<style>
+    /* Ensure the container is perfectly centered on all screens */
+    .tragalero-web-container { display: block; clear: both; }
+    @media (max-width: 768px) { .tragalero-web-container { margin: 30px auto; padding: 0 15px; } }
+</style>`;
+                navigator.clipboard.writeText(snippet).then(() => showToast("Gallery Code Copied!"));
             };
 
             const cpPromo = document.getElementById('btn-copy-promo');
             if (cpPromo) cpPromo.onclick = () => {
-                if (!activeDomain) return showToast("Assign a domain first.", "warning");
+                if (!activeDomain) return showToast("Asigna un dominio primero.", "warning");
                 const activeEvents = localPromos.filter(p => p.is_active).map(p => p.event_type);
-                const eventToTag = { 'christmas': 'tragalero-navidad', 'halloween': 'tragalero-halloween', 'valentine': 'tragalero-valentin', 'president': 'tragalero-presidentes' };
-                const tags = activeEvents.map(ev => `<${eventToTag[ev] || ev} domain="${activeDomain}"></${eventToTag[ev] || ev}>`).join('\n');
-                const snippet = `<div style="max-width:1200px; margin:0 auto;"><!-- Tragalero Promotions -->\n<script src="https://tragalero.com/tragaleroUI.js"><\/script>\n${tags}</div>`;
-                navigator.clipboard.writeText(snippet).then(() => showToast("Copied!"));
+                const eventToTag = {
+                    'christmas': 'tragalero-navidad',
+                    'halloween': 'tragalero-halloween',
+                    'valentine': 'tragalero-valentin',
+                    'president': 'tragalero-presidentes'
+                };
+                const tags = activeEvents.map(ev => `<${eventToTag[ev] || ev} domain="${activeDomain}"></${eventToTag[ev] || ev}>`).join('\n    ');
+
+                const snippet = `<!-- Tragalero Promotions - Auto-generated -->
+<div class="tragalero-promos-container" style="max-width: 1200px; margin: 40px auto; padding: 0 24px; width: 100%; box-sizing: border-box; text-align: center;">
+    <script src="https://tragalero.com/tragaleroUI.js"><\/script>
+    ${tags || '<!-- No active promotions selected -->'}
+</div>`;
+                navigator.clipboard.writeText(snippet).then(() => showToast("Promo Code Copied!"));
             };
 
             const dz = document.getElementById('drop-zone'), fi = document.getElementById('file-input');
             if (dz && fi) {
                 dz.onclick = () => fi.click();
-                fi.onchange = () => uploadFiles(fi.files);
+
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dz.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }, false);
+                });
+
+                dz.addEventListener('dragover', () => {
+                    dz.style.borderColor = 'var(--orange)';
+                    dz.style.background = 'rgba(255, 149, 51, 0.05)';
+                });
+
+                dz.addEventListener('dragleave', () => {
+                    dz.style.borderColor = 'var(--border)';
+                    dz.style.background = 'var(--card)';
+                });
+
+                dz.addEventListener('drop', (e) => {
+                    dz.style.borderColor = 'var(--border)';
+                    dz.style.background = 'var(--card)';
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (files && files.length) {
+                        uploadFiles(files);
+                    }
+                });
+
+                fi.onchange = () => { if (fi.files.length) uploadFiles(fi.files); };
             }
 
             const pdz = document.getElementById('promo-drop-zone'), pfi = document.getElementById('promo-file-input');
             if (pdz && pfi) {
                 pdz.onclick = () => pfi.click();
+                pdz.ondragover = (e) => { e.preventDefault(); pdz.style.borderColor = 'var(--orange)'; };
+                pdz.ondragleave = () => { pdz.style.borderColor = 'var(--border)'; };
+                pdz.ondrop = async (e) => {
+                    e.preventDefault();
+                    pdz.style.borderColor = 'var(--border)';
+                    if (e.dataTransfer.files.length) {
+                        const file = e.dataTransfer.files[0];
+                        try {
+                            const d = await uploadToCloudinary(file);
+                            const prev = document.getElementById('promo-preview');
+                            const placeholder = document.getElementById('promo-drop-placeholder');
+                            if (prev) { prev.src = d.url; prev.classList.remove('hidden'); }
+                            if (placeholder) placeholder.classList.add('hidden');
+                        } catch(e) { showToast("Upload error", "error"); }
+                    }
+                };
                 pfi.onchange = async () => {
                     if(pfi.files.length) {
                         try {
@@ -505,17 +640,29 @@
         async function uploadFiles(files) {
             if (!activeOwnerId) return showToast("Select a project.", "warning");
             const s = document.getElementById('upload-status');
-            if (s) s.innerHTML = '<div class="loader"></div>';
+            if (s) s.innerHTML = '<div class="loader"></div> <p class="small text-muted mt-2">Uploading images...</p>';
+
+            let uploadedCount = 0;
             for (const f of files) {
                 try {
                     const d = await uploadToCloudinary(f);
-                    localGallery.unshift({ image_url: d.url });
-                } catch (e) { console.error(e); }
+                    if (d && d.url) {
+                        localGallery.unshift({ image_url: d.url });
+                        uploadedCount++;
+                    }
+                } catch (e) {
+                    console.error("Upload error:", e);
+                    showToast("Error uploading some files", "error");
+                }
             }
-            if (s) s.textContent = "";
-            syncGalleryComponent();
-            const ff = document.getElementById('floating-footer');
-            if (ff) ff.classList.remove('hidden');
+
+            if (s) s.innerHTML = uploadedCount > 0 ? `<p class="small text-success">${uploadedCount} images added!</p>` : "";
+            if (uploadedCount > 0) {
+                syncGalleryComponent();
+                const ff = document.getElementById('floating-footer');
+                if (ff) ff.classList.remove('hidden');
+            }
+            setTimeout(() => { if(s) s.innerHTML = ""; }, 3000);
         }
 
         async function loadGallery() {
@@ -524,6 +671,12 @@
                 localGallery = data || [];
                 const { data: profile } = await sb.from('usuarios').select('gallery_type').eq('id', activeOwnerId).maybeSingle();
                 currentGalleryType = (profile && profile.gallery_type) ? profile.gallery_type : 'grid';
+
+                // Update active state in UI segment buttons
+                document.querySelectorAll('.segment-btn').forEach(b => {
+                    b.classList.toggle('active', b.getAttribute('data-value') === currentGalleryType);
+                });
+
                 syncGalleryComponent();
             } catch(e) { console.error(e); }
         }
@@ -547,7 +700,56 @@
             if (!container) return;
 
             const imagesList = localGallery.map(it => it.image_url).join(',');
-            container.innerHTML = `<tragalero-gallery id="main-gallery" admin-mode type="${currentGalleryType}" images-list="${imagesList}"></tragalero-gallery>`;
+
+            // We use the custom element for the preview
+            let galleryHtml = `<tragalero-gallery id="main-gallery" admin-mode type="${currentGalleryType}" domain="${activeDomain || ''}" images-list="${imagesList}"></tragalero-gallery>`;
+
+            // Bento logic helper - Matches admin.html span logic
+            const getBentoStyle = (url) => {
+                if (currentGalleryType !== 'bento') return '';
+                const match = url.match(/#s=(\d+)/);
+                const span = match ? parseInt(match[1]) : 3; // default span 3 (half row)
+                let rowSpan = 1;
+                if (span === 3) rowSpan = 2;
+                if (span >= 4) rowSpan = 2;
+                if (span >= 6) rowSpan = 3;
+                return `grid-column: span ${span}; grid-row: span ${rowSpan};`;
+            };
+
+            // Manual rendering for immediate visual feedback
+            let manualHtml = `
+                <div class="manual-gallery mt-5 pt-5 border-top">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h5 class="fw-bold mb-0">Vista Previa del Editor</h5>
+                            <p class="small text-muted mb-0">Ordena tus imágenes arrastrándolas. Los cambios se verán en tu dominio.</p>
+                        </div>
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill" style="font-size: 0.7rem; font-weight: 800; letter-spacing: 1px;">ESTILO: ${currentGalleryType.toUpperCase()}</span>
+                    </div>
+                    <div class="gallery-grid-container ${currentGalleryType}">
+                        ${localGallery.map((it, idx) => `
+                            <div class="gallery-card"
+                                 style="${getBentoStyle(it.image_url)}"
+                                 draggable="true"
+                                 ondragstart="handleImageDragStart(event, ${idx})"
+                                 ondragover="event.preventDefault()"
+                                 ondrop="handleImageDrop(event, ${idx})">
+                                <img src="${it.image_url}" alt="Gallery ${idx}" loading="lazy">
+                                <div class="card-actions">
+                                    ${currentGalleryType === 'bento' ? `
+                                        <button class="btn-del" style="background: var(--orange)" onclick="cycleBentoSpan(${idx})" title="Cambiar Tamaño"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+                                    ` : ''}
+                                    <button class="btn-del" onclick="removeLocalImage(${idx})" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                                </div>
+                                <div style="position: absolute; bottom: 0; left: 0; right: 0; font-size: 9px; padding: 4px; background: rgba(0,0,0,0.4); color: white; text-align: center; font-weight: 700;">IMG #${idx+1}</div>
+                            </div>
+                        `).join('')}
+                        ${localGallery.length === 0 ? '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-dim); border: 2.5px dashed var(--border); border-radius: 32px; background: var(--input);">No hay imágenes cargadas en esta galería. Arrastra archivos arriba para empezar.</div>' : ''}
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = galleryHtml + manualHtml;
 
             const gallery = document.getElementById('main-gallery');
             if (!gallery) return;
@@ -576,6 +778,51 @@
                 if (ff) ff.classList.remove('hidden');
             });
         }
+
+        window.removeLocalImage = (idx) => {
+            if (!confirm("¿Eliminar esta imagen de la galería?")) return;
+            localGallery.splice(idx, 1);
+            syncGalleryComponent();
+            const ff = document.getElementById('floating-footer');
+            if (ff) ff.classList.remove('hidden');
+        };
+
+        window.handleImageDragStart = (e, index) => {
+            e.dataTransfer.setData('text/plain', index);
+        };
+
+        window.handleImageDrop = (e, toIndex) => {
+            e.preventDefault();
+            const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+            if (isNaN(fromIndex) || fromIndex === toIndex) return;
+
+            const item = localGallery.splice(fromIndex, 1)[0];
+            localGallery.splice(toIndex, 0, item);
+            syncGalleryComponent();
+            const ff = document.getElementById('floating-footer');
+            if (ff) ff.classList.remove('hidden');
+        };
+
+        window.cycleBentoSpan = (idx) => {
+            const it = localGallery[idx];
+            if (!it) return;
+            const match = it.image_url.match(/#s=(\d+)/);
+            let currentSpan = match ? parseInt(match[1]) : 3;
+            let nextSpan = 3;
+
+            // Cycle through 2, 3, 4, 6
+            if (currentSpan === 2) nextSpan = 3;
+            else if (currentSpan === 3) nextSpan = 4;
+            else if (currentSpan === 4) nextSpan = 6;
+            else if (currentSpan === 6) nextSpan = 2;
+            else nextSpan = 3;
+
+            const baseUrl = it.image_url.split('#')[0];
+            it.image_url = `${baseUrl}#s=${nextSpan}`;
+            syncGalleryComponent();
+            const ff = document.getElementById('floating-footer');
+            if (ff) ff.classList.remove('hidden');
+        };
 
         window.setGalleryType = (type) => {
             currentGalleryType = type;
