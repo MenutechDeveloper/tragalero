@@ -104,8 +104,8 @@
         .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
         .user-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 60px; }
-        .user-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px 32px; display: grid; grid-template-columns: 1.5fr 1.5fr 1fr auto; align-items: center; gap: 24px; transition: 0.4s; }
-        .user-card:hover { border-color: var(--orange); transform: scale(1.005); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .user-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px 32px; display: grid; grid-template-columns: 1.5fr 1.5fr 1fr auto; align-items: center; gap: 24px; transition: 0.4s; margin-bottom: 8px; }
+        .user-card:hover { border-color: var(--orange); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
         .user-info h3 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
 
         .controls { display: flex; flex-direction: column; gap: 8px; }
@@ -114,9 +114,11 @@
 
         .actions { display: flex; gap: 10px; }
         .btn { padding: 12px 18px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.3s; border: none; text-transform: uppercase; }
-        .btn-save { background: var(--orange); color: #000; }
+        .btn-save { background: var(--orange); color: #fff; box-shadow: 0 4px 12px rgba(255, 149, 51, 0.2); }
+        .btn-save:hover { filter: brightness(1.1); transform: translateY(-1px); }
         .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--error); }
-        .btn-access { background: rgba(139, 92, 246, 0.1); color: var(--dev); }
+        .btn-access { background: #f3f0ff; color: #8b5cf6; }
+        .btn-access:hover { background: #8b5cf6; color: #fff; }
 
         .loader { width: 30px; height: 30px; border: 3px solid rgba(255, 149, 51, 0.1); border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; margin: 40px auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -171,7 +173,7 @@
         <div class="container">
             <div id="admin-tools" class="hidden">
                 <div class="section-title">All Users</div>
-                <div style="margin-bottom: 30px;"><input type="text" id="user-search" placeholder="Search users or domains..." style="width: 100%; max-width: 400px; background: var(--input); border: 1px solid var(--border); border-radius: 14px; padding: 14px 20px; color: var(--text);"></div>
+                <div style="margin-bottom: 40px;"><input type="text" id="user-search" placeholder="Search users or domains..." style="width: 100%; max-width: 420px; background: var(--input); border: 1.5px solid var(--border); border-radius: 16px; padding: 16px 24px; color: var(--text); font-size: 0.85rem; box-shadow: 0 4px 20px rgba(0,0,0,0.02); transition: 0.3s;"></div>
                 <div id="user-list" class="user-list"></div>
             </div>
             <div id="dev-tools" class="hidden">
@@ -218,9 +220,9 @@
                 currentUser = profile;
                 const userRole = (profile.role || '').toLowerCase();
                 const isAdmin = userRole === 'admin';
-                const isStaff = ['admin', 'developer', 'design', 'cs', 'sales', 'support', 'retention', 'owner'].includes(userRole);
+                const isStaff = ['admin', 'developer', 'design', 'cs', 'sales', 'support', 'retention'].includes(userRole);
 
-                if (!isStaff) {
+                if (userRole !== 'admin' && !isStaff) {
                     document.getElementById('no-access').classList.remove('hidden');
                     const loader = document.getElementById('loading');
                     if (loader) loader.classList.add('hidden');
@@ -299,15 +301,20 @@
                 else if (roleLower === 'developer') badgeClass = 'badge-dev';
 
                 return `
-                <div class="user-card">
-                    <div class="user-info"><h3>${u.name || 'No Name'}</h3>${u.domain ? `<div style="font-size: 0.75rem; color: var(--orange); font-weight: 600;">${u.domain}</div>` : ''}</div>
+                <div class="user-card" style="border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(255, 149, 51, 0.1);">
+                    <div class="user-info">
+                        <h3 style="font-family: 'Outfit'; font-weight: 700;">${u.name || 'No Name'}</h3>
+                        ${u.domain ? `<div style="font-size: 0.7rem; color: var(--orange); font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">${u.domain}</div>` : '<div style="font-size: 0.7rem; color: var(--text-dim);">NO DOMAIN</div>'}
+                    </div>
                     <div class="controls">
-                        <input type="text" value="${u.name || ''}" id="user-${u.id}" ${!isAdminView ? 'disabled' : ''} placeholder="Name">
-                        <input type="text" value="${u.domain || ''}" id="dom-${u.id}" ${!isAdminView ? 'disabled' : ''} placeholder="Domain">
+                        <div style="font-size: 0.6rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; margin-left: 5px;">User Info</div>
+                        <input type="text" value="${u.name || ''}" id="user-${u.id}" ${!isAdminView ? 'disabled' : ''} placeholder="Name" style="margin-bottom: 8px; border-radius: 14px; font-weight: 600;">
+                        <input type="text" value="${u.domain || ''}" id="dom-${u.id}" ${!isAdminView ? 'disabled' : ''} placeholder="Domain" style="border-radius: 14px; font-weight: 600;">
                     </div>
                     <div class="badge-container">
+                        <div style="font-size: 0.6rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; margin-left: 5px;">Access Role</div>
                         ${isAdminView ? `
-                            <select id="role-${u.id}" style="width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">
+                            <select id="role-${u.id}" style="width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 14px; padding: 10px 14px; color: var(--text); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; cursor: pointer;">
                                 <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
                                 <option value="Developer" ${u.role === 'Developer' ? 'selected' : ''}>Developer</option>
                                 <option value="Owner" ${u.role === 'Owner' ? 'selected' : ''}>Owner</option>
@@ -317,11 +324,18 @@
                                 <option value="Support" ${u.role === 'Support' ? 'selected' : ''}>Support</option>
                                 <option value="Retention" ${u.role === 'Retention' ? 'selected' : ''}>Retention</option>
                             </select>
-                        ` : `<span class="badge ${badgeClass}">${u.role}</span>`}
+                        ` : `<span class="badge ${badgeClass}" style="display: inline-block; width: 100%; text-align: center; padding: 12px; border-radius: 14px;">${u.role}</span>`}
                     </div>
                     <div class="actions">
-                        ${isAdminView ? `<button class="btn btn-save" onclick="updateUser('${u.id}')">SAVE</button>` : ''}
-                        <button class="btn btn-access" onclick="manageGallery('${u.id}')">GALLERY</button>
+                        <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                            <button class="btn btn-access" onclick="manageGallery('${u.id}')" style="width: 100%; border-radius: 16px; background: rgba(255, 149, 51, 0.1); color: var(--orange); border: 1.5px solid rgba(255, 149, 51, 0.2);">GALLERY</button>
+                            ${isAdminView ? `
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn btn-save" onclick="updateUser('${u.id}')" style="flex: 1; border-radius: 16px; font-weight: 800;">SAVE</button>
+                                    <button class="btn btn-del" onclick="deleteUser('${u.id}')" style="border-radius: 16px; padding: 12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg></button>
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>`}).join('');
         }
@@ -342,6 +356,18 @@
         window.manageGallery = (ownerId) => {
             sessionStorage.setItem('mt_edit_owner_id', ownerId);
             location.href = 'adminWeb.html';
+        };
+
+        window.deleteUser = async (id) => {
+            if (!confirm("¿ESTÁS SEGURO? Esta acción eliminará permanentemente al usuario y todos sus datos (galería, promos, negocios).")) return;
+
+            const { error } = await sb.from('usuarios').delete().eq('id', id);
+            if (error) {
+                window.showToast(error.message, "error");
+            } else {
+                window.showToast("Usuario eliminado", "success");
+                loadAllUsers();
+            }
         };
 
         function initEvents() {

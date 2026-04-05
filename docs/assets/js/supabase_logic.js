@@ -174,8 +174,8 @@ async function renderUserMenu(containerId = 'authButtons') {
                         <i class="bi bi-plus-circle"></i>Nuevo Negocio
                     </a>
                     ${user.role === 'Admin' ? `
-                        <a href="./users.html" class="user-dropdown-item">
-                            <i class="bi bi-people-fill"></i>Usuarios
+                        <a href="./adminCustomer.html" class="user-dropdown-item">
+                            <i class="bi bi-people-fill"></i>Clientes
                         </a>
                     ` : ''}
                     <hr class="my-2 opacity-10">
