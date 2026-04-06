@@ -275,15 +275,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function forceLibraryInit() {
-        const hasMenutech = window.MenutechUI && typeof window.MenutechUI.init === 'function';
+        const hasTragalero = window.TragaleroUI && typeof window.TragaleroUI.init === 'function';
         const hasGlf = typeof window.glfBindButtons === 'function';
 
-        if (hasMenutech) window.MenutechUI.init();
+        if (hasTragalero) window.TragaleroUI.init();
         if (hasGlf) window.glfBindButtons();
 
         // Retry for dynamic/delayed rendering
         setTimeout(() => {
-            if (hasMenutech) window.MenutechUI.init();
+            if (hasTragalero) window.TragaleroUI.init();
             if (hasGlf) window.glfBindButtons();
         }, 500);
     }
@@ -314,17 +314,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // Action Buttons (Menutech & Gloria Food)
+        // Action Buttons (Tragalero & Gloria Food)
         let actionHtml = '';
         if (isRestaurant && item.cuid && item.ruid) {
             actionHtml = `
-                <div class="menutech-container shadow-sm border-0 bg-light-subtle rounded-4 p-4 mt-4">
+                <div class="tragalero-container shadow-sm border-0 bg-light-subtle rounded-4 p-4 mt-4">
                     <h6 class="fw-bold mb-3 text-center opacity-75">
                         <i class="bi bi-lightning-charge-fill text-warning me-2"></i>Acciones Rápidas
                     </h6>
                     <div class="row g-3">
                         <div class="col-12">
-                            <menutech-orders
+                            <tragalero-orders
                                 cuid="${item.cuid}"
                                 ruid="${item.ruid}"
                                 background="${item.order_bg_color || '#f2a04a'}"
@@ -332,11 +332,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 textColor="${item.order_text_color || '#ffffff'}"
                                 data-glf-cuid="${item.cuid}"
                                 data-glf-ruid="${item.ruid}"
-                            ></menutech-orders>
+                            ></tragalero-orders>
                         </div>
                         ${item.has_reservation ? `
                         <div class="col-12">
-                            <menutech-reservations
+                            <tragalero-reservations
                                 cuid="${item.cuid}"
                                 ruid="${item.ruid}"
                                 background="${item.res_bg_color || '#2f4854'}"
@@ -345,14 +345,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 data-glf-cuid="${item.cuid}"
                                 data-glf-ruid="${item.ruid}"
                                 data-glf-reservation="true"
-                            ></menutech-reservations>
+                            ></tragalero-reservations>
                         </div>` : ''}
                     </div>
                 </div>
             `;
         } else if (item.order_url || item.reservation_url || sWebsite) {
             actionHtml = `
-                <div class="menutech-container shadow-sm border-0 bg-light-subtle rounded-4 p-4 mt-4">
+                <div class="tragalero-container shadow-sm border-0 bg-light-subtle rounded-4 p-4 mt-4">
                      <h6 class="fw-bold mb-3 text-center opacity-75"><i class="bi bi-link-45deg me-2"></i>Enlaces Directos</h6>
                     <div class="d-grid gap-3">
                         ${item.order_url ? `<a href="${escapeHtml(item.order_url)}" target="_blank" class="btn fw-bold rounded-pill py-3 shadow-sm" style="background-color: ${btnBg}; color: ${btnText}; border: none;"><i class="bi bi-bag-check me-2"></i>Ordena Ahora</a>` : ''}

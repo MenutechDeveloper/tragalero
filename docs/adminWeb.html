@@ -162,77 +162,33 @@
         @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-        /* Gallery Layouts */
-        .manual-gallery { margin-bottom: 80px; }
+        /* Premium Promo Modal Styles */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 24px; opacity: 0; transition: opacity 0.3s; }
+        .modal-overlay.active { display: flex; opacity: 1; }
 
-        .gallery-grid-container {
-            display: grid;
-            gap: 20px;
-            transition: all 0.5s ease;
-        }
+        .modal-card { background: var(--card); width: 100%; max-width: 500px; border-radius: 40px; padding: 48px; border: 1.5px solid var(--border); box-shadow: 0 40px 100px rgba(0,0,0,0.3); position: relative; animation: modalSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .modal-card h3 { font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--text); margin-bottom: 32px; letter-spacing: -1px; text-align: left; }
+        @keyframes modalSlideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* GRID Mode */
-        .gallery-grid-container.grid {
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        }
+        .modal-close { position: absolute; top: 32px; right: 32px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--input); color: var(--text-dim); border: 1px solid var(--border); cursor: pointer; transition: all 0.3s; }
+        .modal-close:hover { color: var(--orange); border-color: var(--orange); transform: rotate(90deg); }
 
-        /* BENTO Mode - Matches admin.html dashboard style */
-        .gallery-grid-container.bento {
-            grid-template-columns: repeat(6, 1fr);
-            grid-auto-rows: 160px;
-        }
+        .promo-form-group { margin-bottom: 24px; }
+        .promo-form-group label { display: block; font-size: 0.7rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 10px; font-family: 'Outfit', sans-serif; letter-spacing: 1.5px; margin-left: 4px; }
+        .promo-form-group input, .promo-form-group select { width: 100%; padding: 16px 20px; border-radius: 18px; border: 1.5px solid var(--border); background: var(--input); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600; font-size: 0.9rem; transition: all 0.3s; }
+        .promo-form-group input:focus, .promo-form-group select:focus { border-color: var(--orange); outline: none; box-shadow: 0 0 0 5px rgba(255, 149, 51, 0.1); background: var(--card); }
 
-        @media (max-width: 768px) {
-            .gallery-grid-container.bento {
-                grid-template-columns: repeat(2, 1fr);
-                grid-auto-rows: 180px;
-            }
-            .gallery-grid-container.bento .gallery-card {
-                grid-column: span 2 !important;
-                grid-row: span 1 !important;
-            }
-        }
+        .promo-drop-zone { width: 100%; height: 180px; border-radius: 28px; border: 2px dashed var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; margin-bottom: 28px; overflow: hidden; position: relative; background: var(--input); }
+        .promo-drop-zone:hover { border-color: var(--orange); background: rgba(255, 149, 51, 0.05); transform: scale(1.01); }
+        .promo-drop-zone img { width: 100%; height: 100%; object-fit: cover; }
+        .promo-drop-zone p { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--text-dim); margin-top: 8px; }
 
-        /* SLIDER Mode */
-        .gallery-grid-container.slider {
-            display: flex;
-            overflow-x: auto;
-            padding: 20px 0;
-            scroll-snap-type: x mandatory;
-            gap: 30px;
-        }
-        .gallery-grid-container.slider .gallery-card {
-            flex: 0 0 320px;
-            height: 400px;
-            scroll-snap-align: center;
-        }
-
-        .gallery-card {
-            background: var(--card);
-            border-radius: 30px; /* Matched to admin.html bento-item */
-            overflow: hidden;
-            border: 1px solid rgba(255, 149, 51, 0.1);
-            position: relative;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            cursor: grab;
-        }
-        .gallery-card:active { cursor: grabbing; }
-        .gallery-card:hover { transform: translateY(-10px) scale(1.02); border-color: var(--orange); box-shadow: 0 20px 45px rgba(255,149,51,0.2); z-index: 10; }
-
-        .gallery-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-        .gallery-card .card-actions {
-            position: absolute; top: 12px; right: 12px; display: flex; gap: 8px;
-            opacity: 0; transform: translateY(-10px); transition: 0.3s;
-        }
-        .gallery-card:hover .card-actions { opacity: 1; transform: translateY(0); }
-        .btn-del {
-            width: 28px; height: 28px; border-radius: 50%; background: rgba(220, 38, 38, 0.85);
-            color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        .btn-del:hover { background: #dc2626; transform: scale(1.1); }
+        .modal-actions { display: flex; gap: 16px; margin-top: 40px; }
+        .btn-modal { flex: 1; padding: 18px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); border: none; font-family: 'Outfit', sans-serif; letter-spacing: 1.5px; }
+        .btn-modal-save { background: var(--orange); color: #fff; box-shadow: 0 10px 30px rgba(255, 149, 51, 0.3); }
+        .btn-modal-save:hover { transform: translateY(-4px); box-shadow: 0 15px 40px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
+        .btn-modal-cancel { background: var(--input); color: var(--text-dim); border: 1.5px solid var(--border); }
+        .btn-modal-cancel:hover { background: var(--border); transform: translateY(-2px); }
 
         .loader { border: 3px solid rgba(255, 149, 51, 0.1); width: 28px; height: 28px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 1s linear infinite; margin: 0 auto; }
         @keyframes rotate { to { transform: rotate(360deg); } }
@@ -261,17 +217,6 @@
         @keyframes promo-pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 149, 51, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 149, 51, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 149, 51, 0); } }
         .promo-slot span { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
         .promo-slot.active span { color: var(--text); }
-
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 24px; opacity: 0; transition: opacity 0.3s; }
-        .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-card { background: var(--card); width: 100%; max-width: 500px; border-radius: 32px; padding: 40px; border: 1.5px solid var(--border); box-shadow: 0 30px 60px rgba(0,0,0,0.3); position: relative; animation: modalSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes modalSlideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal-close { position: absolute; top: 25px; right: 25px; cursor: pointer; color: var(--text-dim); border: none; background: none; }
-        .promo-form-group { margin-bottom: 20px; }
-        .promo-form-group label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--orange); text-transform: uppercase; margin-bottom: 8px; }
-        .promo-form-group input, .promo-form-group select { width: 100%; padding: 14px; border-radius: 16px; border: 1px solid var(--border); background: var(--input); color: var(--text); }
-        .promo-drop-zone { width: 100%; height: 150px; border-radius: 20px; border: 2px dashed var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; margin-bottom: 20px; overflow: hidden; position: relative; }
-        .promo-drop-zone img { width: 100%; height: 100%; object-fit: cover; }
     </style>
 </head>
 <body>
@@ -309,6 +254,28 @@
     <div id="floating-footer" class="hidden">
         <button class="btn-footer btn-save-all" onclick="saveChanges()">Save Changes</button>
         <button class="btn-footer btn-visit" onclick="visitSite()">Visit Site</button>
+    </div>
+
+    <div id="promo-modal" class="modal-overlay">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closePromoModal()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <h3 id="promo-modal-title">Configure Promo</h3>
+            <div class="promo-drop-zone" id="promo-drop-zone">
+                <img id="promo-preview" class="hidden">
+                <div id="promo-drop-placeholder">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="1.5" style="margin-bottom: 15px; opacity: 0.8;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                    <p>Subir Imagen Publicitaria</p>
+                </div>
+                <input type="file" id="promo-file-input" class="hidden" accept="image/*">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="promo-form-group"><label>Fecha Inicio</label><input type="date" id="promo-start-date"></div>
+                <div class="promo-form-group"><label>Fecha Fin</label><input type="date" id="promo-end-date"></div>
+            </div>
+            <div class="promo-form-group"><label>Modo de Visualización</label><select id="promo-display-mode"><option value="popup">Popup al cargar</option><option value="section">Sección integrada</option></select></div>
+            <div class="promo-form-group" style="display:flex; align-items:center; gap:12px; background: var(--input); padding: 16px; border-radius: 18px; border: 1.5px solid var(--border);"><input type="checkbox" id="promo-active" style="width:20px; height:20px; accent-color: var(--orange); cursor: pointer;"><label style="margin:0; cursor: pointer; font-size: 0.85rem; font-weight: 700; color: var(--text);">Activar Promoción</label></div>
+            <div class="modal-actions"><button class="btn-modal btn-modal-cancel" onclick="closePromoModal()">Cancelar</button><button class="btn-modal btn-modal-save" id="btn-save-promo">Guardar Promo</button></div>
+        </div>
     </div>
 
     <div class="container hidden" id="main-app">
@@ -372,23 +339,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div id="promo-modal" class="modal-overlay">
-        <div class="modal-card">
-            <button class="modal-close" onclick="closePromoModal()"><svg style="width:24px;height:24px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-            <h3 id="promo-modal-title">Configure Promo</h3>
-            <div class="promo-drop-zone" id="promo-drop-zone">
-                <img id="promo-preview" class="hidden">
-                <div id="promo-drop-placeholder"><p>Drag & Drop Promo Image</p></div>
-                <input type="file" id="promo-file-input" class="hidden" accept="image/*">
-            </div>
-            <div class="promo-form-group"><label>Start Date</label><input type="date" id="promo-start-date"></div>
-            <div class="promo-form-group"><label>End Date</label><input type="date" id="promo-end-date"></div>
-            <div class="promo-form-group"><label>Display Mode</label><select id="promo-display-mode"><option value="popup">Popup on Load</option><option value="section">Integrated Section</option></select></div>
-            <div class="promo-form-group" style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="promo-active" style="width:auto;"><label style="margin:0">Active Promo</label></div>
-            <div class="modal-actions"><button class="btn-modal btn-modal-cancel" onclick="closePromoModal()">Cancel</button><button class="btn-modal btn-modal-save" id="btn-save-promo">Save Promo</button></div>
         </div>
     </div>
 
@@ -704,52 +654,7 @@
             // We use the custom element for the preview
             let galleryHtml = `<tragalero-gallery id="main-gallery" admin-mode type="${currentGalleryType}" domain="${activeDomain || ''}" images-list="${imagesList}"></tragalero-gallery>`;
 
-            // Bento logic helper - Matches admin.html span logic
-            const getBentoStyle = (url) => {
-                if (currentGalleryType !== 'bento') return '';
-                const match = url.match(/#s=(\d+)/);
-                const span = match ? parseInt(match[1]) : 3; // default span 3 (half row)
-                let rowSpan = 1;
-                if (span === 3) rowSpan = 2;
-                if (span >= 4) rowSpan = 2;
-                if (span >= 6) rowSpan = 3;
-                return `grid-column: span ${span}; grid-row: span ${rowSpan};`;
-            };
-
-            // Manual rendering for immediate visual feedback
-            let manualHtml = `
-                <div class="manual-gallery mt-5 pt-5 border-top">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div>
-                            <h5 class="fw-bold mb-0">Vista Previa del Editor</h5>
-                            <p class="small text-muted mb-0">Ordena tus imágenes arrastrándolas. Los cambios se verán en tu dominio.</p>
-                        </div>
-                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill" style="font-size: 0.7rem; font-weight: 800; letter-spacing: 1px;">ESTILO: ${currentGalleryType.toUpperCase()}</span>
-                    </div>
-                    <div class="gallery-grid-container ${currentGalleryType}">
-                        ${localGallery.map((it, idx) => `
-                            <div class="gallery-card"
-                                 style="${getBentoStyle(it.image_url)}"
-                                 draggable="true"
-                                 ondragstart="handleImageDragStart(event, ${idx})"
-                                 ondragover="event.preventDefault()"
-                                 ondrop="handleImageDrop(event, ${idx})">
-                                <img src="${it.image_url}" alt="Gallery ${idx}" loading="lazy">
-                                <div class="card-actions">
-                                    ${currentGalleryType === 'bento' ? `
-                                        <button class="btn-del" style="background: var(--orange)" onclick="cycleBentoSpan(${idx})" title="Cambiar Tamaño"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
-                                    ` : ''}
-                                    <button class="btn-del" onclick="removeLocalImage(${idx})" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-                                </div>
-                                <div style="position: absolute; bottom: 0; left: 0; right: 0; font-size: 9px; padding: 4px; background: rgba(0,0,0,0.4); color: white; text-align: center; font-weight: 700;">IMG #${idx+1}</div>
-                            </div>
-                        `).join('')}
-                        ${localGallery.length === 0 ? '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: var(--text-dim); border: 2.5px dashed var(--border); border-radius: 32px; background: var(--input);">No hay imágenes cargadas en esta galería. Arrastra archivos arriba para empezar.</div>' : ''}
-                    </div>
-                </div>
-            `;
-
-            container.innerHTML = galleryHtml + manualHtml;
+            container.innerHTML = galleryHtml;
 
             const gallery = document.getElementById('main-gallery');
             if (!gallery) return;
@@ -778,51 +683,6 @@
                 if (ff) ff.classList.remove('hidden');
             });
         }
-
-        window.removeLocalImage = (idx) => {
-            if (!confirm("¿Eliminar esta imagen de la galería?")) return;
-            localGallery.splice(idx, 1);
-            syncGalleryComponent();
-            const ff = document.getElementById('floating-footer');
-            if (ff) ff.classList.remove('hidden');
-        };
-
-        window.handleImageDragStart = (e, index) => {
-            e.dataTransfer.setData('text/plain', index);
-        };
-
-        window.handleImageDrop = (e, toIndex) => {
-            e.preventDefault();
-            const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
-            if (isNaN(fromIndex) || fromIndex === toIndex) return;
-
-            const item = localGallery.splice(fromIndex, 1)[0];
-            localGallery.splice(toIndex, 0, item);
-            syncGalleryComponent();
-            const ff = document.getElementById('floating-footer');
-            if (ff) ff.classList.remove('hidden');
-        };
-
-        window.cycleBentoSpan = (idx) => {
-            const it = localGallery[idx];
-            if (!it) return;
-            const match = it.image_url.match(/#s=(\d+)/);
-            let currentSpan = match ? parseInt(match[1]) : 3;
-            let nextSpan = 3;
-
-            // Cycle through 2, 3, 4, 6
-            if (currentSpan === 2) nextSpan = 3;
-            else if (currentSpan === 3) nextSpan = 4;
-            else if (currentSpan === 4) nextSpan = 6;
-            else if (currentSpan === 6) nextSpan = 2;
-            else nextSpan = 3;
-
-            const baseUrl = it.image_url.split('#')[0];
-            it.image_url = `${baseUrl}#s=${nextSpan}`;
-            syncGalleryComponent();
-            const ff = document.getElementById('floating-footer');
-            if (ff) ff.classList.remove('hidden');
-        };
 
         window.setGalleryType = (type) => {
             currentGalleryType = type;

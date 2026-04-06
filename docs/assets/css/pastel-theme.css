@@ -419,14 +419,14 @@ body {
     color: var(--bs-primary);
 }
 
-.menutech-container {
+.tragalero-container {
     background: #f8fafc;
     border-radius: 20px;
     padding: 20px;
     margin-top: 20px;
 }
 
-[data-bs-theme="dark"] .menutech-container {
+[data-bs-theme="dark"] .tragalero-container {
     background: #1e293b;
 }
 
