@@ -223,14 +223,14 @@ html {
 
 }
 
-#menutech {
+#tragalero {
   max-width: 800px;
   margin: auto;
   text-align: center;
   margin-top: 30px;
 }
 
-#menutech h1 {
+#tragalero h1 {
   color: orange;
   font-family: 'Montserrat';
   font-weight: 500;
@@ -348,7 +348,7 @@ model-viewer {
 }
 
 @media (max-width: 992px) {
-  #menutech {
+  #tragalero {
     padding: 20px;
   }
 }

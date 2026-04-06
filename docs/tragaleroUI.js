@@ -913,3 +913,80 @@ customElements.define('tragalero-navidad', class extends TragaleroPromoBase { co
 customElements.define('tragalero-halloween', class extends TragaleroPromoBase { constructor() { super('halloween'); } });
 customElements.define('tragalero-valentin', class extends TragaleroPromoBase { constructor() { super('valentine'); } });
 customElements.define('tragalero-presidentes', class extends TragaleroPromoBase { constructor() { super('president'); } });
+
+class TragaleroActionBase extends HTMLElement {
+    constructor(type) {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.type = type; // 'orders' or 'reservations'
+    }
+
+    connectedCallback() {
+        this.render();
+    }
+
+    static get observedAttributes() {
+        return ['cuid', 'ruid', 'background', 'color', 'textcolor'];
+    }
+
+    attributeChangedCallback() {
+        this.render();
+    }
+
+    render() {
+        const cuid = this.getAttribute('cuid') || '';
+        const ruid = this.getAttribute('ruid') || '';
+        const bg = this.getAttribute('background') || (this.type === 'orders' ? '#f2a04a' : '#2f4854');
+        const color = this.getAttribute('color') || this.getAttribute('textcolor') || '#ffffff';
+
+        const isRes = this.type === 'reservations';
+        const label = isRes ? 'RESERVAR MESA' : 'ORDENAR AHORA';
+        const icon = isRes ? 'bi-calendar-event' : 'bi-bag-check';
+
+        this.shadowRoot.innerHTML = `
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+            <style>
+                :host { display: block; width: 100%; }
+                .btn-glf {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    width: 100%;
+                    padding: 16px;
+                    border-radius: 16px;
+                    border: none;
+                    background: ${bg};
+                    color: ${color};
+                    font-family: 'Plus Jakarta Sans', sans-serif;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                    text-transform: uppercase;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+                    text-decoration: none;
+                }
+                .btn-glf:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 12px 25px rgba(0,0,0,0.15); }
+                i { font-size: 1.2rem; }
+            </style>
+            <button class="btn-glf"
+                    data-glf-cuid="${cuid}"
+                    data-glf-ruid="${ruid}"
+                    ${isRes ? 'data-glf-reservation="true"' : ''}>
+                <i class="bi ${icon}"></i>
+                ${label}
+            </button>
+        `;
+    }
+}
+
+customElements.define('tragalero-orders', class extends TragaleroActionBase { constructor() { super('orders'); } });
+customElements.define('tragalero-reservations', class extends TragaleroActionBase { constructor() { super('reservations'); } });
+
+// Global TragaleroUI object for legacy compatibility
+window.TragaleroUI = {
+    init: () => {
+        console.log("TragaleroUI components initialized");
+    }
+};
