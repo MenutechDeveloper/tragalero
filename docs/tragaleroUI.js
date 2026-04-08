@@ -376,7 +376,7 @@ class TragaleroGallery extends HTMLElement {
             const isAdmin = this.hasAttribute('admin-mode');
             const styles = `
                 <style>
-                    :host { display: block; width: 100%; max-width: 1200px; margin: 80px auto; padding: 0 24px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; clear: both; text-align: center; }
+                    :host { display: block; width: 100%; max-width: 1200px; margin: 60px auto; padding: 0 24px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; box-sizing: border-box; clear: both; text-align: center; }
                     :host([admin-mode]) { margin: 20px auto; margin-bottom: 120px; }
                     .gallery-grid {
                         display: grid;
@@ -513,7 +513,7 @@ class TragaleroGallery extends HTMLElement {
                     .handle-r { right: -4px; top: 10px; bottom: 10px; width: 8px; cursor: ew-resize; }
 
                     @media (max-width: 768px) {
-                        :host { margin: 40px auto; padding: 0 16px; }
+                        :host { margin: 30px auto; padding: 0 15px; }
                         .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
                         .gallery-bento { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 100px; gap: 10px; }
                         :host([admin-mode]) .gallery-bento { background-size: calc((100% + 10px) / 3) 110px; }
@@ -861,7 +861,7 @@ class TragaleroPromoBase extends HTMLElement {
                     display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
                 }
                 .promo-section {
-                    width: 100%; max-width: 650px; margin: 40px auto; padding: 0 24px;
+                    width: 100%; max-width: 1200px; margin: 60px auto; padding: 0 24px;
                     display: flex; flex-direction: column; align-items: center; box-sizing: border-box;
                 }
                 .promo-section img {
@@ -870,7 +870,7 @@ class TragaleroPromoBase extends HTMLElement {
                 }
 
                 @media (max-width: 768px) {
-                    .promo-section { margin: 20px auto; padding: 0 16px; }
+                    .promo-section { margin: 30px auto; padding: 0 15px; }
                     .promo-section img { max-height: 70vh; }
                 }
 

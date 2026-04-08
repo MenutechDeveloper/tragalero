@@ -485,16 +485,9 @@
             const cpCode = document.getElementById('btn-copy-code');
             if (cpCode) cpCode.onclick = () => {
                 if (!activeDomain) return showToast("Asigna un dominio primero.", "warning");
-                const snippet = `<!-- Tragalero Web Gallery - Auto-generated -->
-<div class="tragalero-web-container" style="max-width: 1200px; margin: 60px auto; padding: 0 24px; width: 100%; box-sizing: border-box;">
-    <script src="https://tragalero.com/tragaleroUI.js"><\/script>
-    <tragalero-gallery domain="${activeDomain}"></tragalero-gallery>
-</div>
-<style>
-    /* Ensure the container is perfectly centered on all screens */
-    .tragalero-web-container { display: block; clear: both; }
-    @media (max-width: 768px) { .tragalero-web-container { margin: 30px auto; padding: 0 15px; } }
-</style>`;
+                const snippet = `<!-- Tragalero Gallery -->
+<script src="https://tragalero.com/tragaleroUI.js"><\/script>
+<tragalero-gallery domain="${activeDomain}"></tragalero-gallery>`;
                 navigator.clipboard.writeText(snippet).then(() => showToast("Gallery Code Copied!"));
             };
 
@@ -508,13 +501,11 @@
                     'valentine': 'tragalero-valentin',
                     'president': 'tragalero-presidentes'
                 };
-                const tags = activeEvents.map(ev => `<${eventToTag[ev] || ev} domain="${activeDomain}"></${eventToTag[ev] || ev}>`).join('\n    ');
+                const tags = activeEvents.map(ev => `<${eventToTag[ev] || ev} domain="${activeDomain}"></${eventToTag[ev] || ev}>`).join('\n');
 
-                const snippet = `<!-- Tragalero Promotions - Auto-generated -->
-<div class="tragalero-promos-container" style="max-width: 1200px; margin: 40px auto; padding: 0 24px; width: 100%; box-sizing: border-box; text-align: center;">
-    <script src="https://tragalero.com/tragaleroUI.js"><\/script>
-    ${tags || '<!-- No active promotions selected -->'}
-</div>`;
+                const snippet = `<!-- Tragalero Promotions -->
+<script src="https://tragalero.com/tragaleroUI.js"><\/script>
+${tags || '<!-- No active promotions selected -->'} `;
                 navigator.clipboard.writeText(snippet).then(() => showToast("Promo Code Copied!"));
             };
 
