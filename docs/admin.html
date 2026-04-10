@@ -181,6 +181,13 @@
                     <div class="fs-5">Clientes</div>
                     <div class="small opacity-75 fw-normal">Gestión de usuarios</div>
                 </a>
+
+                <!-- Laboratorio (Solo Admin) -->
+                <a href="./laboratorio.html" id="labSlot" class="bento-item animate-fade-in hidden" style="grid-column: span 6; grid-row: span 1; background-color: #dcfaf0; animation-delay: 0.5s;">
+                    <i class="bi bi-flask-fill"></i>
+                    <div class="fs-5">Laboratorio</div>
+                    <div class="small opacity-75 fw-normal">Pruebas de QR y Compilador</div>
+                </a>
             </div>
         </div>
     </div>
@@ -205,6 +212,7 @@
 
             if (currentUser?.role === 'Admin') {
                 document.getElementById('adminOnlySlot')?.classList.remove('hidden');
+                document.getElementById('labSlot')?.classList.remove('hidden');
             }
         });
     </script>
