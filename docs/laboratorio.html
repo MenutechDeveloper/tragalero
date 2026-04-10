@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio | Tragalero</title>
+    <link rel="icon" type="image/png" href="https://tragalero.com/assets/img/tragalero.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --error: #dc2626;
+            --nm-shadow-1: 20px 20px 60px #d9d6cc, -20px -20px 60px #ffffff;
+            --nm-inner-shadow: inset 6px 6px 12px #d9d6cc, inset -6px -6px 12px #ffffff;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+            --nm-shadow-1: 20px 20px 60px #0e1013, -20px -20px 60px #2a2e39;
+            --nm-inner-shadow: inset 6px 6px 12px #0e1013, inset -6px -6px 12px #2a2e39;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
+
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 40px 24px; animation: fadeIn 1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        header { text-align: center; margin-bottom: 40px; }
+        .logo-main { width: 100%; max-width: 220px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+
+        .dashboard-layout { display: flex; min-height: calc(100vh - 160px); gap: 40px; }
+
+        .sidebar { width: 300px; display: flex; flex-direction: column; gap: 20px; }
+        .main-content { flex: 1; min-width: 0; }
+
+        .nav-card { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); }
+        .nav-item { padding: 16px 20px; border-radius: 16px; cursor: pointer; transition: 0.3s; font-weight: 700; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; color: var(--text-dim); }
+        .nav-item:hover { background: rgba(255, 149, 51, 0.05); color: var(--orange); }
+        .nav-item.active { background: var(--orange); color: #fff; box-shadow: 0 10px 20px rgba(255,149,51,0.2); }
+
+        .lab-section { display: none; animation: slideUp 0.5s ease-out; }
+        .lab-section.active { display: block; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .section-header { margin-bottom: 30px; }
+        .section-header h2 { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; color: var(--text); }
+
+        /* QR Reader Styles */
+        .qr-container { background: var(--card); border-radius: 36px; padding: 40px; border: 1.5px solid var(--border); text-align: center; }
+        #drop-area { border: 3px dashed var(--border); border-radius: 24px; padding: 60px 20px; cursor: pointer; transition: 0.3s; background: var(--input); }
+        #drop-area.highlight { border-color: var(--orange); background: rgba(255,149,51,0.05); }
+        #drop-area p { font-weight: 700; color: var(--text-dim); }
+
+        #qr-result-box { margin-top: 30px; padding: 20px; border-radius: 20px; background: var(--input); border: 1px solid var(--border); display: none; word-break: break-all; }
+        #qr-result-box.show { display: block; }
+        #qr-result-box a { color: var(--orange); font-weight: 700; text-decoration: none; }
+
+        /* Compiler Styles */
+        .compiler-container { display: flex; flex-direction: column; gap: 20px; }
+        .editor-box { position: relative; }
+        textarea { width: 100%; height: 300px; padding: 20px; border-radius: 24px; border: 1.5px solid var(--border); background: var(--input); color: var(--text); font-family: 'Courier New', Courier, monospace; font-size: 14px; resize: vertical; outline: none; transition: border-color 0.3s; }
+        textarea:focus { border-color: var(--orange); }
+
+        .compiler-actions { display: flex; gap: 15px; }
+        .btn-lab { padding: 14px 28px; border-radius: 18px; font-weight: 800; font-size: 0.85rem; text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 1px; font-family: 'Outfit', sans-serif; }
+        .btn-run { background: var(--orange); color: #fff; box-shadow: 0 8px 20px rgba(255,149,51,0.3); }
+        .btn-run:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255,149,51,0.4); }
+        .btn-clear { background: var(--input); color: var(--text); border: 1.5px solid var(--border); }
+        .btn-clear:hover { background: var(--border); }
+
+        .preview-label { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 0.7rem; color: var(--orange); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; display: block; }
+        .preview-frame-container {
+            width: 100%;
+            min-height: 400px;
+            border-radius: 40px;
+            background: var(--bg);
+            padding: 30px;
+            box-shadow: var(--nm-shadow-1);
+            display: flex;
+            align-items: stretch;
+        }
+        iframe { width: 100%; border: none; border-radius: 20px; background: transparent; }
+
+        /* Navigation Bar */
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; }
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; text-decoration: none; }
+        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); }
+
+        .theme-switch { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        .theme-switch svg { width: 24px; height: 24px; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 992px) {
+            .dashboard-layout { flex-direction: column; }
+            .sidebar { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+
+    <div id="top-nav">
+        <a href="admin.html" class="btn-panel-top">VOLVER AL PANEL</a>
+        <div class="theme-switch" id="theme-toggle">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </div>
+    </div>
+
+    <div class="container" id="main-container">
+        <header>
+            <img src="https://tragalero.com/assets/img/tragalero.png" class="logo-main" alt="Tragalero">
+            <p style="font-weight: 800; color: var(--orange); font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase; font-family: 'Outfit';">Laboratorio de Pruebas</p>
+        </header>
+
+        <div class="dashboard-layout">
+            <aside class="sidebar">
+                <div class="nav-card">
+                    <div class="nav-item active" onclick="showSection('qr-reader', this)">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="7" y1="7" x2="7" y2="7"/><line x1="17" y1="7" x2="17" y2="7"/><line x1="17" y1="17" x2="17" y2="17"/><line x1="7" y1="17" x2="7" y2="17"/></svg>
+                        Lector QR
+                    </div>
+                    <div class="nav-item" onclick="showSection('compiler', this)">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        Compilar Código
+                    </div>
+                </div>
+            </aside>
+
+            <main class="main-content">
+                <!-- QR READER SECTION -->
+                <section id="qr-reader" class="lab-section active">
+                    <div class="section-header">
+                        <h2>Lector de Códigos QR</h2>
+                    </div>
+                    <div class="qr-container">
+                        <div id="drop-area">
+                            <p>Arrastra y suelta una imagen de código QR aquí</p>
+                            <span style="font-size: 0.8rem; color: var(--text-dim); margin-top: 10px; display: block;">O haz clic para seleccionar un archivo</span>
+                            <input type="file" id="qr-input" class="hidden" accept="image/*">
+                        </div>
+                        <div id="qr-result-box">
+                            <p id="qr-result-text"></p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- COMPILER SECTION -->
+                <section id="compiler" class="lab-section">
+                    <div class="section-header">
+                        <h2>Compilador de Código</h2>
+                    </div>
+                    <div class="compiler-container">
+                        <div class="editor-box">
+                            <textarea id="code-editor" placeholder="Escribe o pega tu código HTML, CSS o JS aquí..."></textarea>
+                        </div>
+                        <div class="compiler-actions">
+                            <button class="btn-lab btn-run" onclick="runCode()">Ejecutar Código</button>
+                            <button class="btn-lab btn-clear" onclick="clearCode()">Limpiar</button>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <span class="preview-label">Resultado en Tiempo Real</span>
+                            <div class="preview-frame-container">
+                                <iframe id="preview-frame"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./assets/js/supabase_logic.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
+
+            // Access check
+            const user = await getLoggedInUser();
+            if (!user || user.role !== 'Admin') {
+                window.location.href = './admin.html';
+                return;
+            }
+
+            initQRReader();
+        });
+
+        function showSection(id, btn) {
+            document.querySelectorAll('.lab-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // --- QR Reader Logic ---
+        function initQRReader() {
+            const dropArea = document.getElementById('drop-area');
+            const qrInput = document.getElementById('qr-input');
+
+            dropArea.onclick = () => qrInput.click();
+
+            qrInput.onchange = (e) => {
+                if (e.target.files.length) processQR(e.target.files[0]);
+            };
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            dropArea.addEventListener('dragover', () => dropArea.classList.add('highlight'));
+            dropArea.addEventListener('dragleave', () => dropArea.classList.remove('highlight'));
+            dropArea.addEventListener('drop', (e) => {
+                dropArea.classList.remove('highlight');
+                if (e.dataTransfer.files.length) processQR(e.dataTransfer.files[0]);
+            });
+        }
+
+        function processQR(file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+                    const resBox = document.getElementById('qr-result-box');
+                    const resText = document.getElementById('qr-result-text');
+                    resBox.classList.add('show');
+
+                    if (code) {
+                        if (isUrl(code.data)) {
+                            resText.innerHTML = `Contenido: <a href="${code.data}" target="_blank">${code.data}</a>`;
+                        } else {
+                            resText.textContent = `Contenido: ${code.data}`;
+                        }
+                    } else {
+                        resText.textContent = "No se detectó ningún código QR.";
+                    }
+                };
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function isUrl(string) {
+            try { new URL(string); return true; } catch (_) { return false; }
+        }
+
+        // --- Compiler Logic ---
+        function runCode() {
+            const code = document.getElementById('code-editor').value;
+            const iframe = document.getElementById('preview-frame');
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(code);
+            doc.close();
+        }
+
+        function clearCode() {
+            document.getElementById('code-editor').value = '';
+            runCode();
+        }
+
+        function initTheme() {
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            const toggle = document.getElementById('theme-toggle');
+            if (toggle) toggle.onclick = () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            };
+        }
+    </script>
+</body>
+</html>
