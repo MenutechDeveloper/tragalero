@@ -209,7 +209,7 @@
                             <button class="btn-lab btn-clear" onclick="clearCode()">Limpiar</button>
                         </div>
                         <div style="margin-top: 20px;">
-                            <span class="preview-label">Resultado en Tiempo Real (Redimensionable)</span>
+                            <span class="preview-label"></span>
                             <div class="preview-frame-container">
                                 <iframe id="preview-frame" sandbox="allow-scripts"></iframe>
                             </div>
@@ -328,10 +328,7 @@
         function runCode() {
             const code = document.getElementById('code-editor').value;
             const iframe = document.getElementById('preview-frame');
-            const doc = iframe.contentDocument || iframe.contentWindow.document;
-            doc.open();
-            doc.write(code);
-            doc.close();
+            iframe.srcdoc = code;
         }
 
         function clearCode() {
