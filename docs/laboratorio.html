@@ -214,7 +214,7 @@
                         </div>
                         <div style="margin-top: 20px;">
                             <div class="preview-frame-container">
-                                <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+                                <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin" scrolling="no"></iframe>
                             </div>
                         </div>
                     </div>
@@ -332,32 +332,17 @@
             const code = document.getElementById('code-editor').value;
             const iframe = document.getElementById('preview-frame');
 
-            try {
-                // El uso de document.write es a veces más fiable para inyectar scripts en un iframe sandbox
-                // Agregamos un estilo para forzar la desaparición de scrolls dentro del iframe
-                const noScrollStyle = '<style>body::-webkit-scrollbar { display: none; } body { -ms-overflow-style: none; scrollbar-width: none; overflow: hidden !important; }</style>';
-                const iframeDoc = iframe.contentWindow.document;
-                iframeDoc.open();
-                iframeDoc.write(code + noScrollStyle);
-                iframeDoc.close();
-            } catch (e) {
-                console.error("Error al compilar:", e);
-                // Fallback a srcdoc si document.write es bloqueado o falla
-                iframe.srcdoc = code;
-            }
+            // Agregamos un estilo para forzar la desaparición de scrolls dentro del iframe
+            const noScrollStyle = '<style>body::-webkit-scrollbar { display: none; } body { -ms-overflow-style: none; scrollbar-width: none; overflow: hidden !important; }</style>';
+
+            // Usamos srcdoc que es más seguro y compatible con el sandbox del iframe
+            iframe.srcdoc = code + noScrollStyle;
         }
 
         function clearCode() {
             document.getElementById('code-editor').value = '';
             const iframe = document.getElementById('preview-frame');
-            try {
-                const iframeDoc = iframe.contentWindow.document;
-                iframeDoc.open();
-                iframeDoc.write('');
-                iframeDoc.close();
-            } catch (e) {
-                iframe.srcdoc = '';
-            }
+            iframe.srcdoc = '';
         }
 
         function initTheme() {
