@@ -91,7 +91,8 @@
         /* Compiler Styles */
         .compiler-container { display: flex; flex-direction: column; gap: 24px; }
         .editor-box { position: relative; }
-        textarea { width: 100%; height: 320px; padding: 24px; border-radius: 28px; border: 1.5px solid var(--border); background: var(--input); color: var(--text); font-family: 'Courier New', Courier, monospace; font-size: 15px; resize: vertical; outline: none; transition: all 0.3s; overflow: hidden; }
+        textarea { width: 100%; height: 320px; padding: 24px; border-radius: 28px; border: 1.5px solid var(--border); background: var(--input); color: var(--text); font-family: 'Courier New', Courier, monospace; font-size: 15px; resize: vertical; outline: none; transition: all 0.3s; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; }
+        textarea::-webkit-scrollbar { display: none; }
         textarea:focus { border-color: var(--orange); }
 
         .compiler-actions { display: flex; gap: 16px; }
@@ -101,7 +102,6 @@
         .btn-clear { background: var(--input); color: var(--text); border: 1.5px solid var(--border); }
         .btn-clear:hover { background: var(--border); transform: translateY(-3px); }
 
-        .preview-label { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 0.75rem; color: var(--orange); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; display: block; margin-left: 5px; }
         .preview-frame-container {
             width: 100%;
             height: 800px;
@@ -115,8 +115,12 @@
             overflow: hidden;
             position: relative;
             border: 1px solid var(--border);
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
-        iframe { width: 100%; border: none; border-radius: 24px; background: transparent; overflow: hidden; }
+        .preview-frame-container::-webkit-scrollbar { display: none; }
+        iframe { width: 100%; border: none; border-radius: 24px; background: transparent; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; }
+        iframe::-webkit-scrollbar { display: none; }
 
         /* Navigation Bar */
         #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
@@ -209,9 +213,8 @@
                             <button class="btn-lab btn-clear" onclick="clearCode()">Limpiar</button>
                         </div>
                         <div style="margin-top: 20px;">
-                            <span class="preview-label"></span>
                             <div class="preview-frame-container">
-                                <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+                                <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin" scrolling="no"></iframe>
                             </div>
                         </div>
                     </div>
@@ -328,12 +331,18 @@
         function runCode() {
             const code = document.getElementById('code-editor').value;
             const iframe = document.getElementById('preview-frame');
-            iframe.srcdoc = code;
+
+            // Agregamos un estilo para forzar la desaparición de scrolls dentro del iframe
+            const noScrollStyle = '<style>body::-webkit-scrollbar { display: none; } body { -ms-overflow-style: none; scrollbar-width: none; overflow: hidden !important; }</style>';
+
+            // Usamos srcdoc que es más seguro y compatible con el sandbox del iframe
+            iframe.srcdoc = code + noScrollStyle;
         }
 
         function clearCode() {
             document.getElementById('code-editor').value = '';
-            runCode();
+            const iframe = document.getElementById('preview-frame');
+            iframe.srcdoc = '';
         }
 
         function initTheme() {
