@@ -89,13 +89,20 @@
             background: white;
             border-radius: var(--tragalero-radius);
             margin: 15px 20px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
             border: 1px solid rgba(0,0,0,0.05);
             position: relative;
             overflow: hidden;
-            transition: transform 0.2s ease;
+            transition: all 0.3s ease;
             touch-action: pan-y;
+            cursor: pointer;
+        }
+
+        .lead-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border-color: rgba(var(--bs-primary-rgb), 0.1);
         }
 
         [data-bs-theme="dark"] .lead-card {
@@ -104,44 +111,57 @@
         }
 
         .lead-img {
-            width: 60px;
-            height: 60px;
-            border-radius: 15px;
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
             object-fit: cover;
-            margin-right: 15px;
+            margin-right: 20px;
             background: #eee;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
         .lead-info h5 {
-            margin-bottom: 2px;
+            margin-bottom: 4px;
             font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--bs-primary);
+        }
+        [data-bs-theme="dark"] .lead-info h5 {
+            color: white;
         }
 
         .lead-actions {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: flex-start;
+            position: relative;
+            z-index: 10;
         }
 
         .action-btn {
-            flex: 1;
-            padding: 10px;
-            border-radius: 15px;
-            text-align: center;
-            font-size: 1.2rem;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
             color: white;
             text-decoration: none;
-            transition: opacity 0.2s;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .action-btn:hover {
-            opacity: 0.8;
+            transform: translateY(-3px);
+            opacity: 0.9;
             color: white;
         }
 
-        .btn-call { background-color: #4CAF50; }
+        .btn-call { background-color: #2ecc71; }
         .btn-whatsapp { background-color: #25D366; }
-        .btn-maps { background-color: #4285F4; }
+        .btn-maps { background-color: #3498db; }
 
         .fab-add {
             position: fixed;
@@ -178,10 +198,12 @@
             color: white;
             font-size: 2rem;
             z-index: -1;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
 
-        .swipe-left-hint { left: 0; background-color: #ffc107; }
-        .swipe-right-hint { right: 0; background-color: #198754; }
+        .swipe-left-hint { left: 0; background: linear-gradient(to right, #ffc107, transparent); }
+        .swipe-right-hint { right: 0; background: linear-gradient(to left, #198754, transparent); }
 
         .modal-content {
             border-radius: var(--tragalero-radius-lg);
@@ -628,6 +650,8 @@
             const dropZone = document.getElementById('imageDropZone');
             const fileInput = document.getElementById('leadImgInput');
 
+            dropZone.onclick = () => fileInput.click();
+
             dropZone.ondragover = (e) => {
                 e.preventDefault();
                 dropZone.classList.add('drag-over');
@@ -763,18 +787,25 @@
                     `;
                 }
 
+                card.onclick = (e) => {
+                    // Prevent editing if clicking actions
+                    if (e.target.closest('.lead-actions') || e.target.closest('.dropdown')) return;
+                    editLead(lead.id);
+                };
+
                 card.innerHTML = `
                     <div class="swipe-hint swipe-left-hint"><i class="bi bi-arrow-left"></i></div>
                     <div class="swipe-hint swipe-right-hint"><i class="bi bi-arrow-right"></i></div>
                     <div class="d-flex align-items-center mb-3">
-                        <img src="${lead.image_url || 'https://via.placeholder.com/150?text=Negocio'}" class="lead-img" onclick="editLead(${lead.id})">
-                        <div class="lead-info flex-grow-1" onclick="editLead(${lead.id})">
-                            <h5>${escapeHtml(lead.business_name)}</h5>
-                            <div class="small text-muted">${escapeHtml(lead.owner_name || 'Sin nombre de dueño')}</div>
+                        <img src="${lead.image_url || 'https://via.placeholder.com/150?text=Negocio'}" class="lead-img">
+                        <div class="lead-info flex-grow-1">
+                            <h5 class="mb-1">${escapeHtml(lead.business_name)}</h5>
+                            <div class="small text-muted opacity-75 mb-1"><i class="bi bi-person-fill me-1"></i>${escapeHtml(lead.owner_name || 'Sin nombre de dueño')}</div>
+                            <div class="small text-muted"><i class="bi bi-geo-alt-fill me-1 text-danger"></i>${escapeHtml(lead.address || 'Sin dirección')}</div>
                             ${reminderHtml}
                         </div>
                         <div class="dropdown">
-                            <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown">
+                            <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown" onclick="event.stopPropagation()">
                                 <i class="bi bi-three-dots-vertical fs-5"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end rounded-4 border-0 shadow">
@@ -783,13 +814,10 @@
                             </ul>
                         </div>
                     </div>
-                    <div class="small text-muted mb-3">
-                        <i class="bi bi-geo-alt-fill me-1"></i> ${escapeHtml(lead.address || 'Sin dirección')}
-                    </div>
-                    <div class="lead-actions">
-                        <a href="tel:${phone}" class="action-btn btn-call"><i class="bi bi-telephone-fill"></i></a>
-                        <a href="https://wa.me/52${phone}" target="_blank" class="action-btn btn-whatsapp"><i class="bi bi-whatsapp"></i></a>
-                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.address)}" target="_blank" class="action-btn btn-maps"><i class="bi bi-geo-alt-fill"></i></a>
+                    <div class="lead-actions" onclick="event.stopPropagation()">
+                        <a href="tel:${phone}" class="action-btn btn-call" title="Llamar"><i class="bi bi-telephone-fill"></i></a>
+                        <a href="https://wa.me/52${phone}" target="_blank" class="action-btn btn-whatsapp" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.address)}" target="_blank" class="action-btn btn-maps" title="Ver Mapa"><i class="bi bi-geo-alt-fill"></i></a>
                     </div>
                 `;
                 list.appendChild(card);
@@ -819,10 +847,14 @@
 
                     if (diff > 0) {
                         el.querySelector('.swipe-left-hint').style.zIndex = '1';
+                        el.querySelector('.swipe-left-hint').style.opacity = '1';
                         el.querySelector('.swipe-right-hint').style.zIndex = '-1';
+                        el.querySelector('.swipe-right-hint').style.opacity = '0';
                     } else {
                         el.querySelector('.swipe-left-hint').style.zIndex = '-1';
+                        el.querySelector('.swipe-left-hint').style.opacity = '0';
                         el.querySelector('.swipe-right-hint').style.zIndex = '1';
+                        el.querySelector('.swipe-right-hint').style.opacity = '1';
                     }
                 }
             }, {passive: true});
@@ -830,6 +862,9 @@
             el.addEventListener('touchend', async (e) => {
                 const diff = currentX - startX;
                 el.style.transition = 'transform 0.3s ease';
+
+                const leftHint = el.querySelector('.swipe-left-hint');
+                const rightHint = el.querySelector('.swipe-right-hint');
 
                 if (diff > threshold && currentIndex > 0) {
                     // Swipe Right -> Prev Status
@@ -839,6 +874,12 @@
                     await updateLeadStatus(lead.id, statuses[currentIndex + 1]);
                 } else {
                     el.style.transform = 'translateX(0)';
+                    leftHint.style.opacity = '0';
+                    rightHint.style.opacity = '0';
+                    setTimeout(() => {
+                        leftHint.style.zIndex = '-1';
+                        rightHint.style.zIndex = '-1';
+                    }, 300);
                 }
 
                 startX = 0;
