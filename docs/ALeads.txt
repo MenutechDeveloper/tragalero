@@ -41,3 +41,7 @@ DROP POLICY IF EXISTS "Sales and Admin manage leads" ON public.leads;
 CREATE POLICY "Sales and Admin manage leads" ON public.leads
     FOR ALL
     USING (public.check_has_sales_access());
+
+-- 6. EJEMPLO PARA ASIGNAR ROLES (OPCIONAL)
+-- UPDATE public.usuarios SET role = 'Ventas' WHERE email = 'ejemplo@ventas.com';
+-- UPDATE public.usuarios SET role = 'CS' WHERE email = 'soporte@tragalero.com';
