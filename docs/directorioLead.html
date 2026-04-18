@@ -186,6 +186,11 @@
         .modal-content {
             border-radius: var(--tragalero-radius-lg);
             border: none;
+            overflow: hidden;
+        }
+
+        .modal-body {
+            padding: 0;
         }
 
         .form-control, .form-select {
@@ -211,6 +216,110 @@
             display: flex;
             align-items: center;
             margin-top: 5px;
+        }
+
+        /* Tabs and Layout */
+        .modal-tabs {
+            background: rgba(0,0,0,0.02);
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+        [data-bs-theme="dark"] .modal-tabs { background: rgba(255,255,255,0.02); }
+
+        .modal-tab-btn {
+            border: none;
+            background: none;
+            padding: 8px 15px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--bs-secondary);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .modal-tab-btn.active {
+            background: white;
+            color: var(--bs-primary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        [data-bs-theme="dark"] .modal-tab-btn.active {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+
+        .modal-tab-content {
+            padding: 25px;
+            display: none;
+        }
+        .modal-tab-content.active {
+            display: block;
+        }
+
+        .drop-zone {
+            border: 2px dashed rgba(0,0,0,0.1);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            background: rgba(0,0,0,0.01);
+        }
+        [data-bs-theme="dark"] .drop-zone { border-color: rgba(255,255,255,0.1); }
+        .drop-zone.drag-over {
+            border-color: var(--bs-primary);
+            background: rgba(var(--bs-primary-rgb), 0.05);
+        }
+
+        .social-icons-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .social-toggle-btn {
+            aspect-ratio: 1;
+            border-radius: 15px;
+            border: 1px solid rgba(0,0,0,0.05);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.2s;
+            color: var(--bs-secondary);
+        }
+        [data-bs-theme="dark"] .social-toggle-btn { background: rgba(255,255,255,0.05); color: #aaa; }
+
+        .social-toggle-btn.active {
+            border-color: var(--bs-primary);
+            color: var(--bs-primary);
+            background: rgba(var(--bs-primary-rgb), 0.05);
+        }
+
+        @media (min-width: 992px) {
+            .modal-lg-horizontal {
+                max-width: 900px !important;
+            }
+            .modal-body-grid {
+                display: grid;
+                grid-template-columns: 250px 1fr;
+            }
+            .modal-tabs {
+                flex-direction: column;
+                border-bottom: none;
+                border-right: 1px solid rgba(0,0,0,0.05);
+                padding: 25px;
+                overflow-x: visible;
+                height: 100%;
+            }
+            .modal-tab-btn {
+                text-align: left;
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -255,77 +364,140 @@
 
     <!-- Lead Modal -->
     <div class="modal fade" id="leadModal" tabindex="-1" aria-labelledby="leadModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-lg-horizontal">
             <div class="modal-content">
-                <div class="modal-header border-0 pb-0">
+                <div class="modal-header border-0 pb-0 px-4 pt-4">
                     <h5 class="modal-title fw-bold" id="leadModalLabel">Nuevo Prospecto</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <form id="leadForm">
-                        <input type="hidden" id="leadId">
-
-                        <div class="text-center mb-4">
-                            <div class="position-relative d-inline-block">
-                                <img src="https://via.placeholder.com/150?text=Subir+Foto" id="leadImgPreview" class="rounded-4 shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">
-                                <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle" onclick="document.getElementById('leadImgInput').click()">
-                                    <i class="bi bi-camera-fill"></i>
+                <form id="leadForm">
+                    <div class="modal-body">
+                        <div class="modal-body-grid">
+                            <div class="modal-tabs">
+                                <button type="button" class="modal-tab-btn active" data-tab="tab-info">
+                                    <i class="bi bi-info-circle me-2"></i> Info General
                                 </button>
-                                <input type="file" id="leadImgInput" class="d-none" accept="image/*">
+                                <button type="button" class="modal-tab-btn" data-tab="tab-status">
+                                    <i class="bi bi-calendar-event me-2"></i> Status y Cita
+                                </button>
+                                <button type="button" class="modal-tab-btn" data-tab="tab-social">
+                                    <i class="bi bi-share me-2"></i> Redes y Notas
+                                </button>
                             </div>
-                        </div>
 
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label small fw-bold">Fecha de Visita</label>
-                                <input type="date" id="visitDate" class="form-control">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-bold">Nombre del Local</label>
-                                <input type="text" id="businessName" class="form-control" required placeholder="Ej. El Fogón de Pepe">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-bold">Dueño / Encargado</label>
-                                <input type="text" id="ownerName" class="form-control" placeholder="Nombre completo">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-bold">Teléfono / WhatsApp</label>
-                                <input type="tel" id="phone" class="form-control" placeholder="10 dígitos">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-bold">Dirección</label>
-                                <textarea id="address" class="form-control" rows="2" placeholder="Calle, número, colonia..."></textarea>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-bold">Status</label>
-                                <select id="status" class="form-select">
-                                    <option value="No Visitados">No Visitados</option>
-                                    <option value="Visitados">Visitados</option>
-                                    <option value="Seguimiento">Seguimiento</option>
-                                    <option value="Agendados">Agendados</option>
-                                    <option value="Venta">Venta</option>
-                                    <option value="No Interesados">No Interesados</option>
-                                </select>
-                            </div>
-                            <div class="col-6" id="scheduledDateContainer">
-                                <label class="form-label small fw-bold">Próxima Cita</label>
-                                <input type="datetime-local" id="scheduledDate" class="form-control">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-bold">Redes Sociales (JSON)</label>
-                                <input type="text" id="socialMedia" class="form-control" placeholder='{"ig": "@usuario", "fb": "facebook.com/..."}'>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-bold">Notas / Observaciones</label>
-                                <textarea id="notes" class="form-control" rows="3"></textarea>
+                            <div class="modal-tab-container">
+                                <input type="hidden" id="leadId">
+
+                                <!-- TAB: INFO -->
+                                <div class="modal-tab-content active" id="tab-info">
+                                    <div class="mb-4">
+                                        <div class="drop-zone" id="imageDropZone">
+                                            <div class="position-relative d-inline-block">
+                                                <img src="https://via.placeholder.com/150?text=Subir+Foto" id="leadImgPreview" class="rounded-4 shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">
+                                                <div class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-1" style="line-height: 1;">
+                                                    <i class="bi bi-camera-fill small"></i>
+                                                </div>
+                                            </div>
+                                            <p class="small text-muted mt-2 mb-0">Haz clic o arrastra imagen</p>
+                                            <input type="file" id="leadImgInput" class="d-none" accept="image/*">
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold">Nombre del Local</label>
+                                            <input type="text" id="businessName" class="form-control" required placeholder="Ej. El Fogón de Pepe">
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold">Dueño / Encargado</label>
+                                            <input type="text" id="ownerName" class="form-control" placeholder="Nombre completo">
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold">Teléfono / WhatsApp</label>
+                                            <input type="tel" id="phone" class="form-control" placeholder="10 dígitos">
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold">Dirección</label>
+                                            <textarea id="address" class="form-control" rows="2" placeholder="Calle, número, colonia..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TAB: STATUS -->
+                                <div class="modal-tab-content" id="tab-status">
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold">Fecha de Visita</label>
+                                            <input type="date" id="visitDate" class="form-control">
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold">Status del Prospecto</label>
+                                            <select id="status" class="form-select">
+                                                <option value="No Visitados">No Visitados</option>
+                                                <option value="Visitados">Visitados</option>
+                                                <option value="Seguimiento">Seguimiento</option>
+                                                <option value="Agendados">Agendados</option>
+                                                <option value="Venta">Venta</option>
+                                                <option value="No Interesados">No Interesados</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12" id="scheduledDateContainer">
+                                            <label class="form-label small fw-bold">Próxima Cita Agendada</label>
+                                            <input type="datetime-local" id="scheduledDate" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TAB: SOCIAL -->
+                                <div class="modal-tab-content" id="tab-social">
+                                    <label class="form-label small fw-bold mb-2">Redes Sociales (Haz clic para activar)</label>
+                                    <div class="social-icons-grid mb-4">
+                                        <button type="button" class="social-toggle-btn" data-platform="fb" title="Facebook"><i class="bi bi-facebook"></i></button>
+                                        <button type="button" class="social-toggle-btn" data-platform="ig" title="Instagram"><i class="bi bi-instagram"></i></button>
+                                        <button type="button" class="social-toggle-btn" data-platform="yelp" title="Yelp"><i class="bi bi-star-fill"></i></button>
+                                        <button type="button" class="social-toggle-btn" data-platform="uber" title="Uber Eats"><i class="bi bi-bicycle"></i></button>
+                                    </div>
+
+                                    <div id="socialInputsContainer">
+                                        <div class="mb-3 d-none social-input-group" data-platform="fb">
+                                            <div class="input-group shadow-sm rounded-4 overflow-hidden">
+                                                <span class="input-group-text bg-primary text-white border-0"><i class="bi bi-facebook"></i></span>
+                                                <input type="text" class="form-control border-0 social-input" id="social-fb" placeholder="Link de Facebook">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 d-none social-input-group" data-platform="ig">
+                                            <div class="input-group shadow-sm rounded-4 overflow-hidden">
+                                                <span class="input-group-text bg-danger text-white border-0"><i class="bi bi-instagram"></i></span>
+                                                <input type="text" class="form-control border-0 social-input" id="social-ig" placeholder="Link de Instagram">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 d-none social-input-group" data-platform="yelp">
+                                            <div class="input-group shadow-sm rounded-4 overflow-hidden">
+                                                <span class="input-group-text bg-warning text-dark border-0"><i class="bi bi-star-fill"></i></span>
+                                                <input type="text" class="form-control border-0 social-input" id="social-yelp" placeholder="Link de Yelp">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 d-none social-input-group" data-platform="uber">
+                                            <div class="input-group shadow-sm rounded-4 overflow-hidden">
+                                                <span class="input-group-text bg-dark text-white border-0"><i class="bi bi-bicycle"></i></span>
+                                                <input type="text" class="form-control border-0 social-input" id="social-uber" placeholder="Link de Uber Eats">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <label class="form-label small fw-bold">Notas y Observaciones</label>
+                                        <textarea id="notes" class="form-control" rows="4" placeholder="Algún detalle importante..."></textarea>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary rounded-pill px-4" id="saveLeadBtn">Guardar Prospecto</button>
-                </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary rounded-pill px-4" id="saveLeadBtn">Guardar Prospecto</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -381,17 +553,56 @@
                 renderLeads(e.target.value);
             };
 
-            // Image preview
-            document.getElementById('leadImgInput').onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (re) => {
-                        document.getElementById('leadImgPreview').src = re.target.result;
-                    };
-                    reader.readAsDataURL(file);
+            // Modal Tabs
+            document.querySelectorAll('.modal-tab-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const tabId = btn.dataset.tab;
+                    document.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.modal-tab-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                };
+            });
+
+            // Social Toggles
+            document.querySelectorAll('.social-toggle-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const platform = btn.dataset.platform;
+                    const inputGroup = document.querySelector(`.social-input-group[data-platform="${platform}"]`);
+                    btn.classList.toggle('active');
+                    inputGroup.classList.toggle('d-none');
+                };
+            });
+
+            // Drop Zone Logic
+            const dropZone = document.getElementById('imageDropZone');
+            const fileInput = document.getElementById('leadImgInput');
+
+            dropZone.ondragover = (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            };
+            dropZone.ondragleave = () => dropZone.classList.remove('drag-over');
+            dropZone.ondrop = (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleImagePreview(e.dataTransfer.files[0]);
                 }
             };
+
+            fileInput.onchange = (e) => {
+                if (e.target.files.length) handleImagePreview(e.target.files[0]);
+            };
+
+            function handleImagePreview(file) {
+                const reader = new FileReader();
+                reader.onload = (re) => {
+                    document.getElementById('leadImgPreview').src = re.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
 
             // Save button
             document.getElementById('saveLeadBtn').onclick = saveLead;
@@ -424,6 +635,7 @@
 
         function renderLeads(searchTerm = '') {
             const list = document.getElementById('leadsList');
+            list.innerHTML = ''; // Clear first
 
             // Weekly Reminders Section if on 'Agendados'
             if (currentStatus === 'Agendados' && !searchTerm) {
@@ -468,16 +680,15 @@
             });
 
             if (filtered.length === 0) {
-                list.innerHTML = `
-                    <div class="text-center py-5 opacity-50">
-                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                        No hay prospectos en "${currentStatus}"
-                    </div>
+                const emptyMsg = document.createElement('div');
+                emptyMsg.className = 'text-center py-5 opacity-50';
+                emptyMsg.innerHTML = `
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    No hay prospectos en "${currentStatus}"
                 `;
+                list.appendChild(emptyMsg);
                 return;
             }
-
-            list.innerHTML = '';
             filtered.forEach(lead => {
                 const card = document.createElement('div');
                 card.className = 'lead-card animate-fade-in';
@@ -611,17 +822,20 @@
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
 
             try {
-                let socialMedia = {};
-                try {
-                    socialMedia = JSON.parse(document.getElementById('socialMedia').value || '{}');
-                } catch (e) {
-                    alert("El campo Redes Sociales debe ser un JSON válido. Ejemplo: {\"ig\": \"@usuario\"}");
-                    btn.disabled = false;
-                    btn.innerHTML = 'Guardar Prospecto';
-                    return;
-                }
+                // Collect social media
+                const socialMedia = {};
+                document.querySelectorAll('.social-input').forEach(input => {
+                    const platform = input.id.split('-')[1];
+                    if (input.value.trim()) socialMedia[platform] = input.value.trim();
+                });
 
                 let imageUrl = document.getElementById('leadImgPreview').src;
+
+                // Don't save placeholder URL
+                if (imageUrl.includes('via.placeholder.com')) {
+                    imageUrl = null;
+                }
+
                 if (file) {
                     const upload = await uploadToCloudinary(file);
                     imageUrl = upload.url;
@@ -666,6 +880,11 @@
             document.getElementById('leadImgPreview').src = 'https://via.placeholder.com/150?text=Subir+Foto';
             document.getElementById('leadModalLabel').textContent = 'Nuevo Prospecto';
             document.getElementById('status').value = currentStatus;
+
+            // Reset tabs and social
+            document.querySelector('.modal-tab-btn[data-tab="tab-info"]').click();
+            document.querySelectorAll('.social-toggle-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.social-input-group').forEach(g => g.classList.add('d-none'));
         }
 
         async function editLead(id) {
@@ -680,8 +899,26 @@
             document.getElementById('address').value = lead.address || '';
             document.getElementById('status').value = lead.status;
             document.getElementById('notes').value = lead.notes || '';
-            document.getElementById('socialMedia').value = JSON.stringify(lead.social_media || {});
             document.getElementById('leadImgPreview').src = lead.image_url || 'https://via.placeholder.com/150?text=Negocio';
+
+            // Populate Social Media
+            document.querySelectorAll('.social-toggle-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.social-input-group').forEach(g => g.classList.add('d-none'));
+
+            if (lead.social_media) {
+                Object.keys(lead.social_media).forEach(platform => {
+                    const btn = document.querySelector(`.social-toggle-btn[data-platform="${platform}"]`);
+                    const group = document.querySelector(`.social-input-group[data-platform="${platform}"]`);
+                    const input = document.getElementById(`social-${platform}`);
+                    if (btn && group && input) {
+                        btn.classList.add('active');
+                        group.classList.remove('d-none');
+                        input.value = lead.social_media[platform];
+                    }
+                });
+            }
+
+            document.querySelector('.modal-tab-btn[data-tab="tab-info"]').click();
 
             if (lead.scheduled_date) {
                 const date = new Date(lead.scheduled_date);
