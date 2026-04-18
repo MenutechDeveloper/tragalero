@@ -162,6 +162,7 @@
         .btn-call { background-color: #2ecc71; }
         .btn-whatsapp { background-color: #25D366; }
         .btn-maps { background-color: #3498db; }
+        .btn-calendar { background-color: #f39c12; }
 
         .fab-add {
             position: fixed;
@@ -319,7 +320,6 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: none;
             z-index: 1;
         }
 
@@ -418,6 +418,38 @@
     </button>
 
     <!-- Lead Modal -->
+    <!-- Modal Agendar Rápido -->
+    <div class="modal fade" id="quickScheduleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0" style="border-radius: 30px; background: var(--bs-body-bg);">
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="icon-circle bg-primary bg-opacity-10 text-primary mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                            <i class="bi bi-calendar-check-fill"></i>
+                        </div>
+                        <h4 class="fw-bold mb-1">Agendar Visita</h4>
+                        <p class="text-muted small" id="quickLeadName">Cargando...</p>
+                    </div>
+
+                    <input type="hidden" id="quickLeadId">
+                    <div class="form-group mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase mb-2">Fecha y Hora</label>
+                        <input type="datetime-local" id="quickDate" class="form-control" style="border-radius: 15px; padding: 12px; border: 2px solid rgba(0,0,0,0.05);">
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary py-3 fw-bold" style="border-radius: 20px;" onclick="saveQuickSchedule()">
+                            Confirmar Cita
+                        </button>
+                        <button type="button" class="btn btn-light py-2 text-muted" style="border-radius: 20px;" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="leadModal" tabindex="-1" aria-labelledby="leadModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-lg-horizontal">
             <div class="modal-content">
@@ -447,9 +479,9 @@
                                 <div class="modal-tab-content active" id="tab-info">
                                     <div class="mb-4">
                                         <div class="drop-zone shadow-sm" id="imageDropZone">
-                                            <img src="" id="leadImgPreview" class="drop-zone-img-preview">
+                                            <img id="leadImgPreview" class="drop-zone-img-preview d-none">
                                             <div class="drop-zone-content text-center" id="dropZonePlaceholder">
-                                                <i class="bi bi-image-fill fs-1 text-primary mb-2"></i>
+                                                <i class="bi bi-cloud-upload-fill fs-1 text-primary mb-2"></i>
                                                 <p class="small fw-bold mb-0">Subir Imagen del Negocio</p>
                                                 <p class="small text-muted mb-0">Haz clic o arrastra aquí</p>
                                             </div>
@@ -677,8 +709,8 @@
 
                 reader.onload = (re) => {
                     preview.src = re.target.result;
-                    preview.style.display = 'block';
-                    placeholder.style.display = 'none';
+                    preview.classList.remove('d-none');
+                    placeholder.classList.add('d-none');
                 };
                 reader.readAsDataURL(file);
             }
@@ -818,6 +850,7 @@
                         <a href="tel:${phone}" class="action-btn btn-call" title="Llamar"><i class="bi bi-telephone-fill"></i></a>
                         <a href="https://wa.me/52${phone}" target="_blank" class="action-btn btn-whatsapp" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
                         <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.address)}" target="_blank" class="action-btn btn-maps" title="Ver Mapa"><i class="bi bi-geo-alt-fill"></i></a>
+                        <button class="action-btn btn-calendar" onclick="openQuickSchedule(${lead.id}, '${escapeHtml(lead.business_name)}')" title="Agendar Visita"><i class="bi bi-calendar-event-fill"></i></button>
                     </div>
                 `;
                 list.appendChild(card);
@@ -978,8 +1011,8 @@
             const preview = document.getElementById('leadImgPreview');
             const placeholder = document.getElementById('dropZonePlaceholder');
             preview.src = '';
-            preview.style.display = 'none';
-            placeholder.style.display = 'block';
+            preview.classList.add('d-none');
+            placeholder.classList.remove('d-none');
 
             document.getElementById('leadModalLabel').textContent = 'Nuevo Prospecto';
             document.getElementById('status').value = currentStatus;
@@ -1007,12 +1040,12 @@
             const placeholder = document.getElementById('dropZonePlaceholder');
             if (lead.image_url) {
                 preview.src = lead.image_url;
-                preview.style.display = 'block';
-                placeholder.style.display = 'none';
+                preview.classList.remove('d-none');
+                placeholder.classList.add('d-none');
             } else {
                 preview.src = '';
-                preview.style.display = 'none';
-                placeholder.style.display = 'block';
+                preview.classList.add('d-none');
+                placeholder.classList.remove('d-none');
             }
 
             // Populate Social Media
@@ -1046,6 +1079,50 @@
 
             document.getElementById('leadModalLabel').textContent = 'Editar Prospecto';
             leadModal.show();
+        }
+
+        let quickScheduleModal;
+        function openQuickSchedule(id, name) {
+            if (!quickScheduleModal) quickScheduleModal = new bootstrap.Modal(document.getElementById('quickScheduleModal'));
+            document.getElementById('quickLeadId').value = id;
+            document.getElementById('quickLeadName').textContent = name;
+
+            // Set default date to today + 1 day, at 10:00 AM
+            const date = new Date();
+            date.setDate(date.getDate() + 1);
+            date.setHours(10, 0, 0, 0);
+            const tzOffset = date.getTimezoneOffset() * 60000;
+            const localISODate = new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+            document.getElementById('quickDate').value = localISODate;
+
+            quickScheduleModal.show();
+        }
+
+        async function saveQuickSchedule() {
+            const id = document.getElementById('quickLeadId').value;
+            const date = document.getElementById('quickDate').value;
+
+            if (!date) {
+                alert("Por favor selecciona una fecha");
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient
+                    .from('leads')
+                    .update({
+                        scheduled_date: date,
+                        status: 'Agendados'
+                    })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                quickScheduleModal.hide();
+                loadLeads();
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
         }
 
         async function deleteLead(id) {
