@@ -188,6 +188,13 @@
                     <div class="small opacity-75 fw-normal">Gestión de usuarios</div>
                 </a>
 
+                <!-- Herramientas Ventas (Admin, Ventas, CS) -->
+                <a href="./presencialSales.html" id="salesSlot" class="bento-item animate-fade-in hidden" style="grid-column: span 3; grid-row: span 1; background-color: #fff4d1; animation-delay: 0.45s;">
+                    <i class="bi bi-briefcase-fill"></i>
+                    <div class="fs-5">Herramientas para vendedores</div>
+                    <div class="small opacity-75 fw-normal">Gestión de prospectos</div>
+                </a>
+
                 <!-- Laboratorio (Solo Admin) -->
                 <a href="./laboratorio.html" id="labSlot" class="bento-item animate-fade-in hidden" style="grid-column: span 6; grid-row: span 1; background-color: #dcfaf0; animation-delay: 0.5s;">
                     <i class="bi bi-flask-fill"></i>
@@ -219,6 +226,10 @@
             if (currentUser?.role === 'Admin') {
                 document.getElementById('adminOnlySlot')?.classList.remove('hidden');
                 document.getElementById('labSlot')?.classList.remove('hidden');
+            }
+
+            if (['Admin', 'Ventas', 'CS'].includes(currentUser?.role)) {
+                document.getElementById('salesSlot')?.classList.remove('hidden');
             }
         });
     </script>
