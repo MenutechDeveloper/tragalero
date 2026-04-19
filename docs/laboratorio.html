@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laboratorio | Tragalero</title>
-    <link rel="icon" type="image/png" href="https://tragalero.com/assets/img/tragalero.png">
+    <link rel="icon" type="image/png" href="./assets/img/tragalero_negro.png">
+    <script src="./assets/js/theme.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 
@@ -22,7 +23,7 @@
             --nm-inner-shadow: inset 6px 6px 12px #d9d6cc, inset -6px -6px 12px #ffffff;
         }
 
-        body.dark-mode {
+        [data-bs-theme="dark"] {
             --bg: #121418;
             --card: #1c1f26;
             --input: #242933;
@@ -31,6 +32,26 @@
             --border: #2d333f;
             --nm-shadow-1: 20px 20px 60px #0e1013, -20px -20px 60px #2a2e39;
             --nm-inner-shadow: inset 6px 6px 12px #0e1013, inset -6px -6px 12px #2a2e39;
+        }
+
+        [data-bs-theme="light"] {
+            --orange: #eab308;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+        }
+
+        [data-bs-theme="medio"] {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -133,8 +154,42 @@
         .theme-switch svg { width: 24px; height: 24px; }
         .sun-icon { color: var(--orange); }
         .moon-icon { color: #8b5cf6; display: none; }
-        body.dark-mode .sun-icon { display: none; }
-        body.dark-mode .moon-icon { display: block; }
+        [data-bs-theme="dark"] .sun-icon { display: none; }
+        [data-bs-theme="dark"] .moon-icon { display: block; }
+
+        .theme-switcher-bar {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 50px;
+            padding: 4px 12px;
+            display: flex;
+        }
+        [data-bs-theme="dark"] .theme-switcher-bar {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .theme-btn {
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            padding: 8px;
+            margin: 0 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: inherit;
+            opacity: 0.5;
+            border-radius: 50%;
+        }
+        .theme-btn:hover {
+            opacity: 1;
+            background: rgba(0,0,0,0.05);
+        }
+        [data-bs-theme="dark"] .theme-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .theme-btn.active {
+            opacity: 1;
+            transform: scale(1.1);
+            color: var(--orange);
+        }
 
         .hidden { display: none !important; }
 
@@ -151,15 +206,17 @@
 
     <div id="top-nav">
         <a href="admin.html" class="btn-panel-top">VOLVER AL PANEL</a>
-        <div class="theme-switch" id="theme-toggle">
-            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <div class="theme-switcher-bar">
+            <button class="theme-btn" data-theme-value="light" title="Modo Amarillo"><i class="bi bi-sun-fill"></i></button>
+            <button class="theme-btn" data-theme-value="dark" title="Modo Oscuro"><i class="bi bi-moon-stars-fill"></i></button>
+            <button class="theme-btn" data-theme-value="medio" title="Modo Suave"><i class="bi bi-palette-fill"></i></button>
         </div>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     </div>
 
     <div class="container" id="main-container">
         <header>
-            <img src="https://tragalero.com/assets/img/tragalero.png" class="logo-main" alt="Tragalero">
+            <img src="./assets/img/tragalero_negro.png" class="logo-main" alt="Tragalero">
             <p style="font-weight: 800; color: var(--orange); font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase; font-family: 'Outfit';">Laboratorio de Pruebas</p>
         </header>
 
@@ -229,7 +286,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            initTheme();
+            // initTheme(); // Handled by theme.js
             initSidebar();
 
             // Access check
@@ -345,14 +402,6 @@
             iframe.srcdoc = '';
         }
 
-        function initTheme() {
-            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
-            const toggle = document.getElementById('theme-toggle');
-            if (toggle) toggle.onclick = () => {
-                document.body.classList.toggle('dark-mode');
-                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-            };
-        }
     </script>
 </body>
 </html>
