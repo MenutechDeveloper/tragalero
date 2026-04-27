@@ -1,124 +1,127 @@
-<!DOCTYPE html>
-<html data-bs-theme="light" lang="es">
+<!-- ESTILOS DEL PERSONALIZADOR -->
+<style>
+    .config-card {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: white;
+        border-radius: 25px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        max-width: 600px;
+        margin: 20px auto;
+        color: #1e293b;
+    }
+    .config-card h4 { font-weight: 700; margin-bottom: 1.5rem; }
+    .form-group-custom { margin-bottom: 1rem; }
+    .form-label-custom {
+        display: block;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #475569;
+        margin-bottom: 0.5rem;
+    }
+    .form-control-custom {
+        width: 100%;
+        border-radius: 12px;
+        padding: 10px 15px;
+        border: 2px solid #f1f5f9;
+        font-size: 0.9rem;
+        box-sizing: border-box;
+    }
+    .form-control-custom:focus {
+        outline: none;
+        border-color: #7c83fd;
+        box-shadow: 0 0 0 4px rgba(124, 131, 253, 0.1);
+    }
+    .flex-row-custom { display: flex; gap: 15px; margin-bottom: 1rem; }
+    .flex-col-custom { flex: 1; }
+    .color-input-wrapper { display: flex; align-items: center; gap: 10px; }
+    .input-color-custom {
+        width: 45px;
+        height: 45px;
+        padding: 0;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+    .preview-container-custom {
+        margin-top: 25px;
+        padding: 20px;
+        border-radius: 20px;
+        background: #f1f5f9;
+        text-align: center;
+    }
+    .preview-label-custom {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+        display: block;
+    }
+    .code-output-custom {
+        margin-top: 20px;
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 15px;
+        border-radius: 12px;
+        font-family: monospace;
+        font-size: 0.8rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+</style>
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Personalizador de Botón - Tragalero</title>
+<!-- ESTRUCTURA DEL PERSONALIZADOR -->
+<div class="config-card">
+    <h4>Configuración de Botón</h4>
 
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f8fafc;
-            padding: 40px 20px;
-        }
-        .config-card {
-            background: white;
-            border-radius: 25px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        .form-label {
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #475569;
-        }
-        .form-control {
-            border-radius: 12px;
-            padding: 12px;
-            border: 2px solid #f1f5f9;
-        }
-        .form-control:focus {
-            border-color: #7c83fd;
-            box-shadow: 0 0 0 4px rgba(124, 131, 253, 0.1);
-        }
-        .preview-container {
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 20px;
-            background: #f1f5f9;
-            text-align: center;
-        }
-        .preview-label {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            display: block;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="config-card">
-        <h4 class="fw-bold mb-4">Configuración del Botón</h4>
-
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label">CUID (GloriaFood)</label>
-                <input type="text" id="cuidInput" class="form-control" placeholder="52230bb2-..." value="52230bb2-7d2d-4f11-9f93-010d211a2f48">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">RUID (GloriaFood)</label>
-                <input type="text" id="ruidInput" class="form-control" placeholder="010d211a-..." value="010d211a-2f48-401d-910d-211a2f48010d">
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Color de Fondo</label>
-                <div class="d-flex align-items-center">
-                    <input type="color" id="bgColor" class="form-control form-control-color me-2" value="#f2a04a">
-                    <input type="text" id="bgText" class="form-control" value="#F2A04A">
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <label class="form-label">Color de Texto</label>
-                <div class="d-flex align-items-center">
-                    <input type="color" id="textColor" class="form-control form-control-color me-2" value="#ffffff">
-                    <input type="text" id="textText" class="form-control" value="#FFFFFF">
-                </div>
-            </div>
+    <div class="flex-row-custom">
+        <div class="flex-col-custom">
+            <label class="form-label-custom">CUID (GloriaFood)</label>
+            <input type="text" id="cuidInput" class="form-control-custom" placeholder="52230bb2-..." value="52230bb2-7d2d-4f11-9f93-010d211a2f48">
         </div>
-
-        <div class="preview-container">
-            <span class="preview-label">Vista Previa Real</span>
-            <div id="buttonPreview">
-                <!-- El botón se renderiza aquí -->
-                <tragalero-orders id="customBtn" cuid="" ruid="" background="#f2a04a" color="#ffffff"></tragalero-orders>
-            </div>
-        </div>
-
-        <div class="mt-4">
-            <label class="form-label">Código generado:</label>
-            <textarea id="generatedCode" class="form-control" rows="3" readonly style="font-family: monospace; font-size: 0.85rem; background: #f8fafc;"></textarea>
+        <div class="flex-col-custom">
+            <label class="form-label-custom">RUID (GloriaFood)</label>
+            <input type="text" id="ruidInput" class="form-control-custom" placeholder="010d211a-..." value="010d211a-2f48-401d-910d-211a2f48010d">
         </div>
     </div>
 
-    <!-- Scripts necesarios -->
-    <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
-    <script>
-        /**
-         * Tragalero Action Button Component
-         * Extracto de tragaleroUI.js - Solo para botones
-         */
+    <div class="flex-row-custom">
+        <div class="flex-col-custom">
+            <label class="form-label-custom">Fondo</label>
+            <div class="color-input-wrapper">
+                <input type="color" id="bgColor" class="input-color-custom" value="#f2a04a">
+                <input type="text" id="bgText" class="form-control-custom" value="#F2A04A">
+            </div>
+        </div>
+        <div class="flex-col-custom">
+            <label class="form-label-custom">Texto</label>
+            <div class="color-input-wrapper">
+                <input type="color" id="textColor" class="input-color-custom" value="#ffffff">
+                <input type="text" id="textText" class="form-control-custom" value="#FFFFFF">
+            </div>
+        </div>
+    </div>
+
+    <div class="preview-container-custom">
+        <span class="preview-label-custom">Vista Previa</span>
+        <div id="buttonPreview">
+            <tragalero-orders id="customBtn" cuid="" ruid="" background="#f2a04a" color="#ffffff"></tragalero-orders>
+        </div>
+    </div>
+
+    <div class="code-output-custom" id="generatedCode"></div>
+</div>
+
+<!-- SISTEMA DEL BOTÓN (Lógica del Componente) -->
+<script>
+    if (!customElements.get('tragalero-orders')) {
         class TragaleroActionBase extends HTMLElement {
             constructor(type) {
                 super();
                 this.attachShadow({ mode: 'open' });
-                this.type = type; // 'orders' or 'reservations'
+                this.type = type;
             }
             connectedCallback() { this.render(); }
             static get observedAttributes() { return ['cuid', 'ruid', 'background', 'color', 'textcolor']; }
@@ -128,116 +131,58 @@
                 const ruid = this.getAttribute('ruid') || '';
                 const bg = this.getAttribute('background') || (this.type === 'orders' ? '#f2a04a' : '#2f4854');
                 const color = this.getAttribute('color') || this.getAttribute('textcolor') || '#ffffff';
-                const isRes = this.type === 'reservations';
-                const label = isRes ? 'RESERVAR MESA' : 'ORDENAR AHORA';
-                const icon = isRes ? 'bi-calendar-event' : 'bi-bag-check';
+                const label = this.type === 'reservations' ? 'RESERVAR MESA' : 'ORDENAR AHORA';
+                const icon = this.type === 'reservations' ? 'bi-calendar-event' : 'bi-bag-check';
                 this.shadowRoot.innerHTML = `
                     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
                     <style>
-                        :host { display: block; width: 100%; }
                         .btn-glf {
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            gap: 10px;
-                            width: 100%;
-                            padding: 16px;
-                            border-radius: 16px;
-                            border: none;
-                            background: ${bg};
-                            color: ${color};
-                            font-family: 'Plus Jakarta Sans', sans-serif;
-                            font-weight: 700;
-                            font-size: 0.9rem;
-                            text-transform: uppercase;
-                            cursor: pointer;
-                            transition: all 0.3s;
-                            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-                            text-decoration: none;
+                            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px;
+                            border-radius: 16px; border: none; background: ${bg}; color: ${color};
+                            font-family: inherit; font-weight: 700; font-size: 0.9rem; text-transform: uppercase;
+                            cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 20px rgba(0,0,0,0.1); text-decoration: none;
                         }
-                        .btn-glf:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 12px 25px rgba(0,0,0,0.15); }
-                        i { font-size: 1.2rem; }
+                        .btn-glf:hover { transform: translateY(-2px); filter: brightness(1.1); }
                     </style>
-                    <button class="btn-glf" data-glf-cuid="${cuid}" data-glf-ruid="${ruid}" ${isRes ? 'data-glf-reservation="true"' : ''}>
-                        <i class="bi ${icon}"></i> ${label}
+                    <button class="btn-glf" data-glf-cuid="${cuid}" data-glf-ruid="${ruid}">
+                         ${label}
                     </button>
                 `;
             }
         }
-        if (!customElements.get('tragalero-orders')) {
-            customElements.define('tragalero-orders', class extends TragaleroActionBase { constructor() { super('orders'); } });
-        }
-        if (!customElements.get('tragalero-reservations')) {
-            customElements.define('tragalero-reservations', class extends TragaleroActionBase { constructor() { super('reservations'); } });
-        }
-    </script>
+        customElements.define('tragalero-orders', class extends TragaleroActionBase { constructor() { super('orders'); } });
+    }
+</script>
 
-    <script>
-        const cuidInput = document.getElementById('cuidInput');
-        const ruidInput = document.getElementById('ruidInput');
-        const bgColor = document.getElementById('bgColor');
-        const bgText = document.getElementById('bgText');
-        const textColor = document.getElementById('textColor');
-        const textText = document.getElementById('textText');
-        const customBtn = document.getElementById('customBtn');
-        const generatedCode = document.getElementById('generatedCode');
+<!-- LÓGICA DE SINCRONIZACIÓN -->
+<script>
+    (function() {
+        const cuidIn = document.getElementById('cuidInput');
+        const ruidIn = document.getElementById('ruidInput');
+        const bgCol = document.getElementById('bgColor');
+        const bgTxt = document.getElementById('bgText');
+        const txCol = document.getElementById('textColor');
+        const txTxt = document.getElementById('textText');
+        const btn = document.getElementById('customBtn');
+        const code = document.getElementById('generatedCode');
 
-        function updateButton() {
-            const cuid = cuidInput.value;
-            const ruid = ruidInput.value;
-            const bg = bgColor.value;
-            const color = textColor.value;
+        function update() {
+            btn.setAttribute('cuid', cuidIn.value);
+            btn.setAttribute('ruid', ruidIn.value);
+            btn.setAttribute('background', bgCol.value);
+            btn.setAttribute('color', txCol.value);
 
-            // Actualizar atributos del componente
-            customBtn.setAttribute('cuid', cuid);
-            customBtn.setAttribute('ruid', ruid);
-            customBtn.setAttribute('background', bg);
-            customBtn.setAttribute('color', color);
-            customBtn.setAttribute('textcolor', color);
+            code.textContent = `<tragalero-orders \n  cuid="${cuidIn.value}" \n  ruid="${ruidIn.value}" \n  background="${bgCol.value}" \n  color="${txCol.value}">\n</tragalero-orders>`;
 
-            // Generar snippet de código (Incluyendo scripts necesarios)
-            const snippet = `<!-- 1. Scripts requeridos (Poner en el <head> o antes de cerrar el <body>) -->\n` +
-                            `<script src="https://www.fbgcdn.com/embedder/js/ewm2.js"><\/script>\n` +
-                            `<script src="https://tragalero.com/tragaleroUI.js"><\/script>\n\n` +
-                            `<!-- 2. Componente del Botón -->\n` +
-                            `<tragalero-orders \n` +
-                            `  cuid="${cuid}" \n` +
-                            `  ruid="${ruid}" \n` +
-                            `  background="${bg}" \n` +
-                            `  color="${color}">\n` +
-                            `</tragalero-orders>`;
-            generatedCode.value = snippet;
-
-            // Re-vincular botones de GloriaFood si la librería está cargada
-            if (window.glfBindButtons) {
-                window.glfBindButtons();
-            }
+            if (window.glfBindButtons) window.glfBindButtons();
         }
 
-        // Event listeners para cambios
-        [cuidInput, ruidInput].forEach(el => el.addEventListener('input', updateButton));
+        [cuidIn, ruidIn].forEach(i => i.addEventListener('input', update));
+        bgCol.addEventListener('input', (e) => { bgTxt.value = e.target.value.toUpperCase(); update(); });
+        bgTxt.addEventListener('input', (e) => { bgCol.value = e.target.value; update(); });
+        txCol.addEventListener('input', (e) => { txTxt.value = e.target.value.toUpperCase(); update(); });
+        txTxt.addEventListener('input', (e) => { txCol.value = e.target.value; update(); });
 
-        bgColor.addEventListener('input', (e) => {
-            bgText.value = e.target.value.toUpperCase();
-            updateButton();
-        });
-        bgText.addEventListener('input', (e) => {
-            bgColor.value = e.target.value;
-            updateButton();
-        });
-
-        textColor.addEventListener('input', (e) => {
-            textText.value = e.target.value.toUpperCase();
-            updateButton();
-        });
-        textText.addEventListener('input', (e) => {
-            textColor.value = e.target.value;
-            updateButton();
-        });
-
-        // Inicializar
-        updateButton();
-    </script>
-</body>
-
-</html>
+        update();
+    })();
+</script>

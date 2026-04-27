@@ -1,48 +1,33 @@
-Sistema de Botones Tragalero (GloriaFood Integration)
-=====================================================
+Sistema de Personalización de Botón Tragalero
+============================================
 
-Este sistema permite integrar y personalizar botones de pedidos en línea (Orders) y reservaciones utilizando la infraestructura de GloriaFood.
+Este archivo (boton.html) contiene ÚNICAMENTE el código necesario para integrar el sistema de personalización de botones en cualquier otra página o plataforma.
 
-1. Identificadores Principales:
--------------------------------
-- CUID: Identificador único del cliente (empresa) en GloriaFood.
-- RUID: Identificador único del restaurante (sucursal) en GloriaFood.
-Ambos son necesarios para que el botón sepa a qué restaurante enviar el pedido o la reserva.
+Instrucciones de Integración:
+----------------------------
 
-2. Componentes Web (Custom Elements):
--------------------------------------
-El sistema utiliza la librería `tragaleroUI.js` que define los siguientes elementos:
-
-<tragalero-orders>: Botón de pedidos ("ORDENAR AHORA").
-<tragalero-reservations>: Botón de reservas ("RESERVAR MESA").
-
-3. Personalización:
--------------------
-Puedes personalizar el diseño pasando los siguientes atributos al elemento:
-
-- cuid: El CUID de GloriaFood.
-- ruid: El RUID de GloriaFood.
-- background: Color de fondo del botón (ej: "#f2a04a").
-- color / textcolor: Color del texto e icono (ej: "#ffffff").
-
-Ejemplo de uso:
-<tragalero-orders
-  cuid="XXXX-XXXX"
-  ruid="YYYY-YYYY"
-  background="#7c83fd"
-  color="#ffffff">
-</tragalero-orders>
-
-4. Requisitos para el funcionamiento:
--------------------------------------
-Para que el sistema funcione correctamente en cualquier página, se deben incluir estos dos scripts:
-
-1. El motor de GloriaFood:
+1. Dependencia Externa:
+Para que el botón funcione (el proceso de pedido real), debes incluir el script de GloriaFood en tu página principal:
 <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
 
-2. La librería de Tragalero:
-<script src="./tragaleroUI.js"></script>
+2. Cómo usar este código:
+Copia todo el contenido de 'boton.html' y pégalo directamente en el lugar de tu HTML donde quieras que aparezca el personalizador.
 
-5. Funcionamiento Interno:
---------------------------
-Internamente, el componente `tragalero-orders` genera un botón de HTML con los atributos `data-glf-cuid` y `data-glf-ruid`. El script de GloriaFood (`ewm2.js`) busca estos atributos y vincula el proceso de compra al hacer clic. La personalización se aplica mediante estilos inyectados en el Shadow DOM del componente.
+3. Qué incluye:
+- Estilos CSS (encapsulados en clases únicas para evitar conflictos).
+- Estructura HTML (Inputs de CUID, RUID y Colores).
+- Lógica JS del Componente: Define la etiqueta <tragalero-orders>.
+- Lógica de Sincronización: Actualiza la vista previa y genera el código final.
+
+Atributos del Botón:
+--------------------
+Si solo quieres usar el botón final sin el personalizador, usa esta estructura:
+
+<tragalero-orders
+  cuid="TU_CUID"
+  ruid="TU_RUID"
+  background="#COLOR_HEX"
+  color="#COLOR_TEXTO_HEX">
+</tragalero-orders>
+
+Nota: Asegúrate de que el script de GloriaFood (paso 1) esté cargado en la página para que el botón sea funcional al hacer clic.
