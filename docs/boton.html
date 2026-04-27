@@ -323,11 +323,14 @@
             let code = `<!-- 1. Script Motor GloriaFood -->\n<script src="https://www.fbgcdn.com/embedder/js/ewm2.js"><\/script>\n\n`;
             code += `<!-- 2. Librería Tragalero -->\n<script src="https://tragalero.com/tragaleroUI.js"><\/script>\n\n`;
             code += `<!-- 3. Botones Personalizados -->\n`;
-            code += `<tragalero-orders \n  cuid="${cuid}" \n  ruid="${ruid}" \n  background="${inputs.o_bg.value}" \n  color="${inputs.o_tx.value}">\n</tragalero-orders>\n`;
+            code += `<tragalero-orders \n  cuid="${cuid}" \n  ruid="${ruid}" \n  background="${inputs.o_bg.value}" \n  color="${inputs.o_tx.value}"\n  data-glf-cuid="${cuid}" \n  data-glf-ruid="${ruid}">\n</tragalero-orders>\n`;
 
             if (inputs.has_res.checked) {
-                code += `\n<tragalero-reservations \n  cuid="${cuid}" \n  ruid="${ruid}" \n  background="${inputs.r_bg.value}" \n  color="${inputs.r_tx.value}">\n</tragalero-reservations>`;
+                code += `\n<tragalero-reservations \n  cuid="${cuid}" \n  ruid="${ruid}" \n  background="${inputs.r_bg.value}" \n  color="${inputs.r_tx.value}"\n  data-glf-cuid="${cuid}" \n  data-glf-ruid="${ruid}" \n  data-glf-reservation="true">\n</tragalero-reservations>\n`;
             }
+
+            code += `\n<!-- 4. Forzar vinculación (Opcional si no abre a la primera) -->\n`;
+            code += `<script>\n  setTimeout(() => { if(window.glfBindButtons) window.glfBindButtons(); }, 1000);\n<\/script>`;
 
             codeOutput.textContent = code;
 
