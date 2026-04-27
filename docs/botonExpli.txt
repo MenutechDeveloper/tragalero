@@ -1,33 +1,25 @@
-Sistema de Personalización de Botón Tragalero
-============================================
+Personalizador de Botones Tragalero
+======================================
 
-Este archivo (boton.html) contiene ÚNICAMENTE el código necesario para integrar el sistema de personalización de botones en cualquier otra página o plataforma.
+Este archivo (boton.html) proporciona una interfaz completa para configurar y generar el código de los botones de pedidos y reservaciones de Tragalero (GloriaFood).
 
-Instrucciones de Integración:
-----------------------------
+Características:
+----------------
+1. Diseño de Doble Columna: Panel de configuración a la izquierda y vista previa real a la derecha.
+2. Identificadores: Campos para CUID y RUID de Tragalero.
+3. Personalización Total: Colores de fondo y texto independientes para los botones de 'Órdenes' y 'Reservaciones'.
+4. Interruptor de Reservas: Opción para activar o desactivar el botón de reserva de mesas.
+5. Generador de Código: Crea automáticamente el snippet necesario con todas las dependencias.
 
-1. Dependencia Externa:
-Para que el botón funcione (el proceso de pedido real), debes incluir el script de GloriaFood en tu página principal:
-<script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
+Instrucciones de Uso:
+---------------------
+1. Copia el contenido íntegro de 'boton.html' y pégalo en tu página de administración o donde desees el personalizador.
+2. Asegúrate de incluir el script de GloriaFood en la página donde se usarán los botones finales:
+   <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
 
-2. Cómo usar este código:
-Copia todo el contenido de 'boton.html' y pégalo directamente en el lugar de tu HTML donde quieras que aparezca el personalizador.
-
-3. Qué incluye:
-- Estilos CSS (encapsulados en clases únicas para evitar conflictos).
-- Estructura HTML (Inputs de CUID, RUID y Colores).
-- Lógica JS del Componente: Define la etiqueta <tragalero-orders>.
-- Lógica de Sincronización: Actualiza la vista previa y genera el código final.
-
-Atributos del Botón:
---------------------
-Si solo quieres usar el botón final sin el personalizador, usa esta estructura:
-
-<tragalero-orders
-  cuid="TU_CUID"
-  ruid="TU_RUID"
-  background="#COLOR_HEX"
-  color="#COLOR_TEXTO_HEX">
-</tragalero-orders>
-
-Nota: Asegúrate de que el script de GloriaFood (paso 1) esté cargado en la página para que el botón sea funcional al hacer clic.
+Funcionamiento del Menú:
+------------------------
+Si el menú no abre al hacer clic en el botón generado:
+- Verifica que el CUID y RUID sean correctos.
+- Asegúrate de que el script 'ewm2.js' esté cargado en la página.
+- El sistema utiliza los componentes nativos <tragalero-orders> y <tragalero-reservations> definidos en 'tragaleroUI.js'.
