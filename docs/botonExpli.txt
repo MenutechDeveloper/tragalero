@@ -1,0 +1,48 @@
+Sistema de Botones Tragalero (GloriaFood Integration)
+=====================================================
+
+Este sistema permite integrar y personalizar botones de pedidos en línea (Orders) y reservaciones utilizando la infraestructura de GloriaFood.
+
+1. Identificadores Principales:
+-------------------------------
+- CUID: Identificador único del cliente (empresa) en GloriaFood.
+- RUID: Identificador único del restaurante (sucursal) en GloriaFood.
+Ambos son necesarios para que el botón sepa a qué restaurante enviar el pedido o la reserva.
+
+2. Componentes Web (Custom Elements):
+-------------------------------------
+El sistema utiliza la librería `tragaleroUI.js` que define los siguientes elementos:
+
+<tragalero-orders>: Botón de pedidos ("ORDENAR AHORA").
+<tragalero-reservations>: Botón de reservas ("RESERVAR MESA").
+
+3. Personalización:
+-------------------
+Puedes personalizar el diseño pasando los siguientes atributos al elemento:
+
+- cuid: El CUID de GloriaFood.
+- ruid: El RUID de GloriaFood.
+- background: Color de fondo del botón (ej: "#f2a04a").
+- color / textcolor: Color del texto e icono (ej: "#ffffff").
+
+Ejemplo de uso:
+<tragalero-orders
+  cuid="XXXX-XXXX"
+  ruid="YYYY-YYYY"
+  background="#7c83fd"
+  color="#ffffff">
+</tragalero-orders>
+
+4. Requisitos para el funcionamiento:
+-------------------------------------
+Para que el sistema funcione correctamente en cualquier página, se deben incluir estos dos scripts:
+
+1. El motor de GloriaFood:
+<script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
+
+2. La librería de Tragalero:
+<script src="./tragaleroUI.js"></script>
+
+5. Funcionamiento Interno:
+--------------------------
+Internamente, el componente `tragalero-orders` genera un botón de HTML con los atributos `data-glf-cuid` y `data-glf-ruid`. El script de GloriaFood (`ewm2.js`) busca estos atributos y vincula el proceso de compra al hacer clic. La personalización se aplica mediante estilos inyectados en el Shadow DOM del componente.
