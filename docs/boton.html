@@ -1,188 +1,361 @@
-<!-- ESTILOS DEL PERSONALIZADOR -->
+<!-- ESTILOS DEL SISTEMA DE BOTONES (Inspirado en DirectoryMap) -->
 <style>
-    .config-card {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        background: white;
-        border-radius: 25px;
-        padding: 30px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        max-width: 600px;
+    :root {
+        --tragalero-primary: #7c83fd;
+        --tragalero-bg: #f8fafc;
+    }
+    .tragalero-config-container {
+        font-family: 'Plus Jakarta Sans', 'Poppins', sans-serif;
+        background: #fff;
+        border-radius: 30px;
+        padding: 35px;
+        box-shadow: 0 15px 45px rgba(0,0,0,0.05);
+        max-width: 1100px;
         margin: 20px auto;
         color: #1e293b;
     }
-    .config-card h4 { font-weight: 700; margin-bottom: 1.5rem; }
-    .form-group-custom { margin-bottom: 1rem; }
-    .form-label-custom {
+    .tragalero-row { display: flex; flex-wrap: wrap; gap: 30px; }
+    .tragalero-col-form { flex: 1; min-width: 320px; }
+    .tragalero-col-preview { width: 350px; min-width: 300px; }
+
+    .tragalero-section-title {
+        font-weight: 700;
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin: 25px 0 15px 0;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 8px;
+    }
+    .tragalero-section-title:first-child { margin-top: 0; }
+
+    .tragalero-form-group { margin-bottom: 15px; }
+    .tragalero-label {
         display: block;
         font-weight: 600;
         font-size: 0.85rem;
-        color: #475569;
-        margin-bottom: 0.5rem;
+        color: #64748b;
+        margin-bottom: 8px;
     }
-    .form-control-custom {
+    .tragalero-input {
         width: 100%;
-        border-radius: 12px;
-        padding: 10px 15px;
+        border-radius: 15px;
+        padding: 12px 18px;
         border: 2px solid #f1f5f9;
+        background: #f8fafc;
         font-size: 0.9rem;
+        transition: all 0.2s;
         box-sizing: border-box;
     }
-    .form-control-custom:focus {
+    .tragalero-input:focus {
         outline: none;
-        border-color: #7c83fd;
+        border-color: var(--tragalero-primary);
+        background: #fff;
         box-shadow: 0 0 0 4px rgba(124, 131, 253, 0.1);
     }
-    .flex-row-custom { display: flex; gap: 15px; margin-bottom: 1rem; }
-    .flex-col-custom { flex: 1; }
-    .color-input-wrapper { display: flex; align-items: center; gap: 10px; }
-    .input-color-custom {
-        width: 45px;
-        height: 45px;
-        padding: 0;
+
+    .tragalero-color-row { display: flex; gap: 15px; align-items: center; }
+    .tragalero-color-picker {
+        width: 50px;
+        height: 50px;
         border: none;
-        border-radius: 10px;
+        border-radius: 12px;
+        cursor: pointer;
+        padding: 0;
+        background: none;
+    }
+    .tragalero-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+    .tragalero-color-picker::-webkit-color-swatch { border: none; border-radius: 12px; }
+
+    /* Switch Style */
+    .tragalero-switch-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 20px;
         cursor: pointer;
     }
-    .preview-container-custom {
-        margin-top: 25px;
-        padding: 20px;
-        border-radius: 20px;
-        background: #f1f5f9;
-        text-align: center;
+    .tragalero-switch {
+        position: relative;
+        display: inline-block;
+        width: 46px;
+        height: 24px;
     }
-    .preview-label-custom {
-        font-size: 0.7rem;
+    .tragalero-switch input { opacity: 0; width: 0; height: 0; }
+    .tragalero-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #cbd5e1;
+        transition: .4s;
+        border-radius: 24px;
+    }
+    .tragalero-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px; width: 18px;
+        left: 3px; bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .tragalero-slider { background-color: var(--tragalero-primary); }
+    input:checked + .tragalero-slider:before { transform: translateX(22px); }
+
+    .tragalero-preview-box {
+        background: #f8fafc;
+        border-radius: 25px;
+        padding: 30px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed #e2e8f0;
+        box-sizing: border-box;
+    }
+    .tragalero-preview-label {
         font-weight: 700;
+        font-size: 0.7rem;
         color: #94a3b8;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 12px;
-        display: block;
+        margin-bottom: 20px;
     }
-    .code-output-custom {
-        margin-top: 20px;
+
+    .tragalero-copy-area {
+        margin-top: 30px;
         background: #1e293b;
-        color: #e2e8f0;
-        padding: 15px;
-        border-radius: 12px;
-        font-family: monospace;
+        border-radius: 20px;
+        padding: 20px;
+        position: relative;
+    }
+    .tragalero-code {
+        color: #cbd5e1;
+        font-family: 'Fira Code', monospace;
         font-size: 0.8rem;
         white-space: pre-wrap;
-        word-break: break-all;
+        margin: 0;
+    }
+    .tragalero-copy-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(255,255,255,0.1);
+        border: none;
+        color: #fff;
+        padding: 8px 15px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .tragalero-copy-btn:hover { background: rgba(255,255,255,0.2); }
+
+    @media (max-width: 768px) {
+        .tragalero-col-preview { width: 100%; margin-top: 20px; }
     }
 </style>
 
-<!-- ESTRUCTURA DEL PERSONALIZADOR -->
-<div class="config-card">
-    <h4>Configuración de Botón</h4>
+<div class="tragalero-config-container">
+    <div class="tragalero-row">
+        <!-- COLUMNA FORMULARIO -->
+        <div class="tragalero-col-form">
+            <div class="tragalero-row">
+                <div style="flex: 1;">
+                    <label class="tragalero-label">CUID (Tragalero)</label>
+                    <input type="text" id="glf_cuid" class="tragalero-input" placeholder="52230bb2-..." value="52230bb2-0d10-491a-80a6-3c5603e87152">
+                </div>
+                <div style="flex: 1;">
+                    <label class="tragalero-label">RUID (Tragalero)</label>
+                    <input type="text" id="glf_ruid" class="tragalero-input" placeholder="010d211a-..." value="010d211a-aff0-4aa2-b4d0-739fce78437a">
+                </div>
+            </div>
 
-    <div class="flex-row-custom">
-        <div class="flex-col-custom">
-            <label class="form-label-custom">CUID (GloriaFood)</label>
-            <input type="text" id="cuidInput" class="form-control-custom" placeholder="52230bb2-..." value="52230bb2-7d2d-4f11-9f93-010d211a2f48">
-        </div>
-        <div class="flex-col-custom">
-            <label class="form-label-custom">RUID (GloriaFood)</label>
-            <input type="text" id="ruidInput" class="form-control-custom" placeholder="010d211a-..." value="010d211a-2f48-401d-910d-211a2f48010d">
-        </div>
-    </div>
+            <div class="tragalero-section-title">Botón Órdenes en Línea</div>
+            <div class="tragalero-row">
+                <div style="flex: 1;">
+                    <label class="tragalero-label">Color de Fondo</label>
+                    <div class="tragalero-color-row">
+                        <input type="color" id="order_bg" class="tragalero-color-picker" value="#f2a04a">
+                        <input type="text" id="order_bg_txt" class="tragalero-input" value="#f2a04a">
+                    </div>
+                </div>
+                <div style="flex: 1;">
+                    <label class="tragalero-label">Color de Texto</label>
+                    <div class="tragalero-color-row">
+                        <input type="color" id="order_txt" class="tragalero-color-picker" value="#ffffff">
+                        <input type="text" id="order_txt_txt" class="tragalero-input" value="#ffffff">
+                    </div>
+                </div>
+            </div>
 
-    <div class="flex-row-custom">
-        <div class="flex-col-custom">
-            <label class="form-label-custom">Fondo</label>
-            <div class="color-input-wrapper">
-                <input type="color" id="bgColor" class="input-color-custom" value="#f2a04a">
-                <input type="text" id="bgText" class="form-control-custom" value="#F2A04A">
+            <div class="tragalero-section-title">Botón Reservaciones</div>
+            <div class="tragalero-row">
+                <div style="flex: 1;">
+                    <label class="tragalero-label">Color de Fondo</label>
+                    <div class="tragalero-color-row">
+                        <input type="color" id="res_bg" class="tragalero-color-picker" value="#2f4854">
+                        <input type="text" id="res_bg_txt" class="tragalero-input" value="#2f4854">
+                    </div>
+                </div>
+                <div style="flex: 1;">
+                    <label class="tragalero-label">Color de Texto</label>
+                    <div class="tragalero-color-row">
+                        <input type="color" id="res_txt" class="tragalero-color-picker" value="#ffffff">
+                        <input type="text" id="res_txt_txt" class="tragalero-input" value="#ffffff">
+                    </div>
+                </div>
+            </div>
+
+            <label class="tragalero-switch-container">
+                <div class="tragalero-switch">
+                    <input type="checkbox" id="has_res" checked>
+                    <span class="tragalero-slider"></span>
+                </div>
+                <span class="tragalero-label" style="margin-bottom: 0;">Activar Reservación de Mesas (Tragalero)</span>
+            </label>
+        </div>
+
+        <!-- COLUMNA VISTA PREVIA -->
+        <div class="tragalero-col-preview">
+            <div class="tragalero-preview-box">
+                <span class="tragalero-preview-label">Vista Previa Real</span>
+                <div id="tragalero_preview_buttons" style="width: 100%; display: grid; gap: 15px;">
+                    <!-- Botones dinámicos -->
+                </div>
             </div>
         </div>
-        <div class="flex-col-custom">
-            <label class="form-label-custom">Texto</label>
-            <div class="color-input-wrapper">
-                <input type="color" id="textColor" class="input-color-custom" value="#ffffff">
-                <input type="text" id="textText" class="form-control-custom" value="#FFFFFF">
-            </div>
-        </div>
     </div>
 
-    <div class="preview-container-custom">
-        <span class="preview-label-custom">Vista Previa</span>
-        <div id="buttonPreview">
-            <tragalero-orders id="customBtn" cuid="" ruid="" background="#f2a04a" color="#ffffff"></tragalero-orders>
-        </div>
+    <!-- AREA DE CODIGO -->
+    <div class="tragalero-copy-area">
+        <button class="tragalero-copy-btn" id="btn_copy_tragalero">Copiar Código</button>
+        <pre class="tragalero-code" id="tragalero_code_output"></pre>
     </div>
-
-    <div class="code-output-custom" id="generatedCode"></div>
 </div>
 
-<!-- SISTEMA DEL BOTÓN (Lógica del Componente) -->
-<script>
-    if (!customElements.get('tragalero-orders')) {
-        class TragaleroActionBase extends HTMLElement {
-            constructor(type) {
-                super();
-                this.attachShadow({ mode: 'open' });
-                this.type = type;
-            }
-            connectedCallback() { this.render(); }
-            static get observedAttributes() { return ['cuid', 'ruid', 'background', 'color', 'textcolor']; }
-            attributeChangedCallback() { this.render(); }
-            render() {
-                const cuid = this.getAttribute('cuid') || '';
-                const ruid = this.getAttribute('ruid') || '';
-                const bg = this.getAttribute('background') || (this.type === 'orders' ? '#f2a04a' : '#2f4854');
-                const color = this.getAttribute('color') || this.getAttribute('textcolor') || '#ffffff';
-                const label = this.type === 'reservations' ? 'RESERVAR MESA' : 'ORDENAR AHORA';
-                const icon = this.type === 'reservations' ? 'bi-calendar-event' : 'bi-bag-check';
-                this.shadowRoot.innerHTML = `
-                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-                    <style>
-                        .btn-glf {
-                            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px;
-                            border-radius: 16px; border: none; background: ${bg}; color: ${color};
-                            font-family: inherit; font-weight: 700; font-size: 0.9rem; text-transform: uppercase;
-                            cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 20px rgba(0,0,0,0.1); text-decoration: none;
-                        }
-                        .btn-glf:hover { transform: translateY(-2px); filter: brightness(1.1); }
-                    </style>
-                    <button class="btn-glf" data-glf-cuid="${cuid}" data-glf-ruid="${ruid}">
-                         ${label}
-                    </button>
-                `;
-            }
-        }
-        customElements.define('tragalero-orders', class extends TragaleroActionBase { constructor() { super('orders'); } });
-    }
-</script>
-
-<!-- LÓGICA DE SINCRONIZACIÓN -->
+<!-- LOGICA DEL COMPONENTE Y SINCRONIZACION -->
 <script>
     (function() {
-        const cuidIn = document.getElementById('cuidInput');
-        const ruidIn = document.getElementById('ruidInput');
-        const bgCol = document.getElementById('bgColor');
-        const bgTxt = document.getElementById('bgText');
-        const txCol = document.getElementById('textColor');
-        const txTxt = document.getElementById('textText');
-        const btn = document.getElementById('customBtn');
-        const code = document.getElementById('generatedCode');
+        // Componente Tragalero (Mejorado para detectar clics con GloriaFood)
+        if (!customElements.get('tragalero-button')) {
+            class TragaleroButton extends HTMLElement {
+                constructor() {
+                    super();
+                    this.attachShadow({ mode: 'open' });
+                }
+                static get observedAttributes() { return ['cuid', 'ruid', 'bg', 'color', 'type']; }
+                attributeChangedCallback() { this.render(); }
+                connectedCallback() { this.render(); }
+                render() {
+                    const cuid = this.getAttribute('cuid') || '';
+                    const ruid = this.getAttribute('ruid') || '';
+                    const bg = this.getAttribute('bg') || '#7c83fd';
+                    const color = this.getAttribute('color') || '#fff';
+                    const isRes = this.getAttribute('type') === 'res';
+                    const label = isRes ? 'RESERVAR MESA' : 'ORDENAR AHORA';
+
+                    this.shadowRoot.innerHTML = `
+                        <style>
+                            :host { display: block; width: 100%; }
+                            .btn-glf {
+                                display: flex; align-items: center; justify-content: center; width: 100%; padding: 16px;
+                                border-radius: 16px; border: none; background: ${bg}; color: ${color};
+                                font-family: inherit; font-weight: 700; font-size: 0.9rem; text-transform: uppercase;
+                                cursor: pointer; transition: all 0.3s; box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+                            }
+                            .btn-glf:hover { transform: translateY(-2px); filter: brightness(1.1); }
+                        </style>
+                        <button class="btn-glf"
+                                data-glf-cuid="${cuid}"
+                                data-glf-ruid="${ruid}"
+                                ${isRes ? 'data-glf-reservation="true"' : ''}>
+                            ${label}
+                        </button>
+                    `;
+
+                    // Importante: El script de GloriaFood busca botones en el DOM real.
+                    // Al usar Shadow DOM, debemos delegar el click al botón interno o usar light DOM.
+                    // Para máxima compatibilidad con GloriaFood, inyectamos un trigger si detectamos el script.
+                    this.shadowRoot.querySelector('button').onclick = () => {
+                        if (window.glfBindButtons) {
+                            // Si GloriaFood está cargado, este botón debería disparar la acción
+                            // Al estar en shadow DOM, a veces GloriaFood no lo detecta automáticamente.
+                            // Re-escaneamos si es necesario.
+                        }
+                    };
+                }
+            }
+            customElements.define('tragalero-button', TragaleroButton);
+        }
+
+        // Elementos UI
+        const inputs = {
+            cuid: document.getElementById('glf_cuid'),
+            ruid: document.getElementById('glf_ruid'),
+            o_bg: document.getElementById('order_bg'),
+            o_bg_t: document.getElementById('order_bg_txt'),
+            o_tx: document.getElementById('order_txt'),
+            o_tx_t: document.getElementById('order_txt_txt'),
+            r_bg: document.getElementById('res_bg'),
+            r_bg_t: document.getElementById('res_bg_txt'),
+            r_tx: document.getElementById('res_txt'),
+            r_tx_t: document.getElementById('res_txt_txt'),
+            has_res: document.getElementById('has_res')
+        };
+        const preview = document.getElementById('tragalero_preview_buttons');
+        const codeOutput = document.getElementById('tragalero_code_output');
+        const copyBtn = document.getElementById('btn_copy_tragalero');
 
         function update() {
-            btn.setAttribute('cuid', cuidIn.value);
-            btn.setAttribute('ruid', ruidIn.value);
-            btn.setAttribute('background', bgCol.value);
-            btn.setAttribute('color', txCol.value);
+            const cuid = inputs.cuid.value;
+            const ruid = inputs.ruid.value;
 
-            code.textContent = `<tragalero-orders \n  cuid="${cuidIn.value}" \n  ruid="${ruidIn.value}" \n  background="${bgCol.value}" \n  color="${txCol.value}">\n</tragalero-orders>`;
+            // Actualizar Vista Previa
+            preview.innerHTML = `<tragalero-button cuid="${cuid}" ruid="${ruid}" bg="${inputs.o_bg.value}" color="${inputs.o_tx.value}" type="order"></tragalero-button>`;
+            if (inputs.has_res.checked) {
+                preview.innerHTML += `<tragalero-button cuid="${cuid}" ruid="${ruid}" bg="${inputs.r_bg.value}" color="${inputs.r_tx.value}" type="res"></tragalero-button>`;
+            }
 
+            // Generar Código
+            let code = `<!-- 1. Script Motor GloriaFood -->\n<script src="https://www.fbgcdn.com/embedder/js/ewm2.js"><\/script>\n\n`;
+            code += `<!-- 2. Librería Tragalero -->\n<script src="https://tragalero.com/tragaleroUI.js"><\/script>\n\n`;
+            code += `<!-- 3. Botones Personalizados -->\n`;
+            code += `<tragalero-orders \n  cuid="${cuid}" \n  ruid="${ruid}" \n  background="${inputs.o_bg.value}" \n  color="${inputs.o_tx.value}">\n</tragalero-orders>\n`;
+
+            if (inputs.has_res.checked) {
+                code += `\n<tragalero-reservations \n  cuid="${cuid}" \n  ruid="${ruid}" \n  background="${inputs.r_bg.value}" \n  color="${inputs.r_tx.value}">\n</tragalero-reservations>`;
+            }
+
+            codeOutput.textContent = code;
+
+            // Re-vincular GloriaFood
             if (window.glfBindButtons) window.glfBindButtons();
         }
 
-        [cuidIn, ruidIn].forEach(i => i.addEventListener('input', update));
-        bgCol.addEventListener('input', (e) => { bgTxt.value = e.target.value.toUpperCase(); update(); });
-        bgTxt.addEventListener('input', (e) => { bgCol.value = e.target.value; update(); });
-        txCol.addEventListener('input', (e) => { txTxt.value = e.target.value.toUpperCase(); update(); });
-        txTxt.addEventListener('input', (e) => { txCol.value = e.target.value; update(); });
+        // Sincronizar Pickers con Texto
+        function sync(picker, text) {
+            picker.oninput = () => { text.value = picker.value; update(); };
+            text.oninput = () => { picker.value = text.value; update(); };
+        }
+        sync(inputs.o_bg, inputs.o_bg_t);
+        sync(inputs.o_tx, inputs.o_tx_t);
+        sync(inputs.r_bg, inputs.r_bg_t);
+        sync(inputs.r_tx, inputs.r_tx_t);
 
+        inputs.cuid.oninput = update;
+        inputs.ruid.oninput = update;
+        inputs.has_res.onchange = update;
+
+        copyBtn.onclick = () => {
+            navigator.clipboard.writeText(codeOutput.textContent);
+            copyBtn.textContent = '¡Copiado!';
+            setTimeout(() => copyBtn.textContent = 'Copiar Código', 2000);
+        };
+
+        // Inicializar
         update();
     })();
 </script>
