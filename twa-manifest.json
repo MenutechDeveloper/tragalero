@@ -1,0 +1,37 @@
+{
+  "packageId": "YOUR_PACKAGE_NAME",
+  "host": "tragalero.com",
+  "name": "Tragalero",
+  "shortName": "Tragalero",
+  "themeColor": "#ffffff",
+  "backgroundColor": "#ffffff",
+  "startUrl": "/app.html",
+  "iconUrl": "https://tragalero.com/assets/img/tragalero.png",
+  "maskableIconUrl": "https://tragalero.com/assets/img/tragalero.png",
+  "splashscreenColor": "#ffffff",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "shortcuts": [],
+  "webManifestUrl": "https://tragalero.com/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": true,
+    "playBilling": false
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableNotifications": true,
+  "enableSiteSettingsShortcut": true,
+  "isRtl": false,
+  "signingKey": {
+    "path": "android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "generatorApp": "bubblewrap-cli",
+  "webviewOptions": {
+    "usePlayBilling": false
+  }
+}
