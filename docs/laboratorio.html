@@ -147,49 +147,9 @@
         #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
         #top-nav > * { pointer-events: auto; }
 
+
         .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; text-decoration: none; }
         .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); }
-
-        .theme-switch { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
-        .theme-switch svg { width: 24px; height: 24px; }
-        .sun-icon { color: var(--orange); }
-        .moon-icon { color: #8b5cf6; display: none; }
-        [data-bs-theme="dark"] .sun-icon { display: none; }
-        [data-bs-theme="dark"] .moon-icon { display: block; }
-
-        .theme-switcher-bar {
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 50px;
-            padding: 4px 12px;
-            display: flex;
-        }
-        [data-bs-theme="dark"] .theme-switcher-bar {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        .theme-btn {
-            background: none;
-            border: none;
-            font-size: 1.1rem;
-            padding: 8px;
-            margin: 0 2px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: inherit;
-            opacity: 0.5;
-            border-radius: 50%;
-        }
-        .theme-btn:hover {
-            opacity: 1;
-            background: rgba(0,0,0,0.05);
-        }
-        [data-bs-theme="dark"] .theme-btn:hover {
-            background: rgba(255,255,255,0.1);
-        }
-        .theme-btn.active {
-            opacity: 1;
-            transform: scale(1.1);
-            color: var(--orange);
-        }
 
         .hidden { display: none !important; }
 
@@ -206,12 +166,14 @@
 
     <div id="top-nav">
         <a href="admin.html" class="btn-panel-top">VOLVER AL PANEL</a>
-        <div class="theme-switcher-bar">
-            <button class="theme-btn" data-theme-value="light" title="Modo Amarillo"><i class="bi bi-sun-fill"></i></button>
-            <button class="theme-btn" data-theme-value="dark" title="Modo Oscuro"><i class="bi bi-moon-stars-fill"></i></button>
-            <button class="theme-btn" data-theme-value="medio" title="Modo Suave"><i class="bi bi-palette-fill"></i></button>
+        <div class="theme-switcher-container d-flex align-items-center bg-white bg-opacity-10 p-2 rounded-pill shadow-sm">
+            <div id="authButtons" class="me-3 ps-2"></div>
+            <div class="theme-switcher-bar d-flex">
+                <button class="theme-btn" data-theme-value="light" title="Modo Amarillo"><i class="bi bi-sun-fill"></i></button>
+                <button class="theme-btn" data-theme-value="dark" title="Modo Oscuro"><i class="bi bi-moon-stars-fill"></i></button>
+                <button class="theme-btn" data-theme-value="medio" title="Modo Suave"><i class="bi bi-palette-fill"></i></button>
+            </div>
         </div>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     </div>
 
     <div class="container" id="main-container">
@@ -296,6 +258,7 @@
                 return;
             }
 
+            await renderUserMenu('authButtons');
             initQRReader();
         });
 

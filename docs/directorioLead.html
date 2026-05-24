@@ -43,6 +43,7 @@
             border-bottom-right-radius: var(--tragalero-radius-lg);
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
             margin-bottom: 20px;
+            position: relative;
         }
 
         [data-bs-theme="dark"] .header-section {
@@ -386,7 +387,14 @@
                 <i class="bi bi-chevron-left fs-4"></i>
             </a>
             <h4 class="fw-bold mb-0">Directorio de Leads</h4>
-            <div id="authButtons"></div>
+            <div class="theme-switcher-container d-flex align-items-center bg-white bg-opacity-10 p-2 rounded-pill shadow-sm">
+                <div id="authButtons" class="me-3 ps-2"></div>
+                <div class="theme-switcher-bar d-flex">
+                    <button class="theme-btn" data-theme-value="light" title="Modo Amarillo"><i class="bi bi-sun-fill"></i></button>
+                    <button class="theme-btn" data-theme-value="dark" title="Modo Oscuro"><i class="bi bi-moon-stars-fill"></i></button>
+                    <button class="theme-btn" data-theme-value="medio" title="Modo Suave"><i class="bi bi-palette-fill"></i></button>
+                </div>
+            </div>
         </div>
 
         <div class="input-group search-bar mb-1">
