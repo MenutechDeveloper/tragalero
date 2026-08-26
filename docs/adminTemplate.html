@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Editor | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #059669;
+            --error: #dc2626;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow: hidden; transition: background 0.3s, color 0.3s; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
+
+        /* Loading Animation Overlay */
+        #loading-overlay {
+            position: fixed; inset: 0; background: var(--bg); z-index: 9000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s;
+        }
+        .cube-grid {
+            width: 60px; height: 60px; margin-bottom: 30px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+        }
+        .cube {
+            width: 100%; height: 100%; background-color: var(--orange);
+            animation: cubeGrid 1.3s infinite ease-in-out; border-radius: 2px;
+        }
+        .cube:nth-child(1) { animation-delay: 0.2s; }
+        .cube:nth-child(2) { animation-delay: 0.3s; }
+        .cube:nth-child(3) { animation-delay: 0.4s; }
+        .cube:nth-child(4) { animation-delay: 0.1s; }
+        .cube:nth-child(5) { animation-delay: 0.2s; }
+        .cube:nth-child(6) { animation-delay: 0.3s; }
+        .cube:nth-child(7) { animation-delay: 0.0s; }
+        .cube:nth-child(8) { animation-delay: 0.1s; }
+        .cube:nth-child(9) { animation-delay: 0.2s; }
+        @keyframes cubeGrid {
+            0%, 70%, 100% { transform: scale3D(1, 1, 1); }
+            35% { transform: scale3D(0, 0, 1); }
+        }
+        #loading-overlay p {
+            font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 600;
+            color: var(--text); letter-spacing: 1px; animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+        /* Main Layout */
+        .editor-layout { display: flex; height: 100vh; width: 100vw; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 380px; background: var(--card); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; z-index: 100; box-shadow: 10px 0 30px rgba(0,0,0,0.02);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sidebar-header {
+            padding: 20px 30px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo-mt { height: 45px; width: auto; object-fit: contain; }
+
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 30px; }
+        .sidebar-content::-webkit-scrollbar { width: 6px; }
+        .sidebar-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .control-group { margin-bottom: 30px; }
+        .control-group label {
+            display: block; font-size: 0.75rem; font-weight: 800; color: var(--orange);
+            letter-spacing: 1px; margin-bottom: 12px;
+        }
+
+        .input-field {
+            width: 100%; background: var(--input); border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px 16px; color: var(--text); font-size: 0.9rem;
+            margin-bottom: 15px; transition: 0.3s;
+        }
+        .input-field:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 4px rgba(255, 149, 51, 0.05); }
+
+        .image-upload-box {
+            width: 100%; min-height: 180px; border: 2px dashed var(--border); border-radius: 16px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s; overflow: hidden; position: relative; margin-bottom: 15px;
+        }
+        .image-upload-box:hover { border-color: var(--orange); background: rgba(255,149,51,0.02); transform: scale(1.01); }
+        .image-upload-box.drag-over { border-color: var(--orange); background: rgba(255,149,51,0.1); border-style: solid; }
+        .image-upload-box img { width: 100%; height: 100%; object-fit: cover; }
+        .image-upload-box span { font-size: 0.75rem; color: var(--text-dim); font-weight: 600; }
+
+        .switch-container {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--input); padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border);
+        }
+        .switch {
+            position: relative; display: inline-block; width: 44px; height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--orange); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .social-item {
+            display: flex; gap: 10px; margin-bottom: 10px;
+        }
+        .btn-icon {
+            background: rgba(220, 38, 38, 0.1); color: var(--error); border: none;
+            width: 40px; height: 40px; border-radius: 10px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.3s;
+        }
+        .btn-icon:hover { background: var(--error); color: #fff; }
+
+        .gallery-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px;
+        }
+        .gallery-item {
+            aspect-ratio: 1; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid var(--border);
+        }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .gallery-item .remove-btn {
+            position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5);
+            color: #fff; border: none; width: 18px; height: 18px; border-radius: 50%;
+            font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Preview Area */
+        .preview-area { flex: 1; background: #f0f0f0; position: relative; display: flex; flex-direction: column; }
+        .preview-toolbar {
+            height: 60px; background: var(--card); border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 30px;
+        }
+        .preview-container { flex: 1; padding: 40px; display: flex; align-items: center; justify-content: center; }
+        .preview-frame-wrapper {
+            width: 100%; height: 100%; background: #fff; border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1); overflow: hidden; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .preview-frame-wrapper.mobile {
+            width: 375px;
+            height: 667px;
+            margin: 0 auto;
+        }
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* Floating Actions */
+        .floating-actions {
+            position: absolute; bottom: 30px; right: 30px; display: flex; gap: 15px;
+        }
+        .btn {
+            padding: 14px 28px; border-radius: 16px; font-weight: 800; font-size: 0.85rem;
+            text-transform: uppercase; cursor: pointer; transition: 0.3s; border: none; letter-spacing: 1px;
+        }
+        .btn-primary { background: var(--orange); color: #fff; box-shadow: 0 8px 20px rgba(255,149,51,0.3); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(255,149,51,0.4); }
+
+        /* Save Button Specific Styles */
+        .btn-save {
+            background: #333 !important;
+            color: #fff !important;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+        }
+        .btn-save:hover {
+            background: #1a1a1a !important;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .hidden { display: none !important; }
+
+        /* Context Sidebar */
+        .context-sidebar {
+            position: fixed; left: 0; top: 0; bottom: 0; width: 340px;
+            background: var(--card); border-right: 1px solid var(--border);
+            z-index: 200; transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column;
+        }
+        .context-sidebar.active { transform: translateX(0); }
+        .context-header { padding: 25px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .context-search { padding: 15px 25px; border-bottom: 1px solid var(--border); }
+        .client-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .client-item {
+            padding: 12px 15px; border-radius: 10px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; gap: 12px; margin-bottom: 5px;
+        }
+        .client-item:hover { background: var(--input); }
+        .client-item.active { background: rgba(255,149,51,0.1); border: 1px solid var(--orange); }
+        .client-item .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--orange); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; }
+        .client-info { display: flex; flex-direction: column; }
+        .client-name { font-size: 0.85rem; font-weight: 700; }
+        .client-domain { font-size: 0.7rem; color: var(--text-dim); }
+
+        .context-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px);
+            z-index: 190; display: none;
+        }
+        .context-overlay.active { display: block; }
+
+        #save-status {
+            position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-20px) scale(0.95);
+            padding: 12px 24px; background: var(--card); border: 2px solid var(--border);
+            border-radius: 100px; font-size: 0.85rem; font-weight: 700;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15); display: flex; align-items: center;
+            gap: 12px; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10000; opacity: 0; pointer-events: none;
+        }
+        #save-status.active { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+        /* Multi-language switch styles */
+        .lang-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--input);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            width: fit-content;
+        }
+        .lang-option {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            color: var(--text-dim);
+        }
+        .lang-option.active {
+            background: var(--orange);
+            color: #fff;
+        }
+
+        /* Professional toggle switch */
+        .professional-toggle {
+            position: relative;
+            width: 80px;
+            height: 32px;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            user-select: none;
+        }
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 38px;
+            height: 26px;
+            background: var(--orange);
+            border-radius: 18px;
+            transition: 0.3s cubic-bezier(0.18, 0.89, 0.35, 1.15);
+            z-index: 1;
+        }
+        .toggle-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-dim);
+            z-index: 2;
+            transition: 0.3s;
+        }
+        .toggle-label.active {
+            color: #fff;
+        }
+        .professional-toggle.es .toggle-slider {
+            left: 38px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="cube-grid">
+            <div class="cube"></div><div class="cube"></div><div class="cube"></div>
+            <div class="cube"></div><div class="cube"></div><div class="cube"></div>
+            <div class="cube"></div><div class="cube"></div><div class="cube"></div>
+        </div>
+        <p data-i18n="loading">Cargando editor web...</p>
+    </div>
+
+    <!-- Context Selector for Admins -->
+    <div class="context-overlay" id="context-overlay" onclick="window.toggleContextSidebar()"></div>
+    <aside class="context-sidebar" id="context-sidebar">
+        <div class="context-header">
+            <h3 style="font-family: 'Outfit'; font-size: 1rem;">Select Client</h3>
+            <button class="btn-icon" style="background:none; color: var(--text);" onclick="window.toggleContextSidebar()">×</button>
+        </div>
+        <div class="context-search">
+            <input type="text" id="client-search" class="input-field" style="margin-bottom:0;" placeholder="Search by name or domain...">
+        </div>
+        <div class="client-list" id="client-list">
+            <!-- Clients will be listed here -->
+        </div>
+    </aside>
+
+    <div id="save-status">
+        <div class="loader-ring" style="width:18px; height:18px; border: 2px solid var(--orange); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <span id="save-status-text" data-i18n="saving">Saving changes...</span>
+    </div>
+
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+
+    <script>
+        // Global hideLoading to ensure it's accessible from safety timeout
+        window.hideLoading = function() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+                overlay.classList.add('hidden');
+                console.log("Editor displayed (loading hidden)");
+            }
+        };
+        // Safety timeout: guaranteed hide at 2s regardless of module state
+        setTimeout(() => {
+            if (window.hideLoading) window.hideLoading();
+        }, 2000);
+
+        // Global Drag & Drop handling to prevent browser opening images
+        window.addEventListener('dragover', e => e.preventDefault(), false);
+        window.addEventListener('drop', e => e.preventDefault(), false);
+    </script>
+
+    <div class="editor-layout">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="https://menutech.services/assets/img/logomt.png" class="logo-mt" alt="Logo">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn" style="padding: 10px; background: var(--input); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;" onclick="location.href='index.html'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px; color: var(--text);"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-content">
+                <div class="control-group" id="admin-context-group" style="display:none;">
+                    <label data-i18n="editingAccount">Editing Account</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="current-account-name" class="input-field" style="margin-bottom:0; flex:1;" value="Your Store" readonly>
+                        <button class="btn" style="padding: 0 12px; height: 44px; background: var(--input); border: 1px solid var(--border);" onclick="window.toggleContextSidebar()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px; color: var(--text);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label data-i18n="generalSettings">Restaurant Name</label>
+                    <input type="text" id="site-title" class="input-field" placeholder="Site Title" data-i18n-placeholder="titlePlaceholder" oninput="window.updateContent()">
+
+                    <label style="margin-top:10px;" data-i18n="heroButtonsLabels">Hero Buttons Labels</label>
+                    <input type="text" id="cuid" class="input-field" placeholder="CUID" oninput="window.updateContent()">
+                    <input type="text" id="ruid" class="input-field" placeholder="RUID" oninput="window.updateContent()">
+
+                    <div class="switch-container" style="margin-top:10px;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-dim);" data-i18n="enableReservations">Enable Reservations</span>
+                        <label class="switch">
+                            <input type="checkbox" id="show-reservations" onchange="window.updateContent()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label data-i18n="heroSection">Hero Section</label>
+                    <label style="font-size: 0.6rem; margin-top:5px;" data-i18n="heroLogo">Hero Logo</label>
+                    <div class="image-upload-box" id="logo-drop-zone" style="min-height: 100px;" onclick="document.getElementById('logo-upload').click()">
+                        <img id="logo-preview" class="hidden">
+                        <div id="logo-placeholder">
+                            <span data-i18n="heroPlaceholder">Click or Drag Hero Image</span>
+                        </div>
+                        <input type="file" id="logo-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'logoImg')">
+                    </div>
+
+                    <label style="font-size: 0.6rem; margin-top:5px;" data-i18n="heroAddress">Hero Address</label>
+                    <input type="text" id="hero-address" class="input-field" placeholder="Address" oninput="window.updateContent()">
+
+                    <label style="font-size: 0.6rem; margin-top:5px;" data-i18n="heroBackground">Hero Background</label>
+                    <div class="image-upload-box" id="hero-drop-zone" style="min-height: 100px;" onclick="document.getElementById('hero-upload').click()">
+                        <img id="hero-preview" class="hidden">
+                        <div id="hero-placeholder">
+                            <span data-i18n="heroPlaceholder">Click or Drag Hero Image</span>
+                        </div>
+                        <input type="file" id="hero-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'heroImg')">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="switch-container" style="margin-bottom:10px;">
+                        <label data-i18n="aboutSection" style="margin-bottom:0;">About Section</label>
+                        <label class="switch">
+                            <input type="checkbox" id="show-about" onchange="window.updateContent()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <input type="text" id="about-title" class="input-field" data-i18n-placeholder="sectionTitle" oninput="window.updateContent()">
+                    <input type="text" id="about-subtitle" class="input-field" data-i18n-placeholder="sectionSubtitle" oninput="window.updateContent()">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="image-upload-box" id="about1-drop-zone" style="min-height: 100px;" onclick="document.getElementById('about1-upload').click()">
+                            <img id="about1-preview" class="hidden">
+                            <div id="about1-placeholder">
+                                <span style="font-size: 0.6rem;" data-i18n="aboutImg1Placeholder">Img 1</span>
+                            </div>
+                            <input type="file" id="about1-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'aboutImg1')">
+                        </div>
+                        <div class="image-upload-box" id="about2-drop-zone" style="min-height: 100px;" onclick="document.getElementById('about2-upload').click()">
+                            <img id="about2-preview" class="hidden">
+                            <div id="about2-placeholder">
+                                <span style="font-size: 0.6rem;" data-i18n="aboutImg2Placeholder">Img 2</span>
+                            </div>
+                            <input type="file" id="about2-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'aboutImg2')">
+                        </div>
+                    </div>
+                    <label data-i18n="aboutParagraphs" style="margin-top: 15px;">About Paragraphs</label>
+                    <textarea id="about" class="input-field" style="min-height: 150px;" oninput="window.updateContent()"></textarea>
+                </div>
+
+                <div class="control-group">
+                    <div class="switch-container" style="margin-bottom:10px;">
+                        <label data-i18n="promoSection" style="margin-bottom:0;">Promo Section</label>
+                        <label class="switch">
+                            <input type="checkbox" id="show-promo" onchange="window.updateContent()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="image-upload-box" id="promo-drop-zone" style="min-height: 100px;" onclick="document.getElementById('promo-upload').click()">
+                        <img id="promo-preview" class="hidden">
+                        <div id="promo-placeholder">
+                            <span data-i18n="promoBgPlaceholder">Promo Background</span>
+                        </div>
+                        <input type="file" id="promo-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'promoBg')">
+                    </div>
+
+                    <div style="margin-top: 15px; padding: 10px; background: rgba(255,149,51,0.05); border-radius: 8px;">
+                        <label data-i18n="promoCard1" style="font-size: 0.7rem; color: var(--orange);">Card 1</label>
+                        <input type="text" id="promo1-title" class="input-field" style="font-size: 0.8rem; margin-bottom: 5px;" data-i18n-placeholder="sectionTitle" oninput="window.updateContent()">
+                        <input type="text" id="promo1-subtitle" class="input-field" style="font-size: 0.7rem; margin-bottom: 10px;" data-i18n-placeholder="sectionSubtitle" oninput="window.updateContent()">
+                    </div>
+
+                    <div style="margin-top: 10px; padding: 10px; background: rgba(255,149,51,0.05); border-radius: 8px;">
+                        <label data-i18n="promoCard2" style="font-size: 0.7rem; color: var(--orange);">Card 2</label>
+                        <input type="text" id="promo2-title" class="input-field" style="font-size: 0.8rem; margin-bottom: 5px;" data-i18n-placeholder="sectionTitle" oninput="window.updateContent()">
+                        <input type="text" id="promo2-subtitle" class="input-field" style="font-size: 0.7rem; margin-bottom: 10px;" data-i18n-placeholder="sectionSubtitle" oninput="window.updateContent()">
+                    </div>
+
+                    <div style="margin-top: 10px; padding: 10px; background: rgba(255,149,51,0.05); border-radius: 8px;">
+                        <label data-i18n="promoCard3" style="font-size: 0.7rem; color: var(--orange);">Card 3</label>
+                        <input type="text" id="promo3-title" class="input-field" style="font-size: 0.8rem; margin-bottom: 5px;" data-i18n-placeholder="sectionTitle" oninput="window.updateContent()">
+                        <input type="text" id="promo3-subtitle" class="input-field" style="font-size: 0.7rem; margin-bottom: 10px;" data-i18n-placeholder="sectionSubtitle" oninput="window.updateContent()">
+                    </div>
+
+                    <label data-i18n="promoParagraphs" style="margin-top: 15px;">Promo Paragraphs</label>
+                    <textarea id="promo" class="input-field" style="min-height: 150px;" oninput="window.updateContent()"></textarea>
+                </div>
+
+                <div class="control-group">
+                    <div class="switch-container" style="margin-bottom:10px;">
+                        <label data-i18n="gallery" style="margin-bottom:0;">Gallery</label>
+                        <label class="switch">
+                            <input type="checkbox" id="show-gallery" onchange="window.updateContent()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <input type="text" id="gallery-title" class="input-field" data-i18n-placeholder="sectionTitle" oninput="window.updateContent()">
+                    <input type="text" id="gallery-subtitle" class="input-field" data-i18n-placeholder="sectionSubtitle" oninput="window.updateContent()">
+                    <div class="image-upload-box" id="gallery-drop-zone" style="min-height: 120px; border-style: dashed; margin-bottom: 10px;" onclick="document.getElementById('gallery-upload').click()">
+                        <span data-i18n="galleryPlaceholder">Drag & Drop Gallery Images</span>
+                        <input type="file" id="gallery-upload" class="hidden" accept="image/*" multiple onchange="window.handleImageUpload(event, 'gallery')">
+                    </div>
+                    <div class="gallery-grid" id="gallery-items">
+                        <!-- Gallery items will appear here -->
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="switch-container" style="margin-bottom:10px;">
+                        <label data-i18n="cateringSection" style="margin-bottom:0;">Catering Section</label>
+                        <label class="switch">
+                            <input type="checkbox" id="show-catering" onchange="window.updateContent()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <input type="text" id="catering-title" class="input-field" data-i18n-placeholder="sectionTitle" oninput="window.updateContent()">
+                    <input type="text" id="catering-subtitle" class="input-field" data-i18n-placeholder="sectionSubtitle" oninput="window.updateContent()">
+                    <div class="image-upload-box" id="catering-drop-zone" style="min-height: 100px;" onclick="document.getElementById('catering-upload').click()">
+                        <img id="catering-preview" class="hidden">
+                        <div id="catering-placeholder">
+                            <span data-i18n="cateringBgPlaceholder">Catering Background</span>
+                        </div>
+                        <input type="file" id="catering-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'cateringBg')">
+                    </div>
+                    <label data-i18n="cateringParagraphs" style="margin-top: 15px;">Catering Paragraphs</label>
+                    <textarea id="catering" class="input-field" style="min-height: 120px;" oninput="window.updateContent()"></textarea>
+                </div>
+
+                <div class="control-group">
+                    <div class="switch-container" style="margin-bottom:10px;">
+                        <label data-i18n="infoSection" style="margin-bottom:0;">Info Section</label>
+                        <label class="switch">
+                            <input type="checkbox" id="show-info" onchange="window.updateContent()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <input type="text" id="info-title" class="input-field" data-i18n-placeholder="infoTitle" oninput="window.updateContent()">
+                    <input type="text" id="info-subtitle" class="input-field" data-i18n-placeholder="infoSubtitle" oninput="window.updateContent()">
+
+                    <label style="font-size: 0.6rem; margin-top:5px;" data-i18n="hoursPlaceholder">Hours</label>
+                    <textarea id="info-hours" class="input-field" style="min-height: 80px;" oninput="window.updateContent()"></textarea>
+
+                    <label style="font-size: 0.6rem; margin-top:5px;" data-i18n="phonePlaceholder">Phone</label>
+                    <input type="text" id="info-phone" class="input-field" oninput="window.updateContent()">
+
+                    <label style="font-size: 0.6rem; margin-top:5px;" data-i18n="addressPlaceholder">Address</label>
+                    <input type="text" id="info-address" class="input-field" oninput="window.updateContent()">
+                </div>
+
+                <div class="control-group">
+                    <div class="switch-container" style="margin-bottom:10px;">
+                        <label data-i18n="deliverySection" style="margin-bottom:0;">Delivery Section</label>
+                        <label class="switch">
+                            <input type="checkbox" id="show-delivery" onchange="window.updateContent()" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <input type="text" id="delivery-title" class="input-field" data-i18n-placeholder="sectionTitle" oninput="window.updateContent()">
+                    <input type="text" id="delivery-subtitle" class="input-field" data-i18n-placeholder="sectionSubtitle" oninput="window.updateContent()">
+                    <div class="image-upload-box" id="delivery-drop-zone" style="min-height: 100px;" onclick="document.getElementById('delivery-upload').click()">
+                        <img id="delivery-preview" class="hidden">
+                        <div id="delivery-placeholder">
+                            <span data-i18n="deliveryImgPlaceholder">Delivery Image</span>
+                        </div>
+                        <input type="file" id="delivery-upload" class="hidden" accept="image/*" onchange="window.handleImageUpload(event, 'deliveryImg')">
+                    </div>
+                    <label data-i18n="deliveryParagraphs" style="margin-top: 15px;">Delivery Paragraphs</label>
+                    <textarea id="delivery" class="input-field" style="min-height: 120px;" oninput="window.updateContent()"></textarea>
+                </div>
+
+                <div class="control-group">
+                    <label data-i18n="contactInfo">Contact Info</label>
+                    <input type="text" id="contact-phone" class="input-field" placeholder="Phone Number" data-i18n-placeholder="phonePlaceholder" oninput="window.updateContent()">
+                    <input type="text" id="contact-address" class="input-field" placeholder="Address" data-i18n-placeholder="addressPlaceholder" oninput="window.updateContent()">
+                    <input type="text" id="contact-hours" class="input-field" placeholder="Opening Hours" data-i18n-placeholder="hoursPlaceholder" oninput="window.updateContent()">
+                </div>
+
+                <div class="control-group">
+                    <label data-i18n="socialNetworks">Social Networks</label>
+                    <div id="social-list">
+                        <!-- Social inputs -->
+                    </div>
+                    <button class="btn" style="width: 100%; background: var(--input); border: 1px solid var(--border); font-size: 0.7rem; padding: 10px;" onclick="window.addSocial()" data-i18n="addSocial">+ Add Social Link</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Preview Area -->
+        <main class="preview-area">
+            <div class="preview-toolbar">
+                <div style="display: flex; gap: 10px;">
+                    <button id="preview-desktop-btn" class="btn active" style="padding: 8px 16px; font-size: 0.7rem; background: var(--orange); color: #fff;" onclick="window.setPreviewMode('desktop')" data-i18n="desktopPreview">Desktop</button>
+                    <button id="preview-mobile-btn" class="btn" style="padding: 8px 16px; font-size: 0.7rem; background: var(--input); color: var(--text); border: 1px solid var(--border);" onclick="window.setPreviewMode('mobile')" data-i18n="mobilePreview">Mobile</button>
+                </div>
+                <div class="professional-toggle" id="lang-toggle" onclick="window.toggleLang()">
+                    <div class="toggle-slider"></div>
+                    <span class="toggle-label active" id="label-en">EN</span>
+                    <span class="toggle-label" id="label-es">ES</span>
+                </div>
+            </div>
+            <div class="preview-container">
+                <div class="preview-frame-wrapper">
+                    <iframe id="preview-iframe" src="templateMenutech.html" onload="if(window.updateIframe) window.updateIframe()"></iframe>
+                </div>
+            </div>
+
+            <div class="floating-actions">
+                <button class="btn btn-primary btn-save" onclick="window.saveTemplate()" data-i18n="saveBtn">Save Changes</button>
+                <button class="btn btn-primary" id="btn-export" onclick="window.exportHTML()" data-i18n="exportBtn">Export HTML</button>
+                <button class="btn btn-primary hidden" id="btn-complete" onclick="window.markAsComplete()" data-i18n="completeBtn" style="background: var(--success);">Complete</button>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+        import { MT_CONFIG } from './config.js';
+
+        window.optimizeCloudinaryUrl = (url, options = {}) => {
+            if (!url || typeof url !== 'string' || !url.includes('res.cloudinary.com')) return url;
+            const [baseUrl, hash] = url.split('#');
+            if (!baseUrl.includes('/upload/')) return url;
+            const parts = baseUrl.split('/upload/');
+
+            // Check if parts[1] starts with an existing transformation segment
+            let pathSegments = parts[1].split('/');
+            if (pathSegments.length > 1) {
+                const firstSegment = pathSegments[0];
+                const isVersion = /^v\d+$/.test(firstSegment);
+                const isTransformation = !isVersion && (firstSegment.includes('_') || firstSegment.includes(','));
+                if (isTransformation) {
+                    pathSegments.shift(); // Remove the old transformation segment
+                }
+            }
+            const cleanPath = pathSegments.join('/');
+
+            let transformations = ['f_auto', 'q_auto:eco', 'dpr_auto'];
+            if (options.width) {
+                transformations.push(`w_${options.width}`);
+            } else {
+                transformations.push('w_400');
+            }
+            if (options.height) transformations.push(`h_${options.height}`);
+            if (options.crop) transformations.push(`c_${options.crop}`);
+            const transformationString = transformations.join(',');
+            const optimizedUrl = `${parts[0]}/upload/${transformationString}/${cleanPath}`;
+            return hash ? `${optimizedUrl}#${hash}` : optimizedUrl;
+        };
+
+        window.sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_KEY);
+        const sb = window.sb;
+
+        let user = null;
+        let userRole = 'owner';
+        let activeOwnerId = null;
+        let allOwners = [];
+        let saveTimeout = null;
+
+        const TRANSLATIONS = {
+            en: {
+                saving: "Saving changes...",
+                saved: "Changes saved",
+                errorSaving: "Error saving",
+                editingAccount: "Editing Account",
+                generalSettings: "Restaurant Name",
+                heroSection: "Hero Section",
+                heroBackground: "Hero Background",
+                heroPlaceholder: "Click or Drag Hero Image",
+                aboutSection: "About Section",
+                aboutImg1Placeholder: "Click or Drag About Image 1",
+                aboutImg2Placeholder: "Click or Drag About Image 2",
+                promoSection: "Promo Section",
+                promoBgPlaceholder: "Click or Drag Promo Background",
+                cateringSection: "Catering Section",
+                cateringBgPlaceholder: "Click or Drag Catering Background",
+                deliverySection: "Delivery Section",
+                deliveryImgPlaceholder: "Click or Drag Delivery Image",
+                gallery: "Gallery",
+                galleryPlaceholder: "Drag & Drop Gallery Images",
+                contactInfo: "Contact Info",
+                heroButtonsLabels: "Menutech (CUID / RUID)",
+                enableReservations: "Enable Reservations",
+                phonePlaceholder: "Phone Number",
+                addressPlaceholder: "Address",
+                hoursPlaceholder: "Opening Hours",
+                socialNetworks: "Social Networks",
+                addSocial: "+ Add Social Link",
+                infoSection: "Info Section",
+                infoTitle: "Info Title",
+                infoSubtitle: "Info Subtitle",
+                sectionVisible: "Section Visible",
+                heroLogo: "Hero Logo",
+                heroAddress: "Hero Address",
+                loading: "Loading web editor...",
+                exportBtn: "Export HTML",
+                completeBtn: "Complete",
+                desktopPreview: "DESKTOP PREVIEW",
+                mobilePreview: "MOBILE PREVIEW",
+                siteTitle: "Site Title",
+                titlePlaceholder: "Enter Site Name",
+                saveBtn: "SAVE CHANGES",
+                aboutParagraphs: "About Paragraphs",
+                promoParagraphs: "Promo Paragraphs",
+                promoCard1: "Card 1 - Features",
+                promoCard2: "Card 2 - Description",
+                promoCard3: "Card 3 - Description",
+                cateringParagraphs: "Catering Paragraphs",
+                deliveryParagraphs: "Delivery Paragraphs",
+                sectionTitle: "Section Title",
+                sectionSubtitle: "Section Subtitle"
+            },
+            es: {
+                saving: "Guardando cambios...",
+                saved: "Cambios guardados",
+                errorSaving: "Error al guardar",
+                editingAccount: "Editando Cuenta",
+                generalSettings: "Nombre del Restaurante",
+                heroSection: "Sección Hero",
+                heroBackground: "Fondo Hero",
+                heroPlaceholder: "Haz clic o arrastra la imagen Hero",
+                aboutSection: "Sección Nosotros",
+                aboutImg1Placeholder: "Imagen Nosotros 1",
+                aboutImg2Placeholder: "Imagen Nosotros 2",
+                promoSection: "Sección Promos",
+                promoBgPlaceholder: "Fondo Sección Promos",
+                cateringSection: "Sección Catering",
+                cateringBgPlaceholder: "Fondo Sección Catering",
+                deliverySection: "Sección Delivery",
+                deliveryImgPlaceholder: "Imagen Sección Delivery",
+                gallery: "Galería",
+                galleryPlaceholder: "Arrastra y suelta imágenes de la Galería",
+                contactInfo: "Información de Contacto",
+                heroButtonsLabels: "Menutech (CUID / RUID)",
+                enableReservations: "Habilitar Reservas",
+                phonePlaceholder: "Número de Teléfono",
+                addressPlaceholder: "Dirección",
+                hoursPlaceholder: "Horarios de Apertura",
+                socialNetworks: "Redes Sociales",
+                addSocial: "+ Agregar Enlace Social",
+                infoSection: "Sección Información",
+                infoTitle: "Título Información",
+                infoSubtitle: "Subtítulo Información",
+                sectionVisible: "Sección Visible",
+                heroLogo: "Logo Hero",
+                heroAddress: "Dirección Hero",
+                loading: "Cargando editor web...",
+                exportBtn: "Exportar HTML",
+                completeBtn: "Completar",
+                desktopPreview: "VISTA PREVIA ESCRITORIO",
+                mobilePreview: "VISTA PREVIA MÓVIL",
+                siteTitle: "Título del Sitio",
+                titlePlaceholder: "Nombre de tu negocio",
+                saveBtn: "GUARDAR CAMBIOS",
+                aboutParagraphs: "Párrafos Nosotros",
+                promoParagraphs: "Párrafos Promos",
+                promoCard1: "Tarjeta 1 - Características",
+                promoCard2: "Tarjeta 2 - Descripción",
+                promoCard3: "Tarjeta 3 - Descripción",
+                cateringParagraphs: "Párrafos Catering",
+                deliveryParagraphs: "Párrafos Delivery",
+                sectionTitle: "Título de la Sección",
+                sectionSubtitle: "Subtítulo de la Sección"
+            }
+        };
+
+        const DEFAULT_DATA = {
+            lang: 'en',
+            showReservations: true,
+            showAbout: true,
+            showPromo: true,
+            showGallery: true,
+            showCatering: true,
+            showInfo: true,
+            showDelivery: true,
+            cuid: '',
+            ruid: '',
+            title: 'Template Menutech',
+            logoImg: 'https://menutech.services/assets/img/logomt.png',
+            heroAddress: '100 Tenth Avenue, New York City, NY 1001',
+            heroImg: 'https://res.cloudinary.com/dzklt0a5u/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
+            aboutImg1: 'https://res.cloudinary.com/dzklt0a5u/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
+            aboutImg2: 'https://res.cloudinary.com/dzklt0a5u/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
+            promoBg: 'https://res.cloudinary.com/dzklt0a5u/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
+            cateringBg: 'https://res.cloudinary.com/dzklt0a5u/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
+            deliveryImg: 'https://res.cloudinary.com/dzklt0a5u/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
+            gallery: [
+                'https://res.cloudinary.com/dzklt0a5u/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
+                'https://res.cloudinary.com/dzklt0a5u/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg'
+            ],
+            contact: {
+                phone: '(044) 359 0173',
+                address: '100 Tenth Avenue, New York City, NY 1001',
+                hours: 'Monday - Sunday: 5PM - 10PM'
+            },
+            socials: [
+                { platform: 'instagram', url: '#' },
+                { platform: 'facebook', url: '#' }
+            ],
+            paragraphs: {
+                "about": "At Restaurant Pronto, we take pride in bringing our guests vibrant and authentic Mexican cuisine, crafted with care and rich culinary tradition. Every dish we serve is full of bold flavors and prepared to deliver a memorable dining experience. We are confident you will leave satisfied.\n\nThe secret to our success is simple: creating exceptional meals using fresh, high-quality ingredients that capture the true essence of Mexican cooking in every bite.\n\nOur mission is to help you savor the moments that truly matter. Enjoy great food. Sip on a refreshing drink. And above all, unwind and feel at home. We sincerely appreciate your continued support and trust",
+                "promo": "2 Medium Pizzas\n\nSoft Drinks\n\nGarlic Bread or Patato Wedges\n\nSalad to share\n\nHope you are hungry. Buy one regular priced pizza online and get a second pizza totally free!\n\nOnline only!\n\n6 Delicious regular size pizzas to choose from: Margherita, Capricciosa, Prosciutto e Funghi, Diavola, Calzone, Primavera.",
+                "catering": "Restaurant Pronto can cater to any party or event irrespective of how big or small. We specialize in catering with personalised service and special menus on request. In our menu palette, you'll discover unique and sophisticated tastes - all of which will help you uncover the true greatness of the mexican restaurant.\n\nTell us about your event at office@pronto-wp.com",
+                "delivery": "Looking for food delivery nearby? Not everybody knows or has the time to prepare tasty food.\n\nWhen you want to get served like a king then food delivery from restaurant Pronto will be your best choice.\n\nSimply select \"Delivery\" at the checkout screen and we hope you'll appreciate our food delivery service."
+            },
+            titles: {
+                "about-title": "We are Pronto Mexican Food",
+                "about-subtitle": "About Us",
+                "promo1-title": "Best Friends Deal",
+                "promo1-subtitle": "Sharing Is Caring",
+                "promo2-title": "Buy 1 Get 1 FREE",
+                "promo2-subtitle": "This Week Only",
+                "promo3-title": "Awesome Foursome",
+                "promo3-subtitle": "Sundays Only",
+                "gallery-title": "Delicious Mexican Food",
+                "gallery-subtitle": "Love At First Bite",
+                "catering-title": "Catering",
+                "catering-subtitle": "Party Time",
+                "delivery-title": "Food Delivery in NY",
+                "delivery-subtitle": "Get Served Like a King",
+                "info-title": "Information",
+                "info-subtitle": "Visit Us"
+            }
+        };
+
+        let pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+
+        window.setLang = (lang) => {
+            console.log("MT: Setting language to", lang);
+            pageData.lang = lang;
+            applyEditorLanguage(lang);
+            window.updateIframe();
+        };
+
+        window.toggleLang = () => {
+            const newLang = pageData.lang === 'en' ? 'es' : 'en';
+            window.setLang(newLang);
+        };
+
+        window.setPreviewMode = (mode) => {
+            const wrapper = document.querySelector('.preview-frame-wrapper');
+            const dBtn = document.getElementById('preview-desktop-btn');
+            const mBtn = document.getElementById('preview-mobile-btn');
+
+            if (mode === 'mobile') {
+                wrapper.classList.add('mobile');
+                mBtn.classList.add('active');
+                mBtn.style.background = 'var(--orange)';
+                mBtn.style.color = '#fff';
+                dBtn.classList.remove('active');
+                dBtn.style.background = 'var(--input)';
+                dBtn.style.color = 'var(--text)';
+            } else {
+                wrapper.classList.remove('mobile');
+                dBtn.classList.add('active');
+                dBtn.style.background = 'var(--orange)';
+                dBtn.style.color = '#fff';
+                mBtn.classList.remove('active');
+                mBtn.style.background = 'var(--input)';
+                mBtn.style.color = 'var(--text)';
+            }
+        };
+
+        window.updateContent = () => {
+            pageData.title = document.getElementById('site-title').value;
+            pageData.cuid = document.getElementById('cuid').value;
+            pageData.ruid = document.getElementById('ruid').value;
+            pageData.showReservations = document.getElementById('show-reservations').checked;
+
+            pageData.showAbout = document.getElementById('show-about').checked;
+            pageData.showPromo = document.getElementById('show-promo').checked;
+            pageData.showGallery = document.getElementById('show-gallery').checked;
+            pageData.showCatering = document.getElementById('show-catering').checked;
+            pageData.showInfo = document.getElementById('show-info').checked;
+            pageData.showDelivery = document.getElementById('show-delivery').checked;
+
+            pageData.heroAddress = document.getElementById('hero-address').value;
+
+            if (!pageData.info) pageData.info = {};
+            pageData.info.hours = document.getElementById('info-hours').value;
+            pageData.info.phone = document.getElementById('info-phone').value;
+            pageData.info.address = document.getElementById('info-address').value;
+
+            pageData.contact.phone = document.getElementById('contact-phone').value;
+            pageData.contact.address = document.getElementById('contact-address').value;
+            pageData.contact.hours = document.getElementById('contact-hours').value;
+
+            // Sync paragraphs from inputs to data
+            if (pageData.paragraphs) {
+                Object.keys(pageData.paragraphs).forEach(key => {
+                    const el = document.getElementById(key);
+                    if (el) pageData.paragraphs[key] = el.value;
+                });
+            }
+
+            // Sync titles from inputs to data
+            if (pageData.titles) {
+                Object.keys(pageData.titles).forEach(key => {
+                    const el = document.getElementById(key);
+                    if (el) pageData.titles[key] = el.value;
+                });
+            }
+
+            window.updateIframe();
+        };
+
+        window.updateSocial = (index, field, value) => {
+            pageData.socials[index][field] = value;
+            window.updateIframe();
+        };
+
+        window.addSocial = () => {
+            pageData.socials.push({ platform: 'instagram', url: '' });
+            renderSocials();
+            window.updateIframe();
+        };
+
+        window.removeSocial = (index) => {
+            pageData.socials.splice(index, 1);
+            renderSocials();
+            window.updateIframe();
+        };
+
+        window.removeGalleryItem = (index) => {
+            pageData.gallery.splice(index, 1);
+            renderGallery();
+            window.updateIframe();
+        };
+
+        window.handleImageUpload = (event, type) => {
+            handleFiles(event.target.files, type);
+        };
+
+        window.updateIframe = () => {
+            const iframe = document.getElementById('preview-iframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ type: 'UPDATE_CONTENT', data: pageData }, '*');
+            }
+        };
+
+        // Click-to-Locate Handler
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'SCROLL_TO') {
+                const templateId = event.data.id;
+                console.log("MT: Scroll to requested for template element:", templateId);
+
+                // Map template IDs to editor input IDs
+                const mapping = {
+                    'nav-brand': 'site-title',
+                    'hero-title': 'site-title',
+                    'hero-orders': 'cuid',
+                    'hero-reservations': 'ruid',
+                    'hero-section': 'hero-drop-zone',
+                    'hero-logo': 'logo-drop-zone',
+                    'hero-address': 'hero-address',
+                    'about-title': 'about-title',
+                    'about-subtitle': 'about-subtitle',
+                    'about-img-1': 'about1-drop-zone',
+                    'about-img-2': 'about2-drop-zone',
+                    'about-p1': 'about', 'about-p2': 'about', 'about-p3': 'about',
+                    'promo-section': 'promo-drop-zone',
+                    'promo1-title': 'promo1-title', 'promo1-subtitle': 'promo1-subtitle',
+                    'promo1-p1': 'promo', 'promo1-p2': 'promo', 'promo1-p3': 'promo', 'promo1-p4': 'promo',
+                    'promo2-title': 'promo2-title', 'promo2-subtitle': 'promo2-subtitle',
+                    'promo2-p1': 'promo', 'promo2-p2': 'promo',
+                    'promo3-title': 'promo3-title', 'promo3-subtitle': 'promo3-subtitle',
+                    'promo3-p1': 'promo',
+                    'gallery-title': 'gallery-title',
+                    'gallery-subtitle': 'gallery-subtitle',
+                    'gallery-container': 'gallery-drop-zone',
+                    'catering-title': 'catering-title',
+                    'catering-subtitle': 'catering-subtitle',
+                    'catering-section': 'catering-drop-zone',
+                    'catering-p1': 'catering', 'catering-p2': 'catering',
+                    'info-section': 'show-info',
+                    'info-title': 'info-title',
+                    'info-subtitle': 'info-subtitle',
+                    'info-hours': 'info-hours',
+                    'info-phone': 'info-phone',
+                    'info-address': 'info-address',
+                    'delivery-title': 'delivery-title',
+                    'delivery-subtitle': 'delivery-subtitle',
+                    'delivery-image': 'delivery-drop-zone',
+                    'delivery-p1': 'delivery', 'delivery-p2': 'delivery', 'delivery-p3': 'delivery',
+                    'footer-phone': 'contact-phone',
+                    'footer-address': 'contact-address',
+                    'footer-hours': 'contact-hours',
+                    'social-icons': 'social-list'
+                };
+
+                const editorId = mapping[templateId];
+                if (editorId) {
+                    const el = document.getElementById(editorId);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // Brief highlight
+                        el.style.transition = 'box-shadow 0.3s ease';
+                        el.style.boxShadow = '0 0 15px var(--orange)';
+                        setTimeout(() => {
+                            el.style.boxShadow = '';
+                        }, 1500);
+                        el.focus();
+                    }
+                }
+            }
+        });
+
+        window.saveTemplate = async () => {
+            console.log("MT: Triggering saveTemplate", pageData);
+            const t = TRANSLATIONS[pageData.lang];
+            showSaveStatus(t.saving);
+            try {
+                const { error } = await sb.from('menutech_web_templates')
+                    .upsert({
+                        user_id: activeOwnerId,
+                        config: pageData,
+                        updated_at: new Date()
+                    }, { onConflict: 'user_id' });
+
+                if (error) throw error;
+
+                showSaveStatus(t.saved);
+                setTimeout(() => hideSaveStatus(), 2000);
+            } catch (error) {
+                console.error("Save error", error);
+                showSaveStatus(t.errorSaving, true);
+            }
+        };
+
+        window.markAsComplete = async () => {
+            if (!activeOwnerId) return;
+            const t = TRANSLATIONS[pageData.lang];
+            showSaveStatus(t.saving);
+            try {
+                const { error } = await sb.from('profiles')
+                    .update({ is_completed: true })
+                    .eq('id', activeOwnerId);
+
+                if (error) throw error;
+                showSaveStatus(t.saved);
+                setTimeout(() => hideSaveStatus(), 2000);
+            } catch (error) {
+                console.error("Mark as complete error", error);
+                showSaveStatus(t.errorSaving, true);
+            }
+        };
+
+        window.exportHTML = async () => {
+            const res = await fetch('templateMenutech.html');
+            let html = await res.text();
+
+            const scriptInject = `<script>window.MENU_TECH_STATE = ${JSON.stringify(pageData)};<\/script>`;
+            html = html.replace('</head>', `${scriptInject}\n</head>`);
+
+            // Inject actual values for exported static version
+            const cuid = pageData.cuid || '';
+            const ruid = pageData.ruid || '';
+            html = html.replace(/cuid=""/g, `cuid="${cuid}"`);
+            html = html.replace(/ruid=""/g, `ruid="${ruid}"`);
+            html = html.replace(/data-glf-cuid=""/g, `data-glf-cuid="${cuid}"`);
+            html = html.replace(/data-glf-ruid=""/g, `data-glf-ruid="${ruid}"`);
+
+            if (pageData.logoImg) {
+                html = html.replace(/https:\/\/menutech\.services\/assets\/img\/logomt.png/g, window.optimizeCloudinaryUrl(pageData.logoImg, { width: 250 }));
+            }
+            if (pageData.heroAddress) {
+                html = html.replace(/100 Tenth Avenue, New York City, NY 1001/g, pageData.heroAddress);
+            }
+
+            // Handle reservations visibility in exported HTML
+            if (pageData.showReservations === false) {
+                html = html.replace('id="hero-reservations-wrapper" style="display: inline-block;"', 'id="hero-reservations-wrapper" style="display: none;"');
+            }
+
+            // Remove disabled sections
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const sectionMap = {
+                'showAbout': 'about-section',
+                'showPromo': 'promo-section',
+                'showGallery': 'gallery-section',
+                'showCatering': 'catering-section',
+                'showInfo': 'info-section',
+                'showDelivery': 'delivery-section'
+            };
+
+            Object.keys(sectionMap).forEach(key => {
+                if (pageData[key] === false) {
+                    const el = doc.getElementById(sectionMap[key]);
+                    if (el) el.remove();
+                }
+            });
+
+            html = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            a.click();
+        };
+
+        // Initialize immediately as modules are deferred by default
+        (async function init() {
+            try {
+                initDragAndDrop();
+                await checkSession();
+            } catch (e) {
+                console.error("Initialization error", e);
+            } finally {
+                // Ensure editor is shown even on error
+                if (window.hideLoading) window.hideLoading();
+            }
+        })();
+
+        function migrateData(config) {
+            if (!config) return JSON.parse(JSON.stringify(DEFAULT_DATA));
+
+            if (config.cuid === undefined) config.cuid = '';
+            if (config.ruid === undefined) config.ruid = '';
+
+            if (config.showAbout === undefined) config.showAbout = true;
+            if (config.showPromo === undefined) config.showPromo = true;
+            if (config.showGallery === undefined) config.showGallery = true;
+            if (config.showCatering === undefined) config.showCatering = true;
+            if (config.showInfo === undefined) config.showInfo = true;
+            if (config.showDelivery === undefined) config.showDelivery = true;
+
+            // Ensure basic objects exist
+            if (!config.contact) config.contact = JSON.parse(JSON.stringify(DEFAULT_DATA.contact));
+            if (!config.socials) config.socials = JSON.parse(JSON.stringify(DEFAULT_DATA.socials));
+            if (!config.gallery) config.gallery = JSON.parse(JSON.stringify(DEFAULT_DATA.gallery));
+            if (!config.info) config.info = JSON.parse(JSON.stringify(DEFAULT_DATA.info || {
+                hours: 'Monday - Sunday: 5PM - 10PM',
+                phone: '(044) 359 0173',
+                address: '100 Tenth Avenue, New York City, NY 1001'
+            }));
+
+            // Paragraphs Migration
+            if (!config.paragraphs) {
+                config.paragraphs = JSON.parse(JSON.stringify(DEFAULT_DATA.paragraphs));
+            } else if (config.paragraphs["about-p1"]) {
+                // Migrate from individual keys to consolidated keys
+                const p = config.paragraphs;
+                config.paragraphs = {
+                    about: [p["about-p1"], p["about-p2"], p["about-p3"]].filter(Boolean).join('\n\n'),
+                    promo: [p["promo1-p1"], p["promo1-p2"], p["promo1-p3"], p["promo1-p4"], p["promo2-p1"], p["promo2-p2"], p["promo3-p1"]].filter(Boolean).join('\n\n'),
+                    catering: [p["catering-p1"], p["catering-p2"]].filter(Boolean).join('\n\n'),
+                    delivery: [p["delivery-p1"], p["delivery-p2"], p["delivery-p3"]].filter(Boolean).join('\n\n')
+                };
+            }
+            // Ensure all required paragraph keys exist
+            Object.keys(DEFAULT_DATA.paragraphs).forEach(key => {
+                if (config.paragraphs[key] === undefined) {
+                    config.paragraphs[key] = DEFAULT_DATA.paragraphs[key];
+                }
+            });
+
+            // Titles Migration
+            if (!config.titles) {
+                config.titles = JSON.parse(JSON.stringify(DEFAULT_DATA.titles));
+            }
+            // Ensure all required title keys exist
+            Object.keys(DEFAULT_DATA.titles).forEach(key => {
+                if (config.titles[key] === undefined) {
+                    config.titles[key] = DEFAULT_DATA.titles[key];
+                }
+            });
+
+            // Top level fields
+            const topFields = ['heroImg', 'aboutImg1', 'aboutImg2', 'promoBg', 'cateringBg', 'deliveryImg', 'title', 'lang', 'showReservations', 'logoImg', 'heroAddress'];
+            topFields.forEach(field => {
+                if (config[field] === undefined || config[field] === null || config[field] === "") {
+                    config[field] = DEFAULT_DATA[field];
+                }
+            });
+
+            return config;
+        }
+
+        async function checkSession() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { location.href = "index.html"; return; }
+            user = session.user;
+
+            const { data: currentProfile } = await sb.from('profiles').select('role').eq('id', user.id).single();
+            const rawRole = (currentProfile?.role || 'owner').toUpperCase();
+            const allowedRoles = ['ADMIN', 'DEVELOPER', 'OWNER', 'CS', 'ADMINCS'];
+            if (!currentProfile || !allowedRoles.includes(rawRole)) {
+                location.href = "index.html";
+                return;
+            }
+
+            activeOwnerId = user.id;
+
+            // Optimization: Fetch profile and template in parallel
+            const [profileRes, templateRes] = await Promise.all([
+                sb.from('profiles').select('role, username, domain').eq('id', user.id).single(),
+                sb.from('menutech_web_templates').select('config').eq('user_id', user.id).single()
+            ]);
+
+            const profile = profileRes.data;
+            userRole = (profile?.role || 'owner').toUpperCase();
+
+            if (profile) {
+                document.getElementById('current-account-name').value = profile.username || profile.domain || 'Your Store';
+            }
+
+            const privilegedRoles = ['ADMIN', 'DEVELOPER', 'ADMINCS', 'CS', 'ADMINDESIGN', 'DESIGN', 'RETENTION'];
+            const btnExport = document.getElementById('btn-export');
+            const btnComplete = document.getElementById('btn-complete');
+
+            if (privilegedRoles.includes(userRole)) {
+                const adminGroup = document.getElementById('admin-context-group');
+                if (adminGroup) adminGroup.style.display = 'block';
+
+                if (userRole === 'CS' || userRole === 'ADMINCS') {
+                    if (btnExport) btnExport.classList.add('hidden');
+                    if (btnComplete) btnComplete.classList.remove('hidden');
+                } else {
+                    if (btnExport) btnExport.classList.remove('hidden');
+                    if (btnComplete) btnComplete.classList.add('hidden');
+                }
+            } else {
+                if (btnExport) btnExport.classList.add('hidden');
+                if (btnComplete) btnComplete.classList.add('hidden');
+            }
+
+            if (templateRes.data && templateRes.data.config) {
+                pageData = migrateData(templateRes.data.config);
+            } else {
+                pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                pageData.title = document.getElementById('current-account-name').value;
+                pageData = migrateData(pageData); // Ensure full structure even for new data
+            }
+
+            syncForm();
+            window.updateIframe();
+
+        }
+
+        let contextInitialized = false;
+        async function setupContextSwitcher() {
+            if (contextInitialized) return;
+
+            const list = document.getElementById('client-list');
+            list.innerHTML = '<div style="padding: 20px; text-align: center; font-size: 0.8rem; color: var(--text-dim);">Loading clients...</div>';
+
+            try {
+                // Optimization: Select only required columns
+                const { data } = await sb.from('profiles').select('id, username, domain');
+                allOwners = data || [];
+                renderOwners(allOwners);
+
+                document.getElementById('client-search').oninput = (e) => {
+                    const term = e.target.value.toLowerCase();
+                    renderOwners(allOwners.filter(o =>
+                        (o.username || '').toLowerCase().includes(term) ||
+                        (o.domain || '').toLowerCase().includes(term)
+                    ));
+                };
+                contextInitialized = true;
+            } catch (e) {
+                list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--error);">Error loading clients</div>';
+            }
+        }
+
+        function renderOwners(owners) {
+            const list = document.getElementById('client-list');
+            list.innerHTML = owners.map(o => `
+                <div class="client-item ${o.id === activeOwnerId ? 'active' : ''}" onclick="window.switchContext('${o.id}', '${o.username || o.domain || 'Client'}')">
+                    <div class="avatar">${(o.username || 'C').charAt(0).toUpperCase()}</div>
+                    <div class="client-info">
+                        <span class="client-name">${o.username || 'No name'}</span>
+                        <span class="client-domain">${o.domain || ''}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.switchContext = async function(ownerId, name) {
+            activeOwnerId = ownerId;
+            document.getElementById('current-account-name').value = name;
+            window.toggleContextSidebar();
+            renderOwners(allOwners);
+            await loadTemplate(activeOwnerId);
+        };
+
+        window.toggleContextSidebar = function() {
+            const isActive = document.getElementById('context-sidebar').classList.toggle('active');
+            document.getElementById('context-overlay').classList.toggle('active');
+
+            if (isActive) {
+                setupContextSwitcher();
+            }
+        };
+
+        async function loadTemplate(ownerId) {
+            console.log("MT: Loading template for owner", ownerId);
+            // Optimization: Reset state before loading to prevent UI leaks between accounts
+            pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+            pageData.title = document.getElementById('current-account-name').value;
+            pageData = migrateData(pageData); // Ensure full structure
+
+            syncForm();
+            window.updateIframe();
+
+            try {
+                const { data, error } = await sb.from('menutech_web_templates')
+                    .select('*')
+                    .eq('user_id', ownerId)
+                    .single();
+
+                if (data && data.config) {
+                    pageData = migrateData(data.config);
+                } else {
+                    // Keep the reset state + account name if no template exists
+                    pageData.title = document.getElementById('current-account-name').value;
+                }
+            } catch (e) {
+                console.error("MT: Error loading template", e);
+            }
+
+            syncForm();
+            window.updateIframe();
+        }
+
+        function showSaveStatus(text, isError = false) {
+            const status = document.getElementById('save-status');
+            const statusText = document.getElementById('save-status-text');
+            const loader = status.querySelector('.loader-ring');
+
+            const isSaved = text.includes('saved') || text.includes('guardados');
+
+            statusText.innerText = text;
+            status.style.borderColor = isError ? 'var(--error)' : (isSaved ? 'var(--success)' : 'var(--border)');
+
+            if (isSaved) {
+                statusText.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:18px;height:18px;color:var(--success)"><polyline points="20 6 9 17 4 12"/></svg> ` + text;
+            } else if (isError) {
+                statusText.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:18px;height:18px;color:var(--error)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ` + text;
+            }
+
+            if (loader) loader.style.display = (isError || isSaved) ? 'none' : 'block';
+            status.classList.add('active');
+        }
+
+        function hideSaveStatus() {
+            document.getElementById('save-status').classList.remove('active');
+        }
+
+
+        function initDragAndDrop() {
+            const zones = [
+                { id: 'logo-drop-zone', type: 'logoImg' },
+                { id: 'hero-drop-zone', type: 'heroImg' },
+                { id: 'about1-drop-zone', type: 'aboutImg1' },
+                { id: 'about2-drop-zone', type: 'aboutImg2' },
+                { id: 'promo-drop-zone', type: 'promoBg' },
+                { id: 'catering-drop-zone', type: 'cateringBg' },
+                { id: 'delivery-drop-zone', type: 'deliveryImg' },
+                { id: 'gallery-drop-zone', type: 'gallery' }
+            ];
+
+            zones.forEach(zone => {
+                const el = document.getElementById(zone.id);
+                if (!el) return;
+
+                el.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    el.classList.add('drag-over');
+                });
+
+                el.addEventListener('dragleave', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    el.classList.remove('drag-over');
+                });
+
+                el.addEventListener('drop', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    el.classList.remove('drag-over');
+                    if (e.dataTransfer.files.length) {
+                        handleFiles(e.dataTransfer.files, zone.type);
+                    }
+                });
+            });
+        }
+
+        function applyEditorLanguage(lang) {
+            const t = TRANSLATIONS[lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.innerText = t[key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (t[key]) el.placeholder = t[key];
+            });
+
+            // Update professional toggle switch
+            const toggle = document.getElementById('lang-toggle');
+            const labelEn = document.getElementById('label-en');
+            const labelEs = document.getElementById('label-es');
+
+            if (toggle && labelEn && labelEs) {
+                toggle.classList.toggle('es', lang === 'es');
+                labelEn.classList.toggle('active', lang === 'en');
+                labelEs.classList.toggle('active', lang === 'es');
+            }
+        }
+
+        function syncForm() {
+            applyEditorLanguage(pageData.lang);
+            document.getElementById('site-title').value = pageData.title || '';
+            document.getElementById('cuid').value = pageData.cuid || '';
+            document.getElementById('ruid').value = pageData.ruid || '';
+            document.getElementById('show-reservations').checked = pageData.showReservations !== false;
+
+            document.getElementById('show-about').checked = pageData.showAbout !== false;
+            document.getElementById('show-promo').checked = pageData.showPromo !== false;
+            document.getElementById('show-gallery').checked = pageData.showGallery !== false;
+            document.getElementById('show-catering').checked = pageData.showCatering !== false;
+            document.getElementById('show-info').checked = pageData.showInfo !== false;
+            document.getElementById('show-delivery').checked = pageData.showDelivery !== false;
+
+            document.getElementById('hero-address').value = pageData.heroAddress || '';
+
+            if (pageData.info) {
+                document.getElementById('info-title').value = pageData.titles['info-title'] || '';
+                document.getElementById('info-subtitle').value = pageData.titles['info-subtitle'] || '';
+                document.getElementById('info-hours').value = pageData.info.hours || '';
+                document.getElementById('info-phone').value = pageData.info.phone || '';
+                document.getElementById('info-address').value = pageData.info.address || '';
+            }
+
+            // Sync paragraphs
+            if (pageData.paragraphs) {
+                Object.keys(pageData.paragraphs).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = pageData.paragraphs[id] || '';
+                });
+            }
+
+            // Sync titles
+            if (pageData.titles) {
+                Object.keys(pageData.titles).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = pageData.titles[id] || '';
+                });
+            }
+
+            // Sync all images
+            const images = [
+                { id: 'logo', url: pageData.logoImg },
+                { id: 'hero', url: pageData.heroImg },
+                { id: 'about1', url: pageData.aboutImg1 },
+                { id: 'about2', url: pageData.aboutImg2 },
+                { id: 'promo', url: pageData.promoBg },
+                { id: 'catering', url: pageData.cateringBg },
+                { id: 'delivery', url: pageData.deliveryImg }
+            ];
+
+            images.forEach(img => {
+                const preview = document.getElementById(`${img.id}-preview`);
+                const placeholder = document.getElementById(`${img.id}-placeholder`);
+                if (preview && img.url) {
+                    preview.src = window.optimizeCloudinaryUrl(img.url, { width: 400 });
+                    preview.classList.remove('hidden');
+                    if (placeholder) placeholder.classList.add('hidden');
+                }
+            });
+
+            document.getElementById('contact-phone').value = pageData.contact.phone || '';
+            document.getElementById('contact-address').value = pageData.contact.address || '';
+            document.getElementById('contact-hours').value = pageData.contact.hours || '';
+
+            renderGallery();
+            renderSocials();
+        }
+
+        function renderGallery() {
+            const container = document.getElementById('gallery-items');
+            container.innerHTML = pageData.gallery.map((img, index) => `
+                <div class="gallery-item">
+                    <img src="${window.optimizeCloudinaryUrl(img, { width: 200, height: 200, crop: 'fill' })}">
+                    <button class="remove-btn" onclick="window.removeGalleryItem(${index})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function renderSocials() {
+            const container = document.getElementById('social-list');
+            container.innerHTML = pageData.socials.map((s, index) => `
+                <div class="social-item">
+                    <select class="input-field" style="margin-bottom:0; flex: 1;" onchange="window.updateSocial(${index}, 'platform', this.value)">
+                        <option value="instagram" ${s.platform === 'instagram' ? 'selected' : ''}>Instagram</option>
+                        <option value="facebook" ${s.platform === 'facebook' ? 'selected' : ''}>Facebook</option>
+                        <option value="whatsapp" ${s.platform === 'whatsapp' ? 'selected' : ''}>WhatsApp</option>
+                        <option value="twitter" ${s.platform === 'twitter' ? 'selected' : ''}>Twitter</option>
+                    </select>
+                    <input type="text" class="input-field" style="margin-bottom:0; flex: 2;" value="${s.url}" oninput="window.updateSocial(${index}, 'url', this.value)" placeholder="URL">
+                    <button class="btn-icon" onclick="window.removeSocial(${index})">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+
+        async function handleFiles(files, type) {
+            if (!files.length) return;
+
+            for (const file of files) {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
+
+                try {
+                    const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
+                    const d = await res.json();
+
+                    if (d.secure_url) {
+                        if (type === 'gallery') {
+                            pageData.gallery.push(d.secure_url);
+                            renderGallery();
+                        } else {
+                            pageData[type] = d.secure_url;
+                            // Map type back to ID for preview update
+                            const idMap = {
+                                logoImg: 'logo',
+                                heroImg: 'hero',
+                                aboutImg1: 'about1',
+                                aboutImg2: 'about2',
+                                promoBg: 'promo',
+                                cateringBg: 'catering',
+                                deliveryImg: 'delivery'
+                            };
+                            // Fallback for types that already match ID (like 'hero')
+                            const id = idMap[type] || type;
+                            const preview = document.getElementById(`${id}-preview`);
+                            const placeholder = document.getElementById(`${id}-placeholder`);
+                            if (preview) {
+                                preview.src = window.optimizeCloudinaryUrl(d.secure_url, { width: 400 });
+                                preview.classList.remove('hidden');
+                                if (placeholder) placeholder.classList.add('hidden');
+                            }
+                        }
+                        window.updateIframe();
+                    }
+                } catch (e) {
+                    console.error("Upload error", e);
+                }
+            }
+        };
+
+        // Attach functions to window
+        window.switchContext = switchContext;
+        window.toggleContextSidebar = toggleContextSidebar;
+        window.saveTemplate = saveTemplate;
+        window.exportHTML = exportHTML;
+        window.updateContent = updateContent;
+        window.updateSocial = updateSocial;
+        window.addSocial = addSocial;
+        window.removeSocial = removeSocial;
+        window.removeGalleryItem = removeGalleryItem;
+        window.handleImageUpload = handleImageUpload;
+        window.updateIframe = updateIframe;
+        window.setPreviewMode = setPreviewMode;
+        window.toggleLang = toggleLang;
+        window.setLang = setLang;
+
+    </script>
+</body>
+</html>

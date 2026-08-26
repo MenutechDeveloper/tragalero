@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Management | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
+
+        :root {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+            --success: #ff9533;
+            --error: #dc2626;
+            --info: #f59e0b; /* Amber/Dark Orange instead of Blue */
+            --dev: #8b5cf6;
+        }
+
+        body.dark-mode {
+            --bg: #121418;
+            --card: #1c1f26;
+            --input: #242933;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #2d333f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+        .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
+
+        .container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 80px 24px; animation: fadeIn 1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        header { text-align: center; margin-bottom: 40px; }
+        .logo-main { width: 100%; max-width: 200px; height: auto; margin: 0 auto 10px auto; display: block; filter: drop-shadow(0 10px 20px rgba(255,149,51,0.15)); }
+
+        .dashboard-layout { display: flex; min-height: calc(100vh - 160px); gap: 20px; position: relative; }
+
+        /* Unified Sidebar Container */
+        .sidebar-container {
+            position: fixed; left: 0; top: 120px; z-index: 6000; pointer-events: none; display: flex; align-items: flex-start;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sidebar-container > * { pointer-events: auto; }
+        .sidebar-container.collapsed { transform: translateX(-340px) !important; }
+
+        .sidebar { width: 340px; height: 600px; display: flex; flex-direction: column; gap: 20px; }
+        .main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+
+        .search-box { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px; position: relative; cursor: default; transition: opacity 0.3s; user-select: none; z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.15); height: 100%; display: flex; flex-direction: column; }
+        .search-box label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--orange); text-transform: uppercase; margin-bottom: 15px; margin-left: 5px; pointer-events: none; }
+        .search-box input { width: 100%; margin-bottom: 15px; border-radius: 16px; padding: 14px; background: var(--input); border: 1px solid var(--border); color: var(--text); }
+
+        .client-list { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
+        .client-list::-webkit-scrollbar { width: 4px; }
+        .client-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .client-item { padding: 14px 18px; border-radius: 16px; background: var(--input); border: 1px solid var(--border); cursor: pointer; transition: 0.3s; }
+        .client-item:hover { border-color: var(--orange); }
+        .client-item.active { border-color: var(--orange); background: rgba(255,149,51,0.08); }
+        .client-item .name { font-weight: 700; font-size: 0.85rem; display: block; }
+        .client-item .domain { font-size: 0.7rem; color: var(--text-dim); }
+
+        .sidebar-tab {
+            width: 45px; height: 160px; background: var(--orange); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 0 16px 16px 0; cursor: pointer; writing-mode: vertical-lr; text-orientation: mixed; font-weight: 800; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; box-shadow: 10px 0 30px rgba(255, 149, 51, 0.2); transition: 0.4s; margin-top: 40px; position: relative;
+        }
+        .sidebar-tab:hover { width: 55px; padding-left: 10px; }
+
+        #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
+        #top-nav > * { pointer-events: auto; }
+
+        /* Premium User Pill */
+        #user-display-pill {
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; min-width: 220px; justify-content: flex-start;
+        }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
+
+        #user-display-pill.admin-glow {
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
+
+        #user-display-pill.dev-glow {
+            background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
+
+        #user-display-pill.owner-glow {
+            background: #000;
+            background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.owner-glow #user-name, #user-display-pill.owner-glow #user-role-label { color: #fff !important; }
+
+        #user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
+
+        @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .pill-menu {
+            position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important; border: 1px solid var(--border);
+            border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
+            animation: none !important;
+        }
+        #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .pill-menu-item {
+            padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text);
+            display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none;
+        }
+        .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
+        .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+
+        .theme-switch {
+            width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); pointer-events: auto; }
+        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
+
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
+        .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
+        .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
+
+        .btn-copy {
+            background: #fff5eb;
+            border: 1px solid #ffd8b0;
+            color: var(--orange);
+            padding: 12px 24px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+        }
+        .btn-copy:hover { background: var(--orange); color: #fff; }
+
+        /* Tabs Styling */
+        .tabs-container {
+            display: flex; gap: 10px; margin-bottom: 20px; background: var(--card); padding: 10px; border-radius: 24px; border: 1px solid var(--border);
+            overflow-x: auto; scrollbar-width: none;
+        }
+        .tabs-container::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            flex: 1; padding: 12px 20px; border-radius: 16px; border: none; background: transparent; color: var(--text-dim);
+            font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.3s; white-space: nowrap;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .tab-btn.active { background: var(--orange); color: #fff; box-shadow: 0 8px 20px rgba(255, 149, 51, 0.2); }
+        .tab-btn .count { background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; }
+        .tab-btn.active .count { background: rgba(255,255,255,0.2); }
+
+        /* Layout Split */
+        .orders-split-view { display: flex; gap: 24px; min-height: 500px; align-items: flex-start; }
+        .orders-list-pane { flex: 0 0 380px; max-height: calc(100vh - 200px); overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 10px; }
+        .order-details-pane {
+            flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 20px;
+            display: flex; flex-direction: column; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.02);
+            overflow: hidden; min-height: 200px;
+        }
+
+        /* Compact Card */
+        .order-card-compact {
+            background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; cursor: pointer; transition: 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .order-card-compact:hover { border-color: var(--orange); transform: translateX(5px); }
+        .order-card-compact.active { border-color: var(--orange); background: rgba(255, 149, 51, 0.04); border-width: 2px; }
+        .order-card-compact .status-dot { width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 20px; right: 20px; }
+        .order-card-compact.pending .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
+        .order-card-compact.accepted .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
+        .order-card-compact.preparing .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
+        .order-card-compact.finished .status-dot { background: var(--orange); box-shadow: 0 0 10px var(--orange); }
+        .order-card-compact.delivered .status-dot { background: var(--orange); opacity: 0.6; }
+        .order-card-compact.rejected .status-dot { background: var(--error); }
+
+        .order-card-compact h4 { font-size: 1rem; font-family: 'Outfit'; margin-bottom: 4px; }
+        .order-card-compact p { font-size: 0.8rem; color: var(--text-dim); }
+        .order-card-compact .order-time { font-size: 0.75rem; font-weight: 600; margin-top: 10px; display: block; color: var(--orange); }
+
+        /* Full Details Styling */
+        .details-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .details-header h2 { font-family: 'Outfit'; font-size: 1.3rem; }
+        .details-header .status-tag { padding: 6px 16px; border-radius: 30px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+        .status-tag.pending { background: rgba(255,149,51,0.1); color: var(--orange); }
+        .status-tag.accepted { background: rgba(255,149,51,0.1); color: var(--orange); }
+        .status-tag.preparing { background: rgba(255,149,51,0.1); color: var(--orange); }
+        .status-tag.finished { background: rgba(255,149,51,0.1); color: var(--orange); }
+        .status-tag.delivered { background: rgba(255,149,51,0.05); color: var(--orange); opacity: 0.8; }
+        .status-tag.rejected { background: rgba(220,38,38,0.1); color: var(--error); }
+
+        .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .info-group label { display: block; font-size: 0.55rem; font-weight: 800; color: var(--orange); text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.5px; }
+        .info-group p { font-size: 0.8rem; font-weight: 600; }
+        .info-group a { color: var(--orange); text-decoration: none; border-bottom: 1px dashed var(--orange); }
+
+        .items-section { background: var(--input); border-radius: 16px; padding: 15px; margin-bottom: 15px; max-height: 400px; overflow-y: auto; }
+        .items-section h3 { font-family: 'Outfit'; margin-bottom: 10px; font-size: 0.95rem; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+        .item-row:last-child { border-bottom: none; }
+        .item-row:hover { opacity: 0.7; }
+        .item-row.crossed .item-name { text-decoration: line-through; opacity: 0.5; }
+        .item-name { font-weight: 600; }
+        .item-price { font-weight: 700; color: var(--orange); }
+        .item-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; padding-left: 0; }
+
+        .details-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px; }
+        .total-amount { font-size: 1.3rem; font-weight: 800; font-family: 'Outfit'; color: var(--orange); }
+
+        .actions-bar { display: flex; gap: 15px; }
+        .btn { padding: 14px 32px; border-radius: 18px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.3s; font-size: 0.9rem; letter-spacing: 1px; }
+        .btn-accept { background: var(--orange); color: #fff; }
+        .btn-finish { background: var(--orange); color: #fff; }
+        .btn-delivered { background: var(--orange); color: #fff; }
+        .btn-reject { background: var(--error); color: #fff; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+
+        .empty-details { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-dim); text-align: center; }
+        .empty-details svg { width: 80px; height: 80px; opacity: 0.1; margin-bottom: 20px; }
+
+        /* History Filters */
+        .history-filters {
+            display: flex; gap: 8px; margin-bottom: 15px; padding: 0 5px;
+        }
+        .filter-chip {
+            padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--card);
+            font-size: 0.7rem; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .filter-chip:hover { border-color: var(--orange); color: var(--orange); }
+        .filter-chip.active { background: var(--orange); border-color: var(--orange); color: #fff; box-shadow: 0 4px 12px rgba(255, 149, 51, 0.2); }
+
+        /* Responsive Mobile Styles */
+        @media (max-width: 1024px) {
+            .orders-split-view { flex-direction: column; height: auto; }
+            .orders-list-pane { flex: none; height: auto; max-height: 400px; }
+            .order-details-pane { min-height: 400px; padding: 20px; }
+            .container { padding: 60px 15px; }
+        }
+
+        @media (max-width: 768px) {
+            .order-details-pane {
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 7000;
+                border-radius: 0; transform: translateY(100%); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                padding: 15px;
+            }
+            .order-details-pane.open { transform: translateY(0); }
+            .close-details { display: block !important; position: absolute; top: 15px; right: 15px; background: var(--input); border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 20px; cursor: pointer; z-index: 100; }
+            .details-header h2 { font-size: 1.3rem; padding-right: 50px; }
+            .total-amount { font-size: 1.4rem; }
+            .btn { padding: 12px 20px; font-size: 0.8rem; }
+        }
+
+        .close-details { display: none; }
+
+        /* Toast Notification */
+        #toast-container { position: fixed; top: 24px; right: 24px; z-index: 20000; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { min-width: 320px; max-width: 440px; padding: 18px 24px; border-radius: 24px; background: #1c1f26; border: 1px solid var(--border); color: #fff; font-size: 0.9rem; font-weight: 500; box-shadow: 0 12px 32px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 12px; pointer-events: auto; animation: toastSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1), toastFadeOut 0.5s 5.5s forwards; line-height: 1.4; }
+        .toast.success { border-left: 6px solid var(--success); }
+        .toast.error { border-left: 6px solid var(--error); }
+        .toast.warning { border-left: 6px solid var(--orange); }
+        @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastFadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+        .loader { border: 3px solid rgba(255, 149, 51, 0.1); width: 28px; height: 28px; border-radius: 50%; border-left-color: var(--orange); animation: rotate 1s linear infinite; margin: 0 auto; }
+        @keyframes rotate { to { transform: rotate(360deg); } }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+    <div id="toast-container"></div>
+
+    <div id="top-nav" class="hidden">
+        <div><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+            <div id="user-display-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div class="pill-info">
+                    <div id="user-name">&nbsp;</div>
+                    <div id="user-role-label">&nbsp;</div>
+                </div>
+                <div class="pill-menu">
+                    <a href="index.html" class="pill-menu-item">Home</a>
+                    <div class="pill-menu-item danger" onclick="logout()">Logout</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container hidden" id="main-app">
+        <header>
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
+        </header>
+
+        <div class="dashboard-layout">
+            <div class="sidebar-container hidden" id="sidebar-container">
+                <div class="sidebar" id="sidebar">
+                    <div class="search-box">
+                        <label>Find Project</label>
+                        <input type="text" id="client-search" placeholder="Domain or Name...">
+                        <div class="client-list" id="client-list"></div>
+                        <div id="project-info" class="switcher-box hidden" style="width: 100%; margin: 0; padding-top: 15px; border-top: 1px solid var(--border); margin-top: auto;">
+                            <label>Active Project</label>
+                            <div id="active-project-name" style="font-weight: 700; padding: 12px; background: var(--input); border-radius: 14px; border: 1px solid var(--border); font-size: 0.8rem; margin-top: 8px;">None Selected</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar-tab" id="sidebar-tab">Find Project</div>
+            </div>
+
+            <div class="main-content">
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-tab="pending" onclick="switchTab('pending')">Pending <span class="count" id="count-pending">0</span></button>
+                    <button class="tab-btn" data-tab="accepted" onclick="switchTab('accepted')">In Process <span class="count" id="count-accepted">0</span></button>
+                    <button class="tab-btn" data-tab="finished" onclick="switchTab('finished')">Ready <span class="count" id="count-finished">0</span></button>
+                    <button class="tab-btn" data-tab="history" onclick="switchTab('history')">History <span class="count" id="count-history">0</span></button>
+                </div>
+
+                <div id="history-filters" class="history-filters hidden">
+                    <button class="filter-chip active" onclick="setHistoryFilter('today')">Today</button>
+                    <button class="filter-chip" onclick="setHistoryFilter('week')">This Week</button>
+                    <button class="filter-chip" onclick="setHistoryFilter('month')">This Month</button>
+                </div>
+
+                <div class="orders-split-view">
+                    <div id="orders-list" class="orders-list-pane">
+                        <!-- Compact orders will appear here -->
+                    </div>
+                    <div id="order-details" class="order-details-pane">
+                        <div class="empty-details">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
+                            <h3>Select an order to view details</h3>
+                            <p>All the order information will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase as sb } from './supabase.js';
+
+        let user = null, userRole = null, activeOwnerId = null;
+        let orders = [];
+        let allOwners = [];
+        let ordersChannel = null;
+        let currentTab = 'pending';
+        let historyFilter = 'today';
+        let selectedOrderId = null;
+        let crossedItems = new Set();
+        let alertAudio = null;
+
+        async function init() {
+            initTheme();
+            initEvents();
+
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { location.href = 'index.html'; return; }
+            user = session.user;
+
+            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            if (!profile) {
+                userRole = 'owner';
+                activeOwnerId = user.id;
+                showApp(null);
+                loadOrders();
+                subscribeToOrders();
+                return;
+            }
+
+            userRole = profile.role;
+            activeOwnerId = user.id;
+
+            if (userRole === 'admin' || userRole === 'developer' || userRole === 'CS' || userRole === 'adminCS') {
+                document.getElementById('sidebar-container').classList.remove('hidden');
+                document.getElementById('sidebar-container').classList.add('collapsed');
+                await setupContextSwitcher();
+            }
+
+            showApp(profile);
+            loadOrders();
+            subscribeToOrders();
+        }
+
+        async function showApp(profile) {
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('top-nav').classList.remove('hidden');
+
+            const pill = document.getElementById('user-display-pill');
+            const nameEl = document.getElementById('user-name');
+            const roleEl = document.getElementById('user-role-label');
+
+            if (profile) {
+                nameEl.textContent = profile.username || user.email.split('@')[0];
+                roleEl.textContent = profile.role || 'User';
+
+                const role = (profile.role || 'user').trim().toUpperCase();
+                if (role === 'ADMIN') pill.classList.add('admin-glow');
+                else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
+                else pill.classList.add('owner-glow');
+            } else {
+                nameEl.textContent = user.email.split('@')[0];
+                roleEl.textContent = 'Owner';
+                pill.classList.add('owner-glow');
+            }
+        }
+
+        async function setupContextSwitcher() {
+            const { data } = await sb.from('profiles').select('*');
+            allOwners = data || [];
+            renderOwners(allOwners);
+            document.getElementById('client-search').oninput = (e) => {
+                const term = e.target.value.toLowerCase();
+                renderOwners(allOwners.filter(o => (o.username||'').toLowerCase().includes(term) || (o.domain||'').toLowerCase().includes(term)));
+            };
+        }
+
+        function renderOwners(owners) {
+            const list = document.getElementById('client-list');
+            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.username || 'User'}</span><span class="domain">${o.domain || o.id.substring(0,8)}</span></div>`).join('');
+        }
+
+        window.switchContext = async (ownerId) => {
+            const owner = allOwners.find(o => o.id === ownerId);
+            if (!owner) return;
+            activeOwnerId = ownerId;
+            document.getElementById('active-project-name').textContent = owner.username || owner.email;
+            document.getElementById('project-info').classList.remove('hidden');
+            renderOwners(allOwners);
+
+            if (ordersChannel) sb.removeChannel(ordersChannel);
+
+            loadOrders();
+            subscribeToOrders();
+        }
+
+        function mapOrder(o) {
+            return {
+                ...o,
+                items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
+                total: parseFloat(o.total_amount || o.total || 0)
+            };
+        }
+
+        async function loadOrders() {
+            const { data, error } = await sb.from('menutech_orders')
+                .select('*')
+                .eq('user_id', activeOwnerId)
+                .order('created_at', { ascending: false });
+
+            if (data) {
+                orders = data.map(mapOrder);
+                updateCounts();
+                renderOrders();
+            }
+        }
+
+        function subscribeToOrders() {
+            // Use a clean channel name
+            const channelName = 'orders_realtime_' + activeOwnerId.substring(0, 8);
+            ordersChannel = sb.channel(channelName)
+                .on('postgres_changes', {
+                    event: '*', // Listen to all events for better reliability
+                    schema: 'public',
+                    table: 'menutech_orders'
+                }, (payload) => {
+                    // Filter by ownerId in JS to avoid subscription filter issues
+                    if (payload.new && payload.new.user_id === activeOwnerId) {
+                        if (payload.eventType === 'INSERT') {
+                            const newOrder = mapOrder(payload.new);
+                            // Avoid duplicates
+                            if (!orders.find(o => o.id === newOrder.id)) {
+                                orders.unshift(newOrder);
+                                updateCounts();
+                                renderOrders();
+                                // Ensure sound alert starts
+                                toggleAlertSound(true);
+                            }
+                        } else if (payload.eventType === 'UPDATE') {
+                            const idx = orders.findIndex(o => o.id === payload.new.id);
+                            if (idx !== -1) {
+                                orders[idx] = mapOrder(payload.new);
+                                updateCounts();
+                                renderOrders();
+                                if (selectedOrderId === payload.new.id) renderDetails(orders[idx]);
+                            }
+                        } else if (payload.eventType === 'DELETE') {
+                            orders = orders.filter(o => o.id !== payload.old.id);
+                            updateCounts();
+                            renderOrders();
+                        }
+                    }
+                })
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        console.log('Realtime subscription active for owner:', activeOwnerId);
+                    }
+                });
+        }
+
+        function updateCounts() {
+            const pending = orders.filter(o => o.status === 'pending').length;
+            const accepted = orders.filter(o => o.status === 'accepted' || o.status === 'preparing').length;
+            const finished = orders.filter(o => o.status === 'finished').length;
+            const history = orders.filter(o => o.status === 'delivered' || o.status === 'rejected').length;
+
+            document.getElementById('count-pending').textContent = pending;
+            document.getElementById('count-accepted').textContent = accepted;
+            document.getElementById('count-finished').textContent = finished;
+            document.getElementById('count-history').textContent = history;
+
+            if (pending > 0) {
+                toggleAlertSound(true);
+            } else {
+                toggleAlertSound(false);
+            }
+        }
+
+        function toggleAlertSound(play) {
+            if (play) {
+                if (!alertAudio) {
+                    alertAudio = new Audio('https://menutech.services/assets/audio/notification.mp3');
+                    alertAudio.loop = true;
+                }
+
+                // If it's already playing, don't restart
+                if (alertAudio.paused) {
+                    alertAudio.play().catch(e => {
+                        // If blocked, we'll try again on next interaction
+                        const retry = () => {
+                            if (orders.some(o => o.status === 'pending')) {
+                                alertAudio.play();
+                            }
+                            document.removeEventListener('click', retry);
+                        };
+                        document.addEventListener('click', retry);
+                    });
+                }
+            } else {
+                if (alertAudio) {
+                    alertAudio.pause();
+                    alertAudio.currentTime = 0;
+                }
+            }
+        }
+
+        window.switchTab = (tab) => {
+            currentTab = tab;
+            selectedOrderId = null;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+            });
+
+            const filters = document.getElementById('history-filters');
+            if (tab === 'history') filters.classList.remove('hidden');
+            else filters.classList.add('hidden');
+
+            renderOrders();
+            renderDetails(null);
+        };
+
+        window.setHistoryFilter = (filter) => {
+            historyFilter = filter;
+            document.querySelectorAll('.filter-chip').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(filter));
+            });
+            renderOrders();
+        };
+
+        function renderOrders() {
+            const list = document.getElementById('orders-list');
+            let filtered = [];
+
+            if (currentTab === 'history') {
+                const now = new Date();
+                const todayStr = now.toLocaleDateString();
+                const todayTs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                const lastWeekTs = todayTs - (7 * 24 * 60 * 60 * 1000);
+                const lastMonthTs = todayTs - (30 * 24 * 60 * 60 * 1000);
+
+                filtered = orders.filter(o => {
+                    if (o.status !== 'delivered' && o.status !== 'rejected') return false;
+                    const oDate = new Date(o.created_at);
+                    const oTs = oDate.getTime();
+                    if (historyFilter === 'today') return oDate.toLocaleDateString() === todayStr;
+                    if (historyFilter === 'week') return oTs >= lastWeekTs;
+                    if (historyFilter === 'month') return oTs >= lastMonthTs;
+                    return true;
+                });
+            } else if (currentTab === 'accepted') {
+                filtered = orders.filter(o => o.status === 'accepted' || o.status === 'preparing');
+            } else {
+                filtered = orders.filter(o => o.status === currentTab);
+            }
+
+            if (filtered.length === 0) {
+                list.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-dim); opacity:0.5;">No orders in this stage</div>`;
+                return;
+            }
+
+            list.innerHTML = filtered.map(order => `
+                <div class="order-card-compact ${order.status} ${selectedOrderId === order.id ? 'active' : ''}" onclick="selectOrder('${order.id}')">
+                    <div class="status-dot"></div>
+                    <h4>${order.customer_name}</h4>
+                    <p>${order.items.length} items • $${order.total.toFixed(2)}</p>
+                    <span class="order-time">${new Date(order.created_at).toLocaleDateString()} ${new Date(order.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                </div>
+            `).join('');
+        }
+
+        window.selectOrder = (id) => {
+            selectedOrderId = id;
+            const order = orders.find(o => o.id === id);
+            renderOrders();
+            renderDetails(order);
+            if (window.innerWidth <= 768) {
+                document.getElementById('order-details').classList.add('open');
+            }
+        };
+
+        function renderDetails(order) {
+            const pane = document.getElementById('order-details');
+            if (!order) {
+                pane.innerHTML = `<div class="empty-details"><h3>Select an order</h3></div>`;
+                return;
+            }
+
+            const dateStr = new Date(order.created_at).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+            const deliveryType = order.order_type === 'delivery' ? 'Delivery' : 'Pickup';
+            const paymentMethod = (order.payment_method || 'N/A').charAt(0).toUpperCase() + (order.payment_method || 'N/A').slice(1);
+            let statusLabel = order.status.charAt(0).toUpperCase() + order.status.slice(1);
+            if (order.status === 'accepted') statusLabel = 'Accepted';
+            if (order.status === 'preparing') statusLabel = 'Preparing';
+            if (order.status === 'finished') statusLabel = 'Ready';
+
+            const isPending = order.status === 'pending';
+            const isAccepted = order.status === 'accepted';
+            const isFinished = order.status === 'finished';
+            const isDelivered = order.status === 'delivered';
+            const isRejected = order.status === 'rejected';
+
+            pane.innerHTML = `
+                <button class="close-details" onclick="closeDetails()">✕</button>
+                <div class="details-header">
+                    <div>
+                        <h2>${order.customer_name}</h2>
+                        <p style="color:var(--text-dim); margin-top:5px; font-size:0.8rem;">${dateStr}</p>
+                    </div>
+                    <div class="status-tag ${order.status}">${statusLabel}</div>
+                </div>
+
+                <div class="details-grid">
+                    <div class="info-group">
+                        <label>Phone Number</label>
+                        <p><a href="tel:${order.customer_phone}">${order.customer_phone}</a></p>
+                    </div>
+                    <div class="info-group">
+                        <label>Order Type</label>
+                        <p>${deliveryType}</p>
+                    </div>
+                    <div class="info-group">
+                        <label>Payment Method</label>
+                        <p>${paymentMethod}</p>
+                    </div>
+                    <div class="info-group">
+                        <label>Expected Time</label>
+                        <p>${order.delivery_time_mode === 'later' ? `${order.delivery_date} ${order.delivery_time}` : 'As soon as possible'}</p>
+                    </div>
+                    ${order.order_type === 'delivery' ? `
+                        <div class="info-group" style="grid-column: 1 / -1;">
+                            <label>Delivery Address</label>
+                            <p>${order.address}</p>
+                            ${order.reference ? `<p style="font-size:0.85rem; color:var(--text-dim); margin-top:5px;"><strong>Ref:</strong> ${order.reference}</p>` : ''}
+                        </div>
+                    ` : ''}
+                    ${order.customer_notes ? `
+                         <div class="info-group" style="grid-column: 1 / -1;">
+                            <label>Customer Notes</label>
+                            <p style="font-style:italic; font-weight:400;">"${order.customer_notes}"</p>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="items-section">
+                    <h3>Order Items</h3>
+                    ${order.items.map((item, idx) => {
+                        const itemId = `${order.id}-${idx}`;
+                        const isCrossed = crossedItems.has(itemId);
+                        return `
+                            <div class="item-row ${isCrossed ? 'crossed' : ''}" onclick="toggleItem('${itemId}')">
+                                <div>
+                                    <span class="item-name">${item.quantity > 1 ? item.quantity + 'x ' : ''}${item.name}</span>
+                                    <div class="item-meta">
+                                        ${item.size ? `Size: ${item.size} • ` : ''}
+                                        ${item.toppings && item.toppings.length > 0 ? `Toppings: ${item.toppings.join(', ')} • ` : ''}
+                                        ${item.instructions ? `<span style="color:var(--orange)">Note: "${item.instructions}"</span>` : ''}
+                                    </div>
+                                </div>
+                                <div class="item-price">$${(item.total || (item.price * (item.quantity || 1))).toFixed(2)}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <div class="details-footer">
+                    <div class="total-amount">Total: $${order.total.toFixed(2)}</div>
+                    <div class="actions-bar">
+                        ${order.status === 'pending' ? `
+                            <button class="btn btn-reject" onclick="updateOrderStatus('${order.id}', 'rejected')">Reject</button>
+                            <button class="btn btn-accept" onclick="updateOrderStatus('${order.id}', 'accepted')">Accept</button>
+                        ` : ''}
+                        ${order.status === 'accepted' ? `
+                            <button class="btn btn-finish" onclick="updateOrderStatus('${order.id}', 'preparing')">Prepare</button>
+                        ` : ''}
+                        ${order.status === 'preparing' ? `
+                            <button class="btn btn-finish" onclick="updateOrderStatus('${order.id}', 'finished')">Ready</button>
+                        ` : ''}
+                        ${order.status === 'finished' ? `
+                            <button class="btn btn-delivered" onclick="updateOrderStatus('${order.id}', 'delivered')">Mark as Delivered</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        window.closeDetails = () => {
+            document.getElementById('order-details').classList.remove('open');
+        };
+
+        window.toggleItem = (itemId) => {
+            if (crossedItems.has(itemId)) crossedItems.delete(itemId);
+            else crossedItems.add(itemId);
+            const order = orders.find(o => o.id === selectedOrderId);
+            renderDetails(order);
+        };
+
+        window.updateOrderStatus = async (id, status) => {
+            const updates = { status };
+            const now = new Date().toISOString();
+
+            if (status === 'accepted') updates.accepted_at = now;
+            else if (status === 'preparing') updates.preparing_at = now;
+            else if (status === 'finished') updates.ready_at = now;
+            else if (status === 'delivered') updates.delivered_at = now;
+            else if (status === 'rejected') {
+                updates.rejected_at = now;
+                const reason = prompt("Optional: Reason for rejection");
+                if (reason !== null && reason.trim() !== "") updates.rejection_reason = reason;
+            }
+
+            // Optimistic update
+            const orderIdx = orders.findIndex(o => o.id === id);
+            if (orderIdx !== -1) {
+                Object.assign(orders[orderIdx], updates);
+                updateCounts();
+                renderOrders();
+                if (selectedOrderId === id) renderDetails(orders[orderIdx]);
+            }
+
+            const { error } = await sb.from('menutech_orders')
+                .update(updates)
+                .eq('id', id);
+
+            if (error) {
+                showToast('Error updating order: ' + error.message, 'error');
+                loadOrders();
+            } else {
+                let statusMsg = status;
+                if (status === 'accepted') statusMsg = 'Accepted';
+                if (status === 'preparing') statusMsg = 'In Preparation';
+                if (status === 'finished') statusMsg = 'Ready';
+                if (status === 'delivered') statusMsg = 'Delivered';
+                showToast(`Order marked as ${statusMsg}`);
+
+                if (status === 'history' || status === 'delivered' || status === 'rejected') {
+                    switchTab('history');
+                } else if (status === 'accepted' || status === 'preparing') {
+                    switchTab('accepted');
+                } else {
+                    switchTab(status);
+                }
+
+                if (status === 'rejected' || status === 'delivered') {
+                    selectedOrderId = null;
+                    if (window.innerWidth <= 768) closeDetails();
+                }
+            }
+        };
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'toastFadeOut 0.5s forwards';
+                setTimeout(() => toast.remove(), 500);
+            }, 6000);
+        }
+
+
+        function initTheme() {
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            document.getElementById('theme-toggle').onclick = () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            };
+        }
+
+        function initEvents() {
+            document.getElementById('sidebar-tab').onclick = () => document.getElementById('sidebar-container').classList.toggle('collapsed');
+            const pill = document.getElementById('user-display-pill');
+            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
+            document.addEventListener('click', () => pill.classList.remove('active'));
+            window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
+
+        }
+
+        init();
+    </script>
+</body>
+</html>
