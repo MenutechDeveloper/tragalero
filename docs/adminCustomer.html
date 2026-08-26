@@ -3,7 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Management Console | Menutech</title>
+    <title>Management Console | Tragalero</title>
+    <link rel="icon" type="image/png" href="./assets/img/tragalero_negro.png">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet" href="./assets/css/pastel-theme.css">
+    <script src="./assets/js/theme.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 
@@ -20,13 +29,33 @@
             --dev: #8b5cf6;
         }
 
-        body.dark-mode {
+        [data-bs-theme="dark"] {
             --bg: #121418;
             --card: #1c1f26;
             --input: #242933;
             --text: #f8fafc;
             --text-dim: #94a3b8;
             --border: #2d333f;
+        }
+
+        [data-bs-theme="light"] {
+            --orange: #eab308;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
+        }
+
+        [data-bs-theme="medio"] {
+            --orange: #ff9533;
+            --bg: #fffcf0;
+            --card: #ffffff;
+            --input: #fffef5;
+            --text: #1a1c1e;
+            --text-dim: #4a5568;
+            --border: #f8e8d8;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -37,53 +66,13 @@
         #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
         #top-nav > * { pointer-events: auto; }
 
-        /* Premium User Pill */
-        #user-display-pill {
-            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
-            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); min-width: 220px; justify-content: flex-start;
-        }
-        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
-
-        #user-display-pill.admin-glow {
-            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
-            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
-        }
-        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
-
-        #user-display-pill.dev-glow {
-            background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
-            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
-        }
-        #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
-
-        #user-display-pill.owner-glow {
-            background: #000;
-            background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%);
-            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
-        }
-        #user-display-pill.owner-glow #user-name, #user-display-pill.owner-glow #user-role-label { color: #fff !important; }
-
-        #user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
-
-        @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-
-        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
-        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; text-align: left; }
-        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; }
-
-        .pill-menu { position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important; border: 1px solid var(--border); border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2); opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000; animation: none !important; }
-        #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
-        .pill-menu-item { padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none; }
-        .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
-        .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
 
         .theme-switch { width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
         .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
         .sun-icon { color: var(--orange); }
         .moon-icon { color: #8b5cf6; display: none; }
-        body.dark-mode .sun-icon { display: none; }
-        body.dark-mode .moon-icon { display: block; }
+        [data-bs-theme="dark"] .sun-icon { display: none; }
+        [data-bs-theme="dark"] .moon-icon { display: block; }
 
         .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; }
         .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); }
@@ -103,8 +92,8 @@
         .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
         .user-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 60px; }
-        .user-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px 32px; display: grid; grid-template-columns: 1.5fr 1.5fr 1fr auto; align-items: center; gap: 24px; transition: 0.4s; }
-        .user-card:hover { border-color: var(--orange); transform: scale(1.005); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .user-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 24px 32px; display: grid; grid-template-columns: 1.5fr 1.5fr 1fr auto; align-items: center; gap: 24px; transition: 0.4s; margin-bottom: 8px; }
+        .user-card:hover { border-color: var(--orange); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
         .user-info h3 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
 
         .controls { display: flex; flex-direction: column; gap: 8px; }
@@ -113,9 +102,11 @@
 
         .actions { display: flex; gap: 10px; }
         .btn { padding: 12px 18px; border-radius: 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: 0.3s; border: none; text-transform: uppercase; }
-        .btn-save { background: var(--orange); color: #000; }
+        .btn-save { background: var(--orange); color: #fff; box-shadow: 0 4px 12px rgba(255, 149, 51, 0.2); }
+        .btn-save:hover { filter: brightness(1.1); transform: translateY(-1px); }
         .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--error); }
-        .btn-access { background: rgba(139, 92, 246, 0.1); color: var(--dev); }
+        .btn-access { background: #f3f0ff; color: #8b5cf6; }
+        .btn-access:hover { background: #8b5cf6; color: #fff; }
 
         .loader { width: 30px; height: 30px; border: 3px solid rgba(255, 149, 51, 0.1); border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; margin: 40px auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -135,38 +126,34 @@
 <body>
     <div class="bg-mesh"></div>
     <div id="toast-container"></div>
+
+    <!-- Access Denied View -->
     <div id="no-access" class="hidden" style="text-align: center; padding: 100px;">
         <h2 style="font-family: 'Outfit'; font-size: 2rem; margin-bottom: 12px;">Access Denied</h2>
-        <button onclick="location.href='index.html'" class="btn btn-save" style="margin-top: 30px">Back to Login</button>
+        <button onclick="location.href='index.html'" class="btn-panel-top" style="margin-top: 30px">Back to Home</button>
     </div>
 
+    <!-- Main Navigation -->
+    <!-- Main Navigation -->
     <div id="top-nav" class="hidden">
-        <div><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <div class="theme-switch" id="theme-toggle">
-                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            </div>
-            <div id="user-display-pill">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <div class="pill-info">
-                    <div id="user-name">&nbsp;</div>
-                    <div id="user-role-label">&nbsp;</div>
-                </div>
-                <div class="pill-menu">
-                    <a href="index.html" class="pill-menu-item">Home</a>
-                    <div class="pill-menu-item danger" onclick="logout()">Logout</div>
-                </div>
+        <div><button class="btn-panel-top" onclick="location.href='admin.html'">PANEL</button></div>
+        <div class="theme-switcher-container d-flex align-items-center bg-white bg-opacity-10 p-2 rounded-pill shadow-sm">
+            <div id="authButtons" class="me-3 ps-2"></div>
+            <div class="theme-switcher-bar d-flex">
+                <button class="theme-btn" data-theme-value="light" title="Modo Amarillo"><i class="bi bi-sun-fill"></i></button>
+                <button class="theme-btn" data-theme-value="dark" title="Modo Oscuro"><i class="bi bi-moon-stars-fill"></i></button>
+                <button class="theme-btn" data-theme-value="medio" title="Modo Suave"><i class="bi bi-palette-fill"></i></button>
             </div>
         </div>
     </div>
 
+    <!-- Application Container -->
     <div id="app" class="hidden">
-        <header><img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo"></header>
+        <header><img src="./assets/img/tragalero_negro.png" class="logo-main" alt="Tragalero Logo"></header>
         <div class="container">
             <div id="admin-tools" class="hidden">
                 <div class="section-title">All Users</div>
-                <div style="margin-bottom: 30px;"><input type="text" id="user-search" placeholder="Search users or domains..." style="width: 100%; max-width: 400px; background: var(--input); border: 1px solid var(--border); border-radius: 14px; padding: 14px 20px; color: var(--text);"></div>
+                <div style="margin-bottom: 40px;"><input type="text" id="user-search" placeholder="Search users or domains..." style="width: 100%; max-width: 420px; background: var(--input); border: 1.5px solid var(--border); border-radius: 16px; padding: 16px 24px; color: var(--text); font-size: 0.85rem; box-shadow: 0 4px 20px rgba(0,0,0,0.02); transition: 0.3s;"></div>
                 <div id="user-list" class="user-list"></div>
             </div>
             <div id="dev-tools" class="hidden">
@@ -177,105 +164,157 @@
         </div>
     </div>
 
-    <script type="module">
-        import { MT_CONFIG } from './config.js';
-        import { supabase as sb } from './supabase.js';
-        let user = null, userRole = null;
+    <!-- Scripts -->
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./assets/js/supabase_logic.js"></script>
+    <script>
+        const sb = supabaseClient;
+        let currentUser = null;
 
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
+            if (!container) return;
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            const icon = document.createElement('div');
-            icon.innerHTML = type === 'success' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><polyline points="20 6 9 17 4 12"/></svg>' : type === 'error' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:20px;height:20px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
-            const msg = document.createElement('div');
-            msg.textContent = message;
-            toast.appendChild(icon); toast.appendChild(msg); container.appendChild(toast);
+            toast.innerHTML = `<div>${message}</div>`;
+            container.appendChild(toast);
             setTimeout(() => toast.remove(), 6000);
         };
+
         document.addEventListener('DOMContentLoaded', async () => {
-            initTheme();
-            checkAuth();
+            try {
+                // initTheme(); // Handled by theme.js
+                initEvents();
+                checkAuth();
+            } catch(e) { console.error("Init error:", e); }
         });
 
         async function checkAuth() {
-            const { data: { session } } = await sb.auth.getSession();
-            if (!session) { location.href = "index.html"; return; }
-            user = session.user;
-            const { data } = await sb.from('profiles').select('role, username').eq('id', user.id).single();
+            try {
+                const profile = await getLoggedInUser();
+                if (!profile) {
+                    location.href = "index.html";
+                    return;
+                }
 
-            if (data && (data.role === 'CS' || data.role === 'adminCS')) {
+                currentUser = profile;
+                const userRole = (profile.role || '').toLowerCase();
+                const isStaff = ['admin', 'developer', 'design', 'cs', 'sales', 'support', 'retention'].includes(userRole);
+
+                if (userRole !== 'admin' && !isStaff) {
+                    document.getElementById('no-access').classList.remove('hidden');
+                    const loader = document.getElementById('loading');
+                    if (loader) loader.classList.add('hidden');
+                    return;
+                }
+
+                const app = document.getElementById('app');
+                const nav = document.getElementById('top-nav');
+
+                await renderUserMenu('authButtons');
+
+                if (app) app.classList.remove('hidden');
+                if (nav) nav.classList.remove('hidden');
+
+                if (userRole === 'admin') {
+                    const tools = document.getElementById('admin-tools');
+                    if (tools) tools.classList.remove('hidden');
+                    loadAllUsers();
+                } else {
+                    const tools = document.getElementById('dev-tools');
+                    if (tools) tools.classList.remove('hidden');
+                    loadAssignedOwners();
+                }
+            } catch (e) {
+                console.error("Auth error:", e);
                 location.href = "index.html";
-                return;
-            }
-
-            const allowedRoles = ['admin', 'developer'];
-            if (!data || !allowedRoles.includes(data.role)) { document.getElementById('no-access').classList.remove('hidden'); }
-            else {
-                userRole = data.role;
-                const pill = document.getElementById('user-display-pill');
-                document.getElementById('user-name').textContent = data.username || user.email.split('@')[0];
-                document.getElementById('user-role-label').textContent = data.role;
-                if (data.role === 'admin') pill.classList.add('admin-glow');
-                else if (data.role === 'developer') pill.classList.add('dev-glow');
-                else pill.classList.add('owner-glow');
-
-                document.getElementById('app').classList.remove('hidden');
-                document.getElementById('top-nav').classList.remove('hidden');
-
-                if (userRole === 'admin') { document.getElementById('admin-tools').classList.remove('hidden'); loadAllUsers(); }
-                else if (userRole === 'developer') { document.getElementById('dev-tools').classList.remove('hidden'); loadAssignedOwners(); }
             }
         }
 
         async function loadAllUsers() {
-            const { data } = await sb.from('profiles').select('*').order('role', { ascending: true });
-            document.getElementById('loading').classList.add('hidden');
-            renderList(data, 'user-list', true);
-            document.getElementById('user-search').oninput = (e) => {
-                const term = e.target.value.toLowerCase();
-                const filtered = data.filter(u => (u.username||'').toLowerCase().includes(term) || (u.domain||'').toLowerCase().includes(term));
-                renderList(filtered, 'user-list', true);
-            };
+            try {
+                const { data, error } = await sb.from('usuarios').select('*').order('role', { ascending: true });
+                const loading = document.getElementById('loading');
+                if (loading) loading.classList.add('hidden');
+                if (error) throw error;
+
+                renderList(data, 'user-list', true);
+                const search = document.getElementById('user-search');
+                if (search) {
+                    search.oninput = (e) => {
+                        const term = e.target.value.toLowerCase();
+                        const filtered = data.filter(u => (u.name||'').toLowerCase().includes(term) || (u.domain||'').toLowerCase().includes(term));
+                        renderList(filtered, 'user-list', true);
+                    };
+                }
+            } catch (e) { console.error(e); }
         }
 
         async function loadAssignedOwners() {
-            const { data: access } = await sb.from('developer_access').select('owner_id').eq('developer_id', user.id);
-            const ids = (access || []).map(a => a.owner_id);
-            const { data } = await sb.from('profiles').select('*').in('id', ids);
-            document.getElementById('loading').classList.add('hidden');
-            renderList(data, 'assigned-list', false);
+            try {
+                const { data } = await sb.from('usuarios').select('*').neq('role', 'Admin');
+                const loading = document.getElementById('loading');
+                if (loading) loading.classList.add('hidden');
+                renderList(data, 'assigned-list', false);
+            } catch(e) { console.error(e); }
         }
 
         function renderList(users, targetId, isAdminView) {
             const list = document.getElementById(targetId);
-            list.innerHTML = (users || []).map(u => `
-                <div class="user-card">
-                    <div class="user-info"><h3>${u.username || 'No Name'}</h3>${u.domain ? `<div style="font-size: 0.75rem; color: var(--orange); font-weight: 600;">${u.domain}</div>` : ''}</div>
-                    <div class="controls"><input type="text" value="${u.username || ''}" id="user-${u.id}" ${!isAdminView ? 'disabled' : ''}><input type="text" value="${u.domain || ''}" id="dom-${u.id}" ${!isAdminView ? 'disabled' : ''}></div>
-                    <div class="badge-container">
-                        ${isAdminView ? `
-                            <select id="role-${u.id}" style="width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">
-                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
-                                <option value="developer" ${u.role === 'developer' ? 'selected' : ''}>Developer</option>
-                                <option value="owner" ${u.role === 'owner' ? 'selected' : ''}>Owner</option>
-                                <option value="design" ${u.role === 'design' ? 'selected' : ''}>Design</option>
-                                <option value="adminDesign" ${u.role === 'adminDesign' ? 'selected' : ''}>Admin Design</option>
-                                <option value="CS" ${u.role === 'CS' ? 'selected' : ''}>CS</option>
-                                <option value="adminCS" ${u.role === 'adminCS' ? 'selected' : ''}>Admin CS</option>
-                                <option value="retention" ${u.role === 'retention' ? 'selected' : ''}>Retention</option>
-                            </select>
-                        ` : `<span class="badge badge-${u.role}">${u.role}</span>`}
+            if (!list) return;
+            list.innerHTML = (users || []).map(u => {
+                const roleLower = (u.role || '').toLowerCase();
+                let badgeClass = 'badge-owner';
+                if (roleLower === 'admin') badgeClass = 'badge-admin';
+                else if (roleLower === 'developer') badgeClass = 'badge-dev';
+
+                return `
+                <div class="user-card" style="border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid rgba(255, 149, 51, 0.1);">
+                    <div class="user-info">
+                        <h3 style="font-family: 'Outfit'; font-weight: 700;">${u.name || 'No Name'}</h3>
+                        ${u.domain ? `<div style="font-size: 0.7rem; color: var(--orange); font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">${u.domain}</div>` : '<div style="font-size: 0.7rem; color: var(--text-dim);">NO DOMAIN</div>'}
                     </div>
-                    <div class="actions">${isAdminView ? `<button class="btn btn-save" onclick="updateUser('${u.id}')">SAVE</button>` : ''}<button class="btn btn-access" onclick="manageGallery('${u.id}')">GALLERY</button></div>
-                </div>`).join('');
+                    <div class="controls">
+                        <div style="font-size: 0.6rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; margin-left: 5px;">User Info</div>
+                        <input type="text" value="${u.name || ''}" id="user-${u.id}" ${!isAdminView ? 'disabled' : ''} placeholder="Name" style="margin-bottom: 8px; border-radius: 14px; font-weight: 600;">
+                        <input type="text" value="${u.domain || ''}" id="dom-${u.id}" ${!isAdminView ? 'disabled' : ''} placeholder="Domain" style="border-radius: 14px; font-weight: 600;">
+                    </div>
+                    <div class="badge-container">
+                        <div style="font-size: 0.6rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; margin-left: 5px;">Access Role</div>
+                        ${isAdminView ? `
+                            <select id="role-${u.id}" style="width: 100%; background: var(--input); border: 1px solid var(--border); border-radius: 14px; padding: 10px 14px; color: var(--text); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; cursor: pointer;">
+                                <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
+                                <option value="Developer" ${u.role === 'Developer' ? 'selected' : ''}>Developer</option>
+                                <option value="Owner" ${u.role === 'Owner' ? 'selected' : ''}>Owner</option>
+                                <option value="Design" ${u.role === 'Design' ? 'selected' : ''}>Design</option>
+                                <option value="CS" ${u.role === 'CS' ? 'selected' : ''}>CS</option>
+                                <option value="Sales" ${u.role === 'Sales' ? 'selected' : ''}>Sales</option>
+                                <option value="Support" ${u.role === 'Support' ? 'selected' : ''}>Support</option>
+                                <option value="Retention" ${u.role === 'Retention' ? 'selected' : ''}>Retention</option>
+                            </select>
+                        ` : `<span class="badge ${badgeClass}" style="display: inline-block; width: 100%; text-align: center; padding: 12px; border-radius: 14px;">${u.role}</span>`}
+                    </div>
+                    <div class="actions">
+                        <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                            <button class="btn btn-access" onclick="manageGallery('${u.id}')" style="width: 100%; border-radius: 16px; background: rgba(255, 149, 51, 0.1); color: var(--orange); border: 1.5px solid rgba(255, 149, 51, 0.2);">GALLERY</button>
+                            ${isAdminView ? `
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn btn-save" onclick="updateUser('${u.id}')" style="flex: 1; border-radius: 16px; font-weight: 800;">SAVE</button>
+                                    <button class="btn btn-del" onclick="deleteUser('${u.id}')" style="border-radius: 16px; padding: 12px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg></button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>`}).join('');
         }
 
         window.updateUser = async (id) => {
             const u = document.getElementById(`user-${id}`).value;
             const d = document.getElementById(`dom-${id}`).value;
             const r = document.getElementById(`role-${id}`).value;
-            const { error } = await sb.from('profiles').update({ username: u, domain: d, role: r }).eq('id', id);
+            const { error } = await sb.from('usuarios').update({ name: u, domain: d, role: r }).eq('id', id);
 
             if (error) {
                 window.showToast(error.message, "error");
@@ -289,14 +328,26 @@
             location.href = 'adminWeb.html';
         };
 
-        function initTheme() {
-            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
-            document.getElementById('theme-toggle').onclick = () => { document.body.classList.toggle('dark-mode'); localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); };
-            const pill = document.getElementById('user-display-pill');
-            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
-            document.addEventListener('click', () => pill.classList.remove('active'));
+        window.deleteUser = async (id) => {
+            if (!confirm("¿ESTÁS SEGURO? Esta acción eliminará permanentemente al usuario y todos sus datos (galería, promos, negocios).")) return;
+
+            const { error } = await sb.from('usuarios').delete().eq('id', id);
+            if (error) {
+                window.showToast(error.message, "error");
+            } else {
+                window.showToast("Usuario eliminado", "success");
+                loadAllUsers();
+            }
+        };
+
+        function initEvents() {
+            // Pill handling moved to renderUserMenu in supabase_logic.js
         }
-        window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
+
+        window.logout = async () => {
+            await sb.auth.signOut();
+            location.href = "index.html";
+        };
     </script>
 </body>
 </html>
