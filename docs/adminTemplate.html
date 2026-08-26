@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Template Editor | Menutech</title>
-    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
-    <link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
+    <title>Template Editor | Tragalero</title>
+    <link rel="icon" type="image/png" href="./assets/img/tragalero_negro.png">
+    <link rel="shortcut icon" href="./assets/img/tragalero_negro.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 
@@ -297,6 +297,35 @@
         .professional-toggle.es .toggle-slider {
             left: 38px;
         }
+
+        /* Floating Client Drawer Sidebar (like adminWeb.html) */
+        .sidebar-container {
+            position: fixed; left: 0; top: 120px; z-index: 6000; pointer-events: none; display: flex; align-items: flex-start;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sidebar-container > * { pointer-events: auto; }
+        .sidebar-container.collapsed { transform: translateX(-340px) !important; }
+
+        .sidebar-drawer { width: 340px; height: 550px; display: flex; flex-direction: column; gap: 20px; }
+
+        .search-box { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px; position: relative; cursor: default; transition: opacity 0.3s; user-select: none; z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.15); height: 100%; display: flex; flex-direction: column; }
+        .search-box label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--orange); text-transform: uppercase; margin-bottom: 15px; margin-left: 5px; pointer-events: none; }
+        .search-box input { width: 100%; margin-bottom: 15px; border-radius: 16px; padding: 14px; background: var(--input); border: 1px solid var(--border); color: var(--text); }
+
+        .client-list { max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
+        .client-list::-webkit-scrollbar { width: 4px; }
+        .client-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .client-item { padding: 14px 18px; border-radius: 16px; background: var(--input); border: 1px solid var(--border); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; gap: 4px; }
+        .client-item:hover { border-color: var(--orange); }
+        .client-item.active { border-color: var(--orange); background: rgba(255,149,51,0.08); }
+        .client-item .name { font-weight: 700; font-size: 0.85rem; display: block; }
+        .client-item .domain { font-size: 0.7rem; color: var(--text-dim); }
+
+        .sidebar-tab {
+            width: 45px; height: 160px; background: var(--orange); color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 0 16px 16px 0; cursor: pointer; writing-mode: vertical-lr; text-orientation: mixed; font-weight: 800; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; box-shadow: 10px 0 30px rgba(255, 149, 51, 0.2); transition: 0.4s; margin-top: 40px; position: relative;
+        }
+        .sidebar-tab:hover { width: 55px; padding-left: 10px; }
     </style>
 </head>
 <body>
@@ -312,20 +341,21 @@
         <p data-i18n="loading">Cargando editor web...</p>
     </div>
 
-    <!-- Context Selector for Admins -->
-    <div class="context-overlay" id="context-overlay" onclick="window.toggleContextSidebar()"></div>
-    <aside class="context-sidebar" id="context-sidebar">
-        <div class="context-header">
-            <h3 style="font-family: 'Outfit'; font-size: 1rem;">Select Client</h3>
-            <button class="btn-icon" style="background:none; color: var(--text);" onclick="window.toggleContextSidebar()">×</button>
+    <!-- Sliding Client Drawer Sidebar -->
+    <div class="sidebar-container collapsed" id="sidebar-container">
+        <div class="sidebar-drawer" id="sidebar-drawer">
+            <div class="search-box">
+                <label>Buscar Cliente</label>
+                <input type="text" id="client-search" placeholder="Nombre o dominio...">
+                <div class="client-list" id="client-list"></div>
+                <div id="project-info" style="width: 100%; padding-top: 15px; border-top: 1px solid var(--border); margin-top: auto;">
+                    <label style="font-size:0.7rem; font-weight:700; color:var(--orange); text-transform:uppercase;">Cuenta Activa</label>
+                    <div id="active-project-name" style="font-weight: 700; padding: 12px; background: var(--input); border-radius: 14px; border: 1px solid var(--border); font-size: 0.8rem; margin-top: 8px;">Ninguna seleccionada</div>
+                </div>
+            </div>
         </div>
-        <div class="context-search">
-            <input type="text" id="client-search" class="input-field" style="margin-bottom:0;" placeholder="Search by name or domain...">
-        </div>
-        <div class="client-list" id="client-list">
-            <!-- Clients will be listed here -->
-        </div>
-    </aside>
+        <div class="sidebar-tab" id="sidebar-tab">Clientes</div>
+    </div>
 
     <div id="save-status">
         <div class="loader-ring" style="width:18px; height:18px; border: 2px solid var(--orange); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
@@ -360,7 +390,7 @@
         <!-- Sidebar Controls -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="https://menutech.services/assets/img/logomt.png" class="logo-mt" alt="Logo">
+                <img src="./assets/img/tragalero_negro.png" class="logo-mt" alt="Tragalero Logo">
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button class="btn" style="padding: 10px; background: var(--input); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;" onclick="location.href='index.html'">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px; height:18px; color: var(--text);"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -680,7 +710,7 @@
                 gallery: "Gallery",
                 galleryPlaceholder: "Drag & Drop Gallery Images",
                 contactInfo: "Contact Info",
-                heroButtonsLabels: "Menutech (CUID / RUID)",
+                heroButtonsLabels: "Tragalero (CUID / RUID)",
                 enableReservations: "Enable Reservations",
                 phonePlaceholder: "Phone Number",
                 addressPlaceholder: "Address",
@@ -732,7 +762,7 @@
                 gallery: "Galería",
                 galleryPlaceholder: "Arrastra y suelta imágenes de la Galería",
                 contactInfo: "Información de Contacto",
-                heroButtonsLabels: "Menutech (CUID / RUID)",
+                heroButtonsLabels: "Tragalero (CUID / RUID)",
                 enableReservations: "Habilitar Reservas",
                 phonePlaceholder: "Número de Teléfono",
                 addressPlaceholder: "Dirección",
@@ -776,8 +806,8 @@
             showDelivery: true,
             cuid: '',
             ruid: '',
-            title: 'Template Menutech',
-            logoImg: 'https://menutech.services/assets/img/logomt.png',
+            title: 'Template Tragalero',
+            logoImg: './assets/img/tragalero_negro.png',
             heroAddress: '100 Tenth Avenue, New York City, NY 1001',
             heroImg: 'https://res.cloudinary.com/dzklt0a5u/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
             aboutImg1: 'https://res.cloudinary.com/dzklt0a5u/image/upload/v1777151404/yiebnrm6l10wizbcdbp2.jpg',
@@ -1062,7 +1092,7 @@
             html = html.replace(/data-glf-ruid=""/g, `data-glf-ruid="${ruid}"`);
 
             if (pageData.logoImg) {
-                html = html.replace(/https:\/\/menutech\.services\/assets\/img\/logomt.png/g, window.optimizeCloudinaryUrl(pageData.logoImg, { width: 250 }));
+                html = html.replace(/https:\/\/menutech\.services\/assets\/img\/logomt\.png|\.\/assets\/img\/tragalero_negro\.png/g, window.optimizeCloudinaryUrl(pageData.logoImg, { width: 250 }));
             }
             if (pageData.heroAddress) {
                 html = html.replace(/100 Tenth Avenue, New York City, NY 1001/g, pageData.heroAddress);
@@ -1186,9 +1216,9 @@
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
 
-            const { data: currentProfile } = await sb.from('profiles').select('role').eq('id', user.id).single();
+            const { data: currentProfile } = await sb.from('usuarios').select('*').eq('id', user.id).single();
             const rawRole = (currentProfile?.role || 'owner').toUpperCase();
-            const allowedRoles = ['ADMIN', 'DEVELOPER', 'OWNER', 'CS', 'ADMINCS'];
+            const allowedRoles = ['ADMIN', 'DEVELOPER', 'OWNER', 'CS', 'ADMINCS', 'VENTAS', 'SUPPORT', 'DESIGN'];
             if (!currentProfile || !allowedRoles.includes(rawRole)) {
                 location.href = "index.html";
                 return;
@@ -1196,18 +1226,18 @@
 
             activeOwnerId = user.id;
 
-            // Optimization: Fetch profile and template in parallel
             const [profileRes, templateRes] = await Promise.all([
-                sb.from('profiles').select('role, username, domain').eq('id', user.id).single(),
+                sb.from('usuarios').select('*').eq('id', user.id).single(),
                 sb.from('menutech_web_templates').select('config').eq('user_id', user.id).single()
             ]);
 
             const profile = profileRes.data;
             userRole = (profile?.role || 'owner').toUpperCase();
 
-            if (profile) {
-                document.getElementById('current-account-name').value = profile.username || profile.domain || 'Your Store';
-            }
+            const accountName = profile?.name || profile?.domain || 'Your Store';
+            document.getElementById('current-account-name').value = accountName;
+            const activeProjEl = document.getElementById('active-project-name');
+            if (activeProjEl) activeProjEl.textContent = accountName;
 
             const privilegedRoles = ['ADMIN', 'DEVELOPER', 'ADMINCS', 'CS', 'ADMINDESIGN', 'DESIGN', 'RETENTION'];
             const btnExport = document.getElementById('btn-export');
@@ -1216,6 +1246,16 @@
             if (privilegedRoles.includes(userRole)) {
                 const adminGroup = document.getElementById('admin-context-group');
                 if (adminGroup) adminGroup.style.display = 'block';
+
+                // Enable sidebar tab for privileged roles
+                const sbTab = document.getElementById('sidebar-tab');
+                if (sbTab) {
+                    sbTab.onclick = () => {
+                        const sbCont = document.getElementById('sidebar-container');
+                        if (sbCont) sbCont.classList.toggle('collapsed');
+                    };
+                }
+                await setupContextSwitcher();
 
                 if (userRole === 'CS' || userRole === 'ADMINCS') {
                     if (btnExport) btnExport.classList.add('hidden');
@@ -1239,7 +1279,6 @@
 
             syncForm();
             window.updateIframe();
-
         }
 
         let contextInitialized = false;
@@ -1247,36 +1286,37 @@
             if (contextInitialized) return;
 
             const list = document.getElementById('client-list');
-            list.innerHTML = '<div style="padding: 20px; text-align: center; font-size: 0.8rem; color: var(--text-dim);">Loading clients...</div>';
+            if (list) list.innerHTML = '<div style="padding: 20px; text-align: center; font-size: 0.8rem; color: var(--text-dim);">Cargando clientes...</div>';
 
             try {
-                // Optimization: Select only required columns
-                const { data } = await sb.from('profiles').select('id, username, domain');
+                const { data } = await sb.from('usuarios').select('*');
                 allOwners = data || [];
                 renderOwners(allOwners);
 
-                document.getElementById('client-search').oninput = (e) => {
-                    const term = e.target.value.toLowerCase();
-                    renderOwners(allOwners.filter(o =>
-                        (o.username || '').toLowerCase().includes(term) ||
-                        (o.domain || '').toLowerCase().includes(term)
-                    ));
-                };
+                const searchInput = document.getElementById('client-search');
+                if (searchInput) {
+                    searchInput.oninput = (e) => {
+                        const term = e.target.value.toLowerCase();
+                        renderOwners(allOwners.filter(o =>
+                            (o.name || '').toLowerCase().includes(term) ||
+                            (o.domain || '').toLowerCase().includes(term) ||
+                            (o.email || '').toLowerCase().includes(term)
+                        ));
+                    };
+                }
                 contextInitialized = true;
             } catch (e) {
-                list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--error);">Error loading clients</div>';
+                if (list) list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--error);">Error al cargar clientes</div>';
             }
         }
 
         function renderOwners(owners) {
             const list = document.getElementById('client-list');
+            if (!list) return;
             list.innerHTML = owners.map(o => `
-                <div class="client-item ${o.id === activeOwnerId ? 'active' : ''}" onclick="window.switchContext('${o.id}', '${o.username || o.domain || 'Client'}')">
-                    <div class="avatar">${(o.username || 'C').charAt(0).toUpperCase()}</div>
-                    <div class="client-info">
-                        <span class="client-name">${o.username || 'No name'}</span>
-                        <span class="client-domain">${o.domain || ''}</span>
-                    </div>
+                <div class="client-item ${o.id === activeOwnerId ? 'active' : ''}" onclick="window.switchContext('${o.id}', '${o.name || o.domain || o.email || 'Cliente'}')">
+                    <span class="name">${o.name || 'Sin nombre'}</span>
+                    <span class="domain">${o.domain || o.email || ''}</span>
                 </div>
             `).join('');
         }
@@ -1284,16 +1324,16 @@
         window.switchContext = async function(ownerId, name) {
             activeOwnerId = ownerId;
             document.getElementById('current-account-name').value = name;
-            window.toggleContextSidebar();
+            const activeProjEl = document.getElementById('active-project-name');
+            if (activeProjEl) activeProjEl.textContent = name;
             renderOwners(allOwners);
             await loadTemplate(activeOwnerId);
         };
 
         window.toggleContextSidebar = function() {
-            const isActive = document.getElementById('context-sidebar').classList.toggle('active');
-            document.getElementById('context-overlay').classList.toggle('active');
-
-            if (isActive) {
+            const sbCont = document.getElementById('sidebar-container');
+            if (sbCont) sbCont.classList.toggle('collapsed');
+            if (sbCont && !sbCont.classList.contains('collapsed')) {
                 setupContextSwitcher();
             }
         };
