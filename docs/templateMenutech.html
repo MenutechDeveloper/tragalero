@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restaurant – Mexican Food & Delivery</title>
-    <link rel="icon" id="favicon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <title>Restaurante – Tragalero Template</title>
+    <link rel="icon" id="favicon" type="image/png" href="./assets/img/tragalero_negro.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
@@ -688,7 +688,7 @@ a {
     <!-- Navbar -->
     <nav class="navbar">
         <div class="container nav-container">
-            <a href="#" class="navbar-brand" id="nav-brand">Template Menutech</a>
+            <a href="#" class="navbar-brand" id="nav-brand">Template Tragalero</a>
             <button class="navbar-toggler" id="navbar-toggler" aria-label="Toggle navigation">
                 <span class="toggler-icon"></span>
                 <span class="toggler-icon"></span>
@@ -715,20 +715,20 @@ a {
         <div class="hero-overlay"></div>
         <div class="hero-content">
             <div class="hero-logo-container">
-                <img src="https://menutech.services/assets/img/logomt.png" id="hero-logo" alt="Logo" class="hero-logo" width="120" height="120">
+                <img src="./assets/img/tragalero_negro.png" id="hero-logo" alt="Logo" class="hero-logo" width="120" height="120">
             </div>
             <h2 class="hero-subtitle">
                 <span></span>
             </h2>
             <div class="hero-buttons">
-                <!-- 1. Script Motor Menutech -->
+                <!-- 1. Script Motor Tragalero / GloriaFood -->
                 <script src="https://www.fbgcdn.com/embedder/js/ewm2.js"></script>
 
-                <!-- 2. Librería Menutech -->
-                <script src="https://menutech.xyz/menutechUI.min.js"></script>
+                <!-- 2. Librería Tragalero -->
+                <script src="./tragaleroUI.js"></script>
 
                 <!-- 3. Botones Personalizados -->
-                <menutech-orders
+                <tragalero-orders
                 id="hero-orders"
                 cuid=""
                 ruid=""
@@ -736,10 +736,10 @@ a {
                 color="#ffffff"
                 data-glf-cuid=""
                 data-glf-ruid="">
-                </menutech-orders>
+                </tragalero-orders>
 
                 <div id="hero-reservations-wrapper" style="display: inline-block;">
-                    <menutech-reservations
+                    <tragalero-reservations
                     id="hero-reservations"
                     cuid=""
                     ruid=""
@@ -748,7 +748,7 @@ a {
                     data-glf-cuid=""
                     data-glf-ruid=""
                     data-glf-reservation="true">
-                    </menutech-reservations>
+                    </tragalero-reservations>
                 </div>
 
                 <!-- 4. Forzar vinculación (Opcional si no abre a la primera) -->
@@ -950,7 +950,7 @@ a {
                 </div>
             </div>
             <div style="text-align: center; margin-top: 40px; font-size: 14px; color: #9a9a9a; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
-                © 2015 - <span id="copyright-year"></span> Powered by <a href="https://menutech.xyz/" target="_blank" style="color: #ff9533; font-weight: 800;">Menutech</a>
+                © 2015 - <span id="copyright-year"></span> Powered by <a href="https://tragalero.com/" target="_blank" style="color: #ff9533; font-weight: 800;">Tragalero</a>
             </div>
         </div>
     </footer>
@@ -1065,9 +1065,9 @@ a {
             const cuid = data.cuid || '';
             const ruid = data.ruid || '';
 
-            const ordersBtn = document.querySelector('menutech-orders');
+            const ordersBtn = document.querySelector('tragalero-orders, menutech-orders');
             if (ordersBtn) {
-                const newOrdersBtn = document.createElement('menutech-orders');
+                const newOrdersBtn = document.createElement('tragalero-orders');
                 newOrdersBtn.setAttribute('cuid', cuid);
                 newOrdersBtn.setAttribute('ruid', ruid);
                 newOrdersBtn.setAttribute('background', '#f2a04a');
@@ -1080,9 +1080,9 @@ a {
             const resWrapper = document.getElementById('hero-reservations-wrapper');
             if (resWrapper) {
                 resWrapper.style.setProperty('display', (data.showReservations !== false) ? 'inline-block' : 'none', 'important');
-                const resBtn = resWrapper.querySelector('menutech-reservations');
+                const resBtn = resWrapper.querySelector('tragalero-reservations, menutech-reservations');
                 if (resBtn) {
-                    const newResBtn = document.createElement('menutech-reservations');
+                    const newResBtn = document.createElement('tragalero-reservations');
                     newResBtn.setAttribute('cuid', cuid);
                     newResBtn.setAttribute('ruid', ruid);
                     newResBtn.setAttribute('background', '#2f4854');
