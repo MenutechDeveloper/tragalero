@@ -327,6 +327,9 @@
         }
         .sidebar-tab:hover { width: 55px; padding-left: 10px; }
     </style>
+    <!-- Supabase JS & Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./assets/js/supabase_logic.js"></script>
 </head>
 <body>
     <div class="bg-mesh"></div>
@@ -644,10 +647,7 @@
         </main>
     </div>
 
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-        import { MT_CONFIG } from './config.js';
-
+    <script>
         window.optimizeCloudinaryUrl = (url, options = {}) => {
             if (!url || typeof url !== 'string' || !url.includes('res.cloudinary.com')) return url;
             const [baseUrl, hash] = url.split('#');
@@ -679,7 +679,7 @@
             return hash ? `${optimizedUrl}#${hash}` : optimizedUrl;
         };
 
-        window.sb = createClient(MT_CONFIG.SUPABASE_URL, MT_CONFIG.SUPABASE_KEY);
+        window.sb = supabaseClient;
         const sb = window.sb;
 
         let user = null;
@@ -1243,18 +1243,18 @@
             const btnExport = document.getElementById('btn-export');
             const btnComplete = document.getElementById('btn-complete');
 
+            const sbTab = document.getElementById('sidebar-tab');
+            if (sbTab) {
+                sbTab.onclick = () => {
+                    const sbCont = document.getElementById('sidebar-container');
+                    if (sbCont) sbCont.classList.toggle('collapsed');
+                };
+            }
+
             if (privilegedRoles.includes(userRole)) {
                 const adminGroup = document.getElementById('admin-context-group');
                 if (adminGroup) adminGroup.style.display = 'block';
 
-                // Enable sidebar tab for privileged roles
-                const sbTab = document.getElementById('sidebar-tab');
-                if (sbTab) {
-                    sbTab.onclick = () => {
-                        const sbCont = document.getElementById('sidebar-container');
-                        if (sbCont) sbCont.classList.toggle('collapsed');
-                    };
-                }
                 await setupContextSwitcher();
 
                 if (userRole === 'CS' || userRole === 'ADMINCS') {
@@ -1339,29 +1339,57 @@
         };
 
         async function loadTemplate(ownerId) {
-            console.log("MT: Loading template for owner", ownerId);
-            // Optimization: Reset state before loading to prevent UI leaks between accounts
+            console.log("Tragalero: Loading template for owner", ownerId);
             pageData = JSON.parse(JSON.stringify(DEFAULT_DATA));
             pageData.title = document.getElementById('current-account-name').value;
-            pageData = migrateData(pageData); // Ensure full structure
-
-            syncForm();
-            window.updateIframe();
+            pageData = migrateData(pageData);
 
             try {
+                // 1. Check if business profile exists for this owner in businesses table (from directorymap)
+                const { data: biz } = await sb.from('businesses')
+                    .select('*')
+                    .eq('owner_id', ownerId)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (biz) {
+                    if (biz.name) pageData.title = biz.name;
+                    if (biz.cuid) pageData.cuid = biz.cuid;
+                    if (biz.ruid) pageData.ruid = biz.ruid;
+                    if (biz.has_reservation !== undefined && biz.has_reservation !== null) pageData.showReservations = biz.has_reservation;
+                    if (biz.logo_url) pageData.logoImg = biz.logo_url;
+                    if (biz.address_detail) {
+                        pageData.heroAddress = biz.address_detail;
+                        if (!pageData.info) pageData.info = {};
+                        pageData.info.address = biz.address_detail;
+                        if (!pageData.contact) pageData.contact = {};
+                        pageData.contact.address = biz.address_detail;
+                    }
+                    if (biz.social_media && typeof biz.social_media === 'object') {
+                        const newSocials = [];
+                        if (biz.social_media.instagram) newSocials.push({ platform: 'instagram', url: biz.social_media.instagram });
+                        if (biz.social_media.facebook) newSocials.push({ platform: 'facebook', url: biz.social_media.facebook });
+                        if (biz.social_media.whatsapp) newSocials.push({ platform: 'whatsapp', url: biz.social_media.whatsapp });
+                        if (newSocials.length) pageData.socials = newSocials;
+                    }
+                }
+
+                // 2. Fetch template config saved in menutech_web_templates table
                 const { data, error } = await sb.from('menutech_web_templates')
                     .select('*')
                     .eq('user_id', ownerId)
                     .single();
 
                 if (data && data.config) {
-                    pageData = migrateData(data.config);
-                } else {
-                    // Keep the reset state + account name if no template exists
-                    pageData.title = document.getElementById('current-account-name').value;
+                    const savedConfig = migrateData(data.config);
+                    pageData = { ...pageData, ...savedConfig };
+                    if (savedConfig.contact) pageData.contact = { ...pageData.contact, ...savedConfig.contact };
+                    if (savedConfig.info) pageData.info = { ...pageData.info, ...savedConfig.info };
+                    if (savedConfig.socials && savedConfig.socials.length) pageData.socials = savedConfig.socials;
                 }
             } catch (e) {
-                console.error("MT: Error loading template", e);
+                console.error("Tragalero: Error loading template", e);
             }
 
             syncForm();
