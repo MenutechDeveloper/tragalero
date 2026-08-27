@@ -478,9 +478,19 @@
                 if (snippetSection) snippetSection.classList.remove('hidden');
                 await setupContextSwitcher();
             }
-            activeOwnerId = profile.id;
-            activeDomain = profile.domain;
-            showApp(profile);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlOwnerId = urlParams.get('owner_id');
+            const passedId = urlOwnerId || sessionStorage.getItem('mt_edit_owner_id');
+
+            if (passedId && (rawRole === 'admin' || rawRole === 'developer')) {
+                sessionStorage.removeItem('mt_edit_owner_id');
+                await switchContext(passedId);
+            } else {
+                activeOwnerId = profile.id;
+                activeDomain = profile.domain;
+                await showApp(profile);
+            }
         }
 
         async function setupContextSwitcher() {
