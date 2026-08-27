@@ -303,7 +303,7 @@
             <div class="sidebar-container hidden" id="sidebar-container">
                 <div class="sidebar" id="sidebar">
                     <div class="search-box">
-                        <label>Find Project</label>
+                    <label>Buscar Cliente</label>
                         <input type="text" id="client-search" placeholder="Domain or Name...">
                         <div class="client-list" id="client-list"></div>
                         <div id="project-info" class="switcher-box hidden" style="width: 100%; margin: 0; padding-top: 15px; border-top: 1px solid var(--border); margin-top: auto;">
@@ -312,7 +312,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="sidebar-tab" id="sidebar-tab">Find Project</div>
+            <div class="sidebar-tab" id="sidebar-tab">Clientes</div>
             </div>
 
             <div class="main-content">
@@ -462,13 +462,11 @@
             user = profile;
             userRole = profile.role || 'Owner';
 
+            const privilegedRoles = ['admin', 'developer', 'admincs', 'cs', 'admindesign', 'design', 'retention'];
             const rawRole = userRole.toLowerCase();
-            if (rawRole === 'cs' || rawRole === 'admincs') {
-                location.href = "admin.html";
-                return;
-            }
+            const isPrivileged = privilegedRoles.includes(rawRole);
 
-            if (rawRole === 'admin' || rawRole === 'developer') {
+            if (isPrivileged) {
                 const sbContainer = document.getElementById('sidebar-container');
                 if (sbContainer) {
                     sbContainer.classList.remove('hidden');
@@ -483,7 +481,7 @@
             const urlOwnerId = urlParams.get('owner_id');
             const passedId = urlOwnerId || sessionStorage.getItem('mt_edit_owner_id');
 
-            if (passedId && (rawRole === 'admin' || rawRole === 'developer')) {
+            if (passedId && isPrivileged) {
                 sessionStorage.removeItem('mt_edit_owner_id');
                 await switchContext(passedId);
             } else {
