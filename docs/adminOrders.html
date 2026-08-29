@@ -3,8 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orders Management | Menutech</title>
-    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+    <title>Ordenes | Tragalero</title>
+    <link rel="icon" type="image/png" href="./assets/img/tragalero_negro.png">
+
+    <!-- Bootstrap 5 CSS & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet" href="./assets/css/pastel-theme.css">
+    <script src="./assets/js/theme.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 
@@ -294,29 +301,21 @@
     <div id="toast-container"></div>
 
     <div id="top-nav" class="hidden">
-        <div><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <div class="theme-switch" id="theme-toggle">
-                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            </div>
-            <div id="user-display-pill">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <div class="pill-info">
-                    <div id="user-name">&nbsp;</div>
-                    <div id="user-role-label">&nbsp;</div>
-                </div>
-                <div class="pill-menu">
-                    <a href="index.html" class="pill-menu-item">Home</a>
-                    <div class="pill-menu-item danger" onclick="logout()">Logout</div>
-                </div>
-            </div>
+        <div><button class="btn-panel-top" onclick="location.href='admin.html'">PANEL</button></div>
+    </div>
+
+    <div class="theme-switcher-container d-flex align-items-center bg-white bg-opacity-10 p-2 rounded-pill shadow-sm">
+        <div id="authButtons" class="me-3 ps-2"></div>
+        <div class="theme-switcher-bar d-flex">
+            <button class="theme-btn" data-theme-value="light" title="Modo Amarillo"><i class="bi bi-sun-fill"></i></button>
+            <button class="theme-btn" data-theme-value="dark" title="Modo Oscuro"><i class="bi bi-moon-stars-fill"></i></button>
+            <button class="theme-btn" data-theme-value="medio" title="Modo Suave"><i class="bi bi-palette-fill"></i></button>
         </div>
     </div>
 
     <div class="container hidden" id="main-app">
         <header>
-            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
+            <img src="./assets/img/tragalero_negro.png" class="logo-main" alt="Tragalero Logo">
         </header>
 
         <div class="dashboard-layout">
@@ -365,8 +364,13 @@
         </div>
     </div>
 
-    <script type="module">
-        import { supabase as sb } from './supabase.js';
+    <!-- Bootstrap JS & Supabase Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./assets/js/supabase_logic.js"></script>
+
+    <script>
+        const sb = supabaseClient;
 
         let user = null, userRole = null, activeOwnerId = null;
         let orders = [];
@@ -379,86 +383,78 @@
         let alertAudio = null;
 
         async function init() {
-            initTheme();
             initEvents();
 
-            const { data: { session } } = await sb.auth.getSession();
-            if (!session) { location.href = 'index.html'; return; }
-            user = session.user;
+            const profile = await getLoggedInUser();
+            if (!profile) { location.href = 'login.html'; return; }
+            user = profile;
+            userRole = profile.role || 'Owner';
+            activeOwnerId = profile.id;
 
-            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-            if (!profile) {
-                userRole = 'owner';
-                activeOwnerId = user.id;
-                showApp(null);
-                loadOrders();
-                subscribeToOrders();
-                return;
-            }
+            const privilegedRoles = ['admin', 'developer', 'admincs', 'cs', 'admindesign', 'design', 'retention'];
+            const isPrivileged = privilegedRoles.includes(userRole.toLowerCase());
 
-            userRole = profile.role;
-            activeOwnerId = user.id;
-
-            if (userRole === 'admin' || userRole === 'developer' || userRole === 'CS' || userRole === 'adminCS') {
-                document.getElementById('sidebar-container').classList.remove('hidden');
-                document.getElementById('sidebar-container').classList.add('collapsed');
+            if (isPrivileged) {
+                const sbContainer = document.getElementById('sidebar-container');
+                if (sbContainer) {
+                    sbContainer.classList.remove('hidden');
+                    sbContainer.classList.add('collapsed');
+                }
                 await setupContextSwitcher();
             }
 
-            showApp(profile);
-            loadOrders();
-            subscribeToOrders();
-        }
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlOwnerId = urlParams.get('owner_id');
+            const passedId = urlOwnerId || sessionStorage.getItem('mt_edit_owner_id');
 
-        async function showApp(profile) {
-            document.getElementById('main-app').classList.remove('hidden');
-            document.getElementById('top-nav').classList.remove('hidden');
-
-            const pill = document.getElementById('user-display-pill');
-            const nameEl = document.getElementById('user-name');
-            const roleEl = document.getElementById('user-role-label');
-
-            if (profile) {
-                nameEl.textContent = profile.username || user.email.split('@')[0];
-                roleEl.textContent = profile.role || 'User';
-
-                const role = (profile.role || 'user').trim().toUpperCase();
-                if (role === 'ADMIN') pill.classList.add('admin-glow');
-                else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
-                else pill.classList.add('owner-glow');
+            if (passedId && isPrivileged) {
+                sessionStorage.removeItem('mt_edit_owner_id');
+                await switchContext(passedId);
             } else {
-                nameEl.textContent = user.email.split('@')[0];
-                roleEl.textContent = 'Owner';
-                pill.classList.add('owner-glow');
+                await showApp(profile);
+                await loadOrders();
+                subscribeToOrders();
             }
         }
 
+        async function showApp(profile) {
+            await renderUserMenu('authButtons');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('top-nav').classList.remove('hidden');
+        }
+
         async function setupContextSwitcher() {
-            const { data } = await sb.from('profiles').select('*');
+            const { data } = await sb.from('usuarios').select('*');
             allOwners = data || [];
             renderOwners(allOwners);
-            document.getElementById('client-search').oninput = (e) => {
-                const term = e.target.value.toLowerCase();
-                renderOwners(allOwners.filter(o => (o.username||'').toLowerCase().includes(term) || (o.domain||'').toLowerCase().includes(term)));
-            };
+            const searchInput = document.getElementById('client-search');
+            if (searchInput) {
+                searchInput.oninput = (e) => {
+                    const term = e.target.value.toLowerCase();
+                    renderOwners(allOwners.filter(o => (o.name||'').toLowerCase().includes(term) || (o.domain||'').toLowerCase().includes(term) || (o.email||'').toLowerCase().includes(term)));
+                };
+            }
         }
 
         function renderOwners(owners) {
             const list = document.getElementById('client-list');
-            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.username || 'User'}</span><span class="domain">${o.domain || o.id.substring(0,8)}</span></div>`).join('');
+            if (!list) return;
+            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.name || o.email || 'User'}</span><span class="domain">${o.domain || o.id.substring(0,8)}</span></div>`).join('');
         }
 
         window.switchContext = async (ownerId) => {
             const owner = allOwners.find(o => o.id === ownerId);
             if (!owner) return;
             activeOwnerId = ownerId;
-            document.getElementById('active-project-name').textContent = owner.username || owner.email;
-            document.getElementById('project-info').classList.remove('hidden');
+            const activeProject = document.getElementById('active-project-name');
+            if (activeProject) activeProject.textContent = owner.name || owner.email;
+            const projectInfo = document.getElementById('project-info');
+            if (projectInfo) projectInfo.classList.remove('hidden');
             renderOwners(allOwners);
 
             if (ordersChannel) sb.removeChannel(ordersChannel);
 
-            loadOrders();
+            await loadOrders();
             subscribeToOrders();
         }
 
@@ -828,21 +824,9 @@
         }
 
 
-        function initTheme() {
-            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
-            document.getElementById('theme-toggle').onclick = () => {
-                document.body.classList.toggle('dark-mode');
-                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-            };
-        }
-
         function initEvents() {
-            document.getElementById('sidebar-tab').onclick = () => document.getElementById('sidebar-container').classList.toggle('collapsed');
-            const pill = document.getElementById('user-display-pill');
-            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
-            document.addEventListener('click', () => pill.classList.remove('active'));
-            window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
-
+            const sbTab = document.getElementById('sidebar-tab');
+            if (sbTab) sbTab.onclick = () => document.getElementById('sidebar-container').classList.toggle('collapsed');
         }
 
         init();
