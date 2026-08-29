@@ -1022,18 +1022,96 @@
                 const editorId = mapping[templateId];
                 if (editorId) {
                     const el = document.getElementById(editorId);
-                    if (el) {
-                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const sidebarContent = document.querySelector('.sidebar-content');
+                    if (el && sidebarContent) {
+                        const containerRect = sidebarContent.getBoundingClientRect();
+                        const elRect = el.getBoundingClientRect();
+                        const relativeTop = elRect.top - containerRect.top + sidebarContent.scrollTop;
+                        sidebarContent.scrollTo({
+                            top: Math.max(0, relativeTop - (containerRect.height / 2) + (elRect.height / 2)),
+                            behavior: 'smooth'
+                        });
+
                         // Brief highlight
                         el.style.transition = 'box-shadow 0.3s ease';
                         el.style.boxShadow = '0 0 15px var(--orange)';
                         setTimeout(() => {
                             el.style.boxShadow = '';
                         }, 1500);
-                        el.focus();
+                        try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
                     }
                 }
             }
+        });
+
+        // Function to notify iframe to scroll to matching section when editor controls are interacted with
+        window.notifyIframeScroll = function(targetTemplateId) {
+            const iframe = document.getElementById('preview-iframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ type: 'SCROLL_TO_TEMPLATE', id: targetTemplateId }, '*');
+            }
+        };
+
+        // Attach focus/click listeners to editor inputs
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputToTemplateMap = {
+                'site-title': 'nav-brand',
+                'cuid': 'hero-orders',
+                'ruid': 'hero-reservations',
+                'show-reservations': 'hero-reservations',
+                'logo-drop-zone': 'hero-logo',
+                'hero-address': 'hero-address',
+                'hero-drop-zone': 'hero-section',
+                'show-about': 'about-section',
+                'about-title': 'about-title',
+                'about-subtitle': 'about-subtitle',
+                'about1-drop-zone': 'about-img-1',
+                'about2-drop-zone': 'about-img-2',
+                'about': 'about-section',
+                'show-promo': 'promo-section',
+                'promo-drop-zone': 'promo-section',
+                'promo1-title': 'promo1-title',
+                'promo1-subtitle': 'promo1-subtitle',
+                'promo2-title': 'promo2-title',
+                'promo2-subtitle': 'promo2-subtitle',
+                'promo3-title': 'promo3-title',
+                'promo3-subtitle': 'promo3-subtitle',
+                'promo': 'promo-section',
+                'show-gallery': 'gallery-section',
+                'gallery-title': 'gallery-title',
+                'gallery-subtitle': 'gallery-subtitle',
+                'gallery-drop-zone': 'gallery-section',
+                'show-catering': 'catering-section',
+                'catering-title': 'catering-title',
+                'catering-subtitle': 'catering-subtitle',
+                'catering-drop-zone': 'catering-section',
+                'catering': 'catering-section',
+                'show-info': 'info-section',
+                'info-title': 'info-title',
+                'info-subtitle': 'info-subtitle',
+                'info-hours': 'info-hours',
+                'info-phone': 'info-phone',
+                'info-address': 'info-address',
+                'show-delivery': 'delivery-section',
+                'delivery-title': 'delivery-title',
+                'delivery-subtitle': 'delivery-subtitle',
+                'delivery-drop-zone': 'delivery-section',
+                'delivery': 'delivery-section',
+                'contact-phone': 'footer-phone',
+                'contact-address': 'footer-address',
+                'contact-hours': 'footer-hours',
+                'social-list': 'social-icons'
+            };
+
+            Object.keys(inputToTemplateMap).forEach(editorId => {
+                const el = document.getElementById(editorId);
+                if (el) {
+                    const templateId = inputToTemplateMap[editorId];
+                    const handler = () => window.notifyIframeScroll(templateId);
+                    el.addEventListener('focus', handler);
+                    el.addEventListener('click', handler);
+                }
+            });
         });
 
         window.saveTemplate = async () => {

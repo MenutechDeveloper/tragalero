@@ -1067,14 +1067,10 @@ a {
 
             const ordersBtn = document.querySelector('tragalero-orders, menutech-orders');
             if (ordersBtn) {
-                const newOrdersBtn = document.createElement('tragalero-orders');
-                newOrdersBtn.setAttribute('cuid', cuid);
-                newOrdersBtn.setAttribute('ruid', ruid);
-                newOrdersBtn.setAttribute('background', '#f2a04a');
-                newOrdersBtn.setAttribute('color', '#ffffff');
-                newOrdersBtn.setAttribute('data-glf-cuid', cuid);
-                newOrdersBtn.setAttribute('data-glf-ruid', ruid);
-                ordersBtn.parentNode.replaceChild(newOrdersBtn, ordersBtn);
+                if (ordersBtn.getAttribute('cuid') !== cuid) ordersBtn.setAttribute('cuid', cuid);
+                if (ordersBtn.getAttribute('ruid') !== ruid) ordersBtn.setAttribute('ruid', ruid);
+                if (ordersBtn.getAttribute('data-glf-cuid') !== cuid) ordersBtn.setAttribute('data-glf-cuid', cuid);
+                if (ordersBtn.getAttribute('data-glf-ruid') !== ruid) ordersBtn.setAttribute('data-glf-ruid', ruid);
             }
 
             const resWrapper = document.getElementById('hero-reservations-wrapper');
@@ -1082,15 +1078,10 @@ a {
                 resWrapper.style.setProperty('display', (data.showReservations !== false) ? 'inline-block' : 'none', 'important');
                 const resBtn = resWrapper.querySelector('tragalero-reservations, menutech-reservations');
                 if (resBtn) {
-                    const newResBtn = document.createElement('tragalero-reservations');
-                    newResBtn.setAttribute('cuid', cuid);
-                    newResBtn.setAttribute('ruid', ruid);
-                    newResBtn.setAttribute('background', '#2f4854');
-                    newResBtn.setAttribute('color', '#ffffff');
-                    newResBtn.setAttribute('data-glf-cuid', cuid);
-                    newResBtn.setAttribute('data-glf-ruid', ruid);
-                    newResBtn.setAttribute('data-glf-reservation', 'true');
-                    resBtn.parentNode.replaceChild(newResBtn, resBtn);
+                    if (resBtn.getAttribute('cuid') !== cuid) resBtn.setAttribute('cuid', cuid);
+                    if (resBtn.getAttribute('ruid') !== ruid) resBtn.setAttribute('ruid', ruid);
+                    if (resBtn.getAttribute('data-glf-cuid') !== cuid) resBtn.setAttribute('data-glf-cuid', cuid);
+                    if (resBtn.getAttribute('data-glf-ruid') !== ruid) resBtn.setAttribute('data-glf-ruid', ruid);
                 }
             }
 
@@ -1218,6 +1209,14 @@ a {
         window.addEventListener('message', (event) => {
             if (event.data.type === 'UPDATE_CONTENT') {
                 updateUI(event.data.data);
+            } else if (event.data.type === 'SCROLL_TO_TEMPLATE') {
+                const targetId = event.data.id;
+                if (targetId) {
+                    const el = document.getElementById(targetId);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
             }
         });
 
