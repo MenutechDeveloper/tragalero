@@ -984,6 +984,68 @@ class TragaleroActionBase extends HTMLElement {
 customElements.define('tragalero-orders', class extends TragaleroActionBase { constructor() { super('orders'); } });
 customElements.define('tragalero-reservations', class extends TragaleroActionBase { constructor() { super('reservations'); } });
 
+/**
+ * Tragalero Menu Web Component
+ * Usage: <tragalero-menu slug="frank"></tragalero-menu> or <tragalero-menu domain="example.com"></tragalero-menu>
+ */
+class TragaleroMenu extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+    }
+
+    static get observedAttributes() {
+        return ['slug', 'domain', 'height'];
+    }
+
+    attributeChangedCallback() {
+        this.render();
+    }
+
+    connectedCallback() {
+        this.render();
+    }
+
+    render() {
+        const slug = this.getAttribute('slug') || '';
+        const domain = this.getAttribute('domain') || '';
+        const height = this.getAttribute('height') || '850px';
+
+        let targetUrl = 'https://tragalero.com/menu.html';
+        if (slug) {
+            targetUrl += `?n=${encodeURIComponent(slug)}`;
+        } else if (domain) {
+            targetUrl += `?domain=${encodeURIComponent(domain)}`;
+        }
+
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host {
+                    display: block;
+                    width: 100%;
+                    max-width: 1000px;
+                    margin: 0 auto;
+                    box-sizing: border-box;
+                }
+                .menu-iframe {
+                    width: 100%;
+                    height: ${height};
+                    border: none;
+                    border-radius: 24px;
+                    box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+                    background: transparent;
+                }
+            </style>
+            <iframe class="menu-iframe" src="${targetUrl}" allow="geolocation; microphone; camera" loading="lazy"></iframe>
+        `;
+    }
+}
+
+window.TragaleroMenu = TragaleroMenu;
+if (!customElements.get('tragalero-menu')) {
+    customElements.define('tragalero-menu', TragaleroMenu);
+}
+
 // Global TragaleroUI object for legacy compatibility
 window.TragaleroUI = {
     init: () => {
