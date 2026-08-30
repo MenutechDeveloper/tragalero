@@ -97,9 +97,19 @@
         .dish-card {
             background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 18px;
             display: flex; gap: 16px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-            position: relative; overflow: hidden;
+            position: relative; overflow: hidden; cursor: pointer;
         }
         .dish-card:hover { border-color: var(--orange); transform: translateY(-2px); }
+
+        /* Floating Cart Button */
+        .cart-float-btn {
+            position: fixed; bottom: 24px; right: 24px; z-index: 5000;
+            background: var(--orange); color: #ffffff; border: none; padding: 14px 24px;
+            border-radius: 30px; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center;
+            gap: 12px; box-shadow: 0 10px 30px rgba(255,149,51,0.4); cursor: pointer; transition: 0.3s;
+        }
+        .cart-float-btn:hover { transform: scale(1.05); filter: brightness(1.05); }
+        .cart-badge { background: #ffffff; color: var(--orange); padding: 2px 10px; border-radius: 12px; font-size: 0.85rem; }
         .dish-thumb { width: 90px; height: 90px; border-radius: 14px; object-fit: cover; flex-shrink: 0; background: var(--input); }
         .dish-details { flex: 1; min-width: 0; display: flex; flex-direction: column; }
         .dish-title { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
@@ -138,6 +148,13 @@
         </div>
 
         <div id="menu-app" class="d-none">
+            <!-- Floating Cart Button -->
+            <button id="cart-float" class="cart-float-btn d-none" onclick="openCartModal()">
+                <i class="bi bi-cart-fill"></i>
+                <span>Ver Pedido</span>
+                <span class="cart-badge" id="cart-count">0</span>
+            </button>
+
             <!-- Cover Header -->
             <div class="cover-wrapper" id="cover-container">
                 <div id="cover-media"></div>
@@ -147,12 +164,6 @@
                         <h1 id="biz-name" class="biz-name">Restaurante</h1>
                     </div>
                 </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="action-bar" id="action-bar">
-                <div id="orders-btn-wrapper"></div>
-                <div id="res-btn-wrapper"></div>
             </div>
 
             <!-- Category Pills Nav -->
@@ -168,8 +179,87 @@
         </div>
     </div>
 
+    <!-- Dish Modal -->
+    <div class="modal fade" id="dishModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg" style="background: var(--card); color: var(--text);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title font-outfit fw-bold" id="modal-dish-name">Platillo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="modal-dish-img" src="" class="w-100 rounded-3 mb-3 object-fit-cover d-none" style="height:200px;">
+                    <p id="modal-dish-desc" class="text-secondary small mb-3"></p>
+
+                    <div id="modal-dish-sizes-wrapper" class="mb-3 d-none">
+                        <label class="form-label fw-bold small text-uppercase" style="color:var(--orange)">Tamaño / Opción</label>
+                        <div id="modal-dish-sizes" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mt-4">
+                        <label class="fw-bold small text-uppercase mb-0" style="color:var(--orange)">Cantidad</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-outline-secondary btn-sm rounded-circle px-2" onclick="adjustModalQty(-1)">-</button>
+                            <span id="modal-dish-qty" class="fw-bold px-2">1</span>
+                            <button class="btn btn-outline-secondary btn-sm rounded-circle px-2" onclick="adjustModalQty(1)">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-warning w-100 py-2 rounded-3 fw-bold text-white shadow-sm" style="background:var(--orange); border:none;" onclick="addModalItemToCart()">
+                        Agregar al Pedido • <span id="modal-dish-total">$0.00</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart / Checkout Modal -->
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg" style="background: var(--card); color: var(--text);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title font-outfit fw-bold"><i class="bi bi-bag-check me-2" style="color:var(--orange)"></i>Tu Pedido</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="cart-items-list" class="mb-3"></div>
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3 mb-4 fw-bold">
+                        <span>Total:</span>
+                        <span id="cart-total-price" class="fs-5" style="color:var(--orange)">$0.00</span>
+                    </div>
+
+                    <h6 class="font-outfit fw-bold mb-3" style="color:var(--orange)">Datos de Envío / Contacto</h6>
+                    <div class="mb-2">
+                        <input type="text" id="order-client-name" class="form-control rounded-3" placeholder="Nombre completo">
+                    </div>
+                    <div class="mb-2">
+                        <input type="tel" id="order-client-phone" class="form-control rounded-3" placeholder="Teléfono de contacto">
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" id="order-client-address" class="form-control rounded-3" placeholder="Dirección / Número de Mesa">
+                    </div>
+                    <div class="mb-2">
+                        <textarea id="order-notes" class="form-control rounded-3" rows="2" placeholder="Notas adicionales (opcional)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-warning w-100 py-3 rounded-3 fw-bold text-white shadow-sm" style="background:var(--orange); border:none;" onclick="submitOrder()">
+                        Confirmar y Enviar Pedido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const sb = supabaseClient;
+        let menuOwnerId = null;
+        let currentCategories = [];
+        let cart = [];
+        let activeDish = null;
+        let modalQty = 1;
+        let selectedSize = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadDigitalMenu();
@@ -178,9 +268,13 @@
         async function loadDigitalMenu() {
             const urlParams = new URLSearchParams(window.location.search);
             const slug = urlParams.get('n') || urlParams.get('slug');
+            const domainParam = urlParams.get('domain');
+
+            if (domainParam) {
+                return fetchMenuByQuery('domain', domainParam);
+            }
 
             if (!slug) {
-                // Try domain as fallback
                 const hostname = window.location.hostname.replace(/^www\./, '');
                 return fetchMenuByQuery('domain', hostname);
             }
@@ -194,11 +288,9 @@
             const appEl = document.getElementById('menu-app');
 
             try {
-                // 1. Fetch menu from menutech_menus
                 let query = sb.from('menutech_menus').select('*').eq(field, value).maybeSingle();
                 let { data: menuData, error: menuErr } = await query;
 
-                // Fallback: if searching slug and no match, try searching domain
                 if (!menuData && field === 'slug') {
                     const domainRes = await sb.from('menutech_menus').select('*').eq('domain', value).maybeSingle();
                     menuData = domainRes.data;
@@ -211,7 +303,9 @@
                     return;
                 }
 
-                // 2. Fetch business / user profile for CUID, RUID, Logo, and Name
+                menuOwnerId = menuData.user_id;
+                currentCategories = menuData.config?.categories || [];
+
                 let cuid = '', ruid = '', name = menuData.slug || 'Restaurante', logoUrl = '';
 
                 if (menuData.user_id) {
@@ -243,7 +337,6 @@
         }
 
         function renderMenu(menu, biz) {
-            // Title & Logo
             document.title = `${biz.name} | Tragalero Menú`;
             document.getElementById('biz-name').textContent = biz.name;
 
@@ -253,7 +346,6 @@
                 logoEl.classList.remove('d-none');
             }
 
-            // Cover Media
             const coverMedia = document.getElementById('cover-media');
             if (menu.cover_url) {
                 if (menu.cover_type === 'video') {
@@ -265,33 +357,19 @@
                 coverMedia.innerHTML = `<img src="https://res.cloudinary.com/dzklt0a5u/image/upload/f_auto,q_auto,w_1200/v1777151404/yiebnrm6l10wizbcdbp2.jpg" alt="Portada">`;
             }
 
-            // Action Buttons
-            const ordersWrapper = document.getElementById('orders-btn-wrapper');
-            const resWrapper = document.getElementById('res-btn-wrapper');
-
-            if (biz.cuid || biz.ruid) {
-                ordersWrapper.innerHTML = `<tragalero-orders cuid="${biz.cuid}" ruid="${biz.ruid}"></tragalero-orders>`;
-                resWrapper.innerHTML = `<tragalero-reservations cuid="${biz.cuid}" ruid="${biz.ruid}"></tragalero-reservations>`;
-            } else {
-                document.getElementById('action-bar').style.display = 'none';
-            }
-
-            // Categories & Dishes
-            const categories = menu.config?.categories || [];
             const pillsNav = document.getElementById('category-pills');
             const categoriesContainer = document.getElementById('categories-container');
 
             pillsNav.innerHTML = '';
             categoriesContainer.innerHTML = '';
 
-            categories.forEach((cat, idx) => {
-                const catId = `cat-${idx}`;
+            currentCategories.forEach((cat, cIdx) => {
+                const catId = `cat-${cIdx}`;
 
-                // Navigation Pill
                 const pill = document.createElement('a');
-                pill.className = `cat-pill ${idx === 0 ? 'active' : ''}`;
+                pill.className = `cat-pill ${cIdx === 0 ? 'active' : ''}`;
                 pill.href = `#${catId}`;
-                pill.textContent = cat.name || `Categoría ${idx + 1}`;
+                pill.textContent = cat.name || `Categoría ${cIdx + 1}`;
                 pill.onclick = (e) => {
                     e.preventDefault();
                     document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
@@ -301,19 +379,18 @@
                 };
                 pillsNav.appendChild(pill);
 
-                // Category Block
                 const catBlock = document.createElement('div');
                 catBlock.className = 'category-block';
                 catBlock.id = catId;
 
-                let dishesHtml = (cat.dishes || []).map(dish => {
+                let dishesHtml = (cat.dishes || []).map((dish, dIdx) => {
                     let sizesHtml = '';
                     if (dish.sizes && dish.sizes.length > 0) {
                         sizesHtml = `<div class="mt-1">${dish.sizes.map(s => `<span class="size-badge">${s.name}: $${s.price}</span>`).join('')}</div>`;
                     }
 
                     return `
-                        <div class="dish-card">
+                        <div class="dish-card" onclick="openDishModal(${cIdx}, ${dIdx})">
                             ${dish.image ? `<img src="${dish.image}" class="dish-thumb" alt="${dish.name || 'Platillo'}">` : ''}
                             <div class="dish-details">
                                 <div class="dish-title">${dish.name || 'Sin Nombre'}</div>
@@ -336,6 +413,184 @@
 
                 categoriesContainer.appendChild(catBlock);
             });
+        }
+
+        function openDishModal(cIdx, dIdx) {
+            activeDish = currentCategories[cIdx]?.dishes[dIdx];
+            if (!activeDish) return;
+
+            modalQty = 1;
+            selectedSize = null;
+
+            document.getElementById('modal-dish-name').textContent = activeDish.name || 'Platillo';
+            document.getElementById('modal-dish-desc').textContent = activeDish.description || '';
+            document.getElementById('modal-dish-qty').textContent = modalQty;
+
+            const imgEl = document.getElementById('modal-dish-img');
+            if (activeDish.image) {
+                imgEl.src = activeDish.image;
+                imgEl.classList.remove('d-none');
+            } else {
+                imgEl.classList.add('d-none');
+            }
+
+            const sizesWrapper = document.getElementById('modal-dish-sizes-wrapper');
+            const sizesContainer = document.getElementById('modal-dish-sizes');
+            sizesContainer.innerHTML = '';
+
+            if (activeDish.sizes && activeDish.sizes.length > 0) {
+                selectedSize = activeDish.sizes[0];
+                sizesWrapper.classList.remove('d-none');
+
+                activeDish.sizes.forEach((s, idx) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `btn btn-sm ${idx === 0 ? 'btn-warning text-white' : 'btn-outline-secondary'} rounded-pill fw-bold`;
+                    btn.textContent = `${s.name} ($${s.price})`;
+                    btn.onclick = () => {
+                        selectedSize = s;
+                        sizesContainer.querySelectorAll('button').forEach(b => {
+                            b.className = 'btn btn-sm btn-outline-secondary rounded-pill fw-bold';
+                        });
+                        btn.className = 'btn btn-sm btn-warning text-white rounded-pill fw-bold';
+                        updateModalPrice();
+                    };
+                    sizesContainer.appendChild(btn);
+                });
+            } else {
+                sizesWrapper.classList.add('d-none');
+            }
+
+            updateModalPrice();
+            const modal = new bootstrap.Modal(document.getElementById('dishModal'));
+            modal.show();
+        }
+
+        function adjustModalQty(delta) {
+            modalQty = Math.max(1, modalQty + delta);
+            document.getElementById('modal-dish-qty').textContent = modalQty;
+            updateModalPrice();
+        }
+
+        function updateModalPrice() {
+            if (!activeDish) return;
+            const unitPrice = selectedSize ? parseFloat(selectedSize.price) : parseFloat(activeDish.price || 0);
+            const total = unitPrice * modalQty;
+            document.getElementById('modal-dish-total').textContent = `$${total.toFixed(2)}`;
+        }
+
+        function addModalItemToCart() {
+            if (!activeDish) return;
+
+            const unitPrice = selectedSize ? parseFloat(selectedSize.price) : parseFloat(activeDish.price || 0);
+            const name = selectedSize ? `${activeDish.name} (${selectedSize.name})` : activeDish.name;
+
+            cart.push({
+                name,
+                unitPrice,
+                qty: modalQty,
+                total: unitPrice * modalQty
+            });
+
+            updateCartUI();
+
+            const modalEl = document.getElementById('dishModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+
+        function updateCartUI() {
+            const count = cart.reduce((acc, item) => acc + item.qty, 0);
+            document.getElementById('cart-count').textContent = count;
+
+            const cartBtn = document.getElementById('cart-float');
+            if (count > 0) {
+                cartBtn.classList.remove('d-none');
+            } else {
+                cartBtn.classList.add('d-none');
+            }
+        }
+
+        function openCartModal() {
+            renderCartItems();
+            const modal = new bootstrap.Modal(document.getElementById('cartModal'));
+            modal.show();
+        }
+
+        function renderCartItems() {
+            const listContainer = document.getElementById('cart-items-list');
+            listContainer.innerHTML = '';
+
+            let grandTotal = 0;
+
+            if (cart.length === 0) {
+                listContainer.innerHTML = '<p class="text-secondary text-center">Tu pedido está vacío.</p>';
+            } else {
+                cart.forEach((item, idx) => {
+                    grandTotal += item.total;
+                    const itemRow = document.createElement('div');
+                    itemRow.className = 'd-flex justify-content-between align-items-center mb-2 pb-2 border-bottom';
+                    itemRow.innerHTML = `
+                        <div>
+                            <div class="fw-bold small">${item.name}</div>
+                            <div class="text-secondary small">$${item.unitPrice.toFixed(2)} x ${item.qty}</div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fw-bold" style="color:var(--orange)">$${item.total.toFixed(2)}</span>
+                            <button class="btn btn-sm btn-link text-danger p-0" onclick="removeCartItem(${idx})"><i class="bi bi-trash"></i></button>
+                        </div>
+                    `;
+                    listContainer.appendChild(itemRow);
+                });
+            }
+
+            document.getElementById('cart-total-price').textContent = `$${grandTotal.toFixed(2)}`;
+        }
+
+        function removeCartItem(idx) {
+            cart.splice(idx, 1);
+            updateCartUI();
+            renderCartItems();
+        }
+
+        async function submitOrder() {
+            if (cart.length === 0) return alert('Tu pedido está vacío.');
+
+            const name = document.getElementById('order-client-name').value.trim();
+            const phone = document.getElementById('order-client-phone').value.trim();
+            const address = document.getElementById('order-client-address').value.trim();
+            const notes = document.getElementById('order-notes').value.trim();
+
+            if (!name || !phone) return alert('Por favor ingresa tu nombre y teléfono.');
+
+            const grandTotal = cart.reduce((acc, item) => acc + item.total, 0);
+
+            try {
+                const { error } = await sb.from('menutech_orders').insert({
+                    user_id: menuOwnerId,
+                    client_name: name,
+                    client_phone: phone,
+                    client_address: address,
+                    items: cart,
+                    total: grandTotal,
+                    status: 'pending',
+                    notes: notes
+                });
+
+                if (error) throw error;
+
+                alert('¡Pedido enviado con éxito! Te contactaremos pronto.');
+                cart = [];
+                updateCartUI();
+
+                const modalEl = document.getElementById('cartModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+
+            } catch (err) {
+                console.error("Error submitting order:", err);
+                alert('Error al enviar el pedido: ' + err.message);
+            }
         }
     </script>
 </body>
