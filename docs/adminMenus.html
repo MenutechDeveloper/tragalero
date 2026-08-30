@@ -650,11 +650,11 @@
             const copySnippet = document.getElementById('btn-copy-snippet');
             if (copySnippet) {
                 copySnippet.onclick = () => {
-                    const slug = menuData.slug || document.getElementById('slug-input').value || '';
-                    if (!slug && !activeDomain) return showToast("Defina un slug o dominio primero.", "warning");
-                    const snippet = `<!-- Tragalero Menu -->\n<script src="https://tragalero.com/tragaleroUI.js"><\/script>\n<tragalero-menu ${slug ? `slug="${slug}"` : `domain="${activeDomain}"`}></tragalero-menu>`;
+                    if (!activeDomain) return showToast("Asigna un dominio primero.", "warning");
+                    const snippet = `<!-- Tragalero Menu -->\n<script src="https://tragalero.com/tragaleroUI.js"><\/script>\n<tragalero-platform-orders domain="${activeDomain}" view="popup"></tragalero-platform-orders>`;
                     navigator.clipboard.writeText(snippet).then(() => {
-                        copySnippet.textContent = "COPIED!";
+                        showToast("Código copiado al portapapeles!");
+                        copySnippet.textContent = "COPIADO!";
                         setTimeout(() => copySnippet.textContent = "COPY MENU CODE", 2000);
                     });
                 };

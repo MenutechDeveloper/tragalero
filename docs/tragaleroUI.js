@@ -1046,6 +1046,27 @@ if (!customElements.get('tragalero-menu')) {
     customElements.define('tragalero-menu', TragaleroMenu);
 }
 
+if (!customElements.get('tragalero-platform-orders')) {
+    customElements.define('tragalero-platform-orders', class extends HTMLElement {
+        constructor() {
+            super();
+            this.attachShadow({ mode: 'open' });
+        }
+        connectedCallback() {
+            const domain = this.getAttribute('domain') || '';
+            const height = this.getAttribute('height') || '850px';
+            const targetUrl = `https://tragalero.com/menu.html?domain=${encodeURIComponent(domain)}`;
+            this.shadowRoot.innerHTML = `
+                <style>
+                    :host { display: block; width: 100%; max-width: 1000px; margin: 0 auto; }
+                    iframe { width: 100%; height: ${height}; border: none; border-radius: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); }
+                </style>
+                <iframe src="${targetUrl}" allow="geolocation; microphone; camera" loading="lazy"></iframe>
+            `;
+        }
+    });
+}
+
 // Global TragaleroUI object for legacy compatibility
 window.TragaleroUI = {
     init: () => {
