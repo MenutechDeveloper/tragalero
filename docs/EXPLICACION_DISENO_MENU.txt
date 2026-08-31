@@ -1,0 +1,81 @@
+================================================================================
+ANÁLISIS TÉCNICO: ¿DÓNDE SE DEFINE Y CONTROLA EL DISEÑO DEL MENÚ DIGITAL?
+================================================================================
+
+Este documento explica de manera clara y detallada la función exacta de los tres
+archivos clave (`adminMenus.html`, `menu.html` y `menutechUI.js`), dónde reside
+el diseño visual que ven los comensales y cómo fluye la información entre ellos.
+
+--------------------------------------------------------------------------------
+1. RESUMEN DIRECTO: ¿DÓNDE ESTÁ EL DISEÑO VISUAL QUE VE EL COMENSAL?
+--------------------------------------------------------------------------------
+
+El diseño visual (estilos CSS, tarjetas de platillos, colores, banner, fuentes,
+disposición en cuadrícula y modales del carrito) se encuentra en:
+
+👉 *** menutechUI.js ***
+
+A continuación se detalla la responsabilidad de cada uno de los 3 archivos:
+
+
+--------------------------------------------------------------------------------
+2. DESGLOSE DETALLADO DE CADA ARCHIVO
+--------------------------------------------------------------------------------
+
+A) adminMenus.html (PANEL DE ADMINISTRACIÓN - SOLO DATA):
+--------------------------------------------------------------------------------
+- Función: Es el panel para los dueños de restaurantes o administradores.
+- Qué hace:
+  * Permite crear y editar categorías, platillos, precios, descripciones, imágenes y dominio.
+  * Guarda toda esa información como un objeto JSON en la base de datos de Supabase
+    (tabla `tragalero_menus` o `menutech_menus`).
+  * Genera el enlace público (ej. `tragalero.com/menu.html?n=mi-restaurante`) o el código
+    personalizado para compartir con el cliente.
+- Qué NO hace: NO contiene los CSS ni la maqueta HTML con la que el comensal interactúa.
+
+
+B) menu.html (CASCARÓN O PÁGINA ANFITRIONA):
+--------------------------------------------------------------------------------
+- Función: Es la URL de entrada pública que abre el comensal desde el link o QR.
+- Qué hace:
+  1. Lee los parámetros de la URL (ej. `?n=slug` o `?domain=midominio.com`).
+  2. Carga el script JavaScript `menutechUI.js`.
+  3. Crea e inserta dinámicamente la etiqueta de Web Component:
+     `<menutech-platform-orders restaurant="slug"></menutech-platform-orders>`
+- Qué NO hace: NO tiene estilos de diseño para platillos, modales ni carrito. Es un
+  archivo casi vacío (un "cascarón") cuya única misión es montar el componente de `menutechUI.js`.
+
+
+C) menutechUI.js (EL NÚCLEO DEL DISEÑO Y LA LÓGICA):
+--------------------------------------------------------------------------------
+- Función: Es el Web Component personalizado (`<menutech-platform-orders>`).
+- Qué hace:
+  * Contiene todo el código CSS dentro de un Shadow DOM (aislado para no interferir con otras webs).
+  * Define la estructura HTML completa:
+    - Encabezado con el nombre del restaurante y botones de acción.
+    - Banner / imagen de portada superior.
+    - Títulos de categorías y cuadrícula de tarjetas de platillos (`.dishes-grid`, `.dish-card`).
+    - Botón flotante del carrito con contador de productos.
+    - Modales emergentes para selección de platillo, carrito de compras y confirmación de pedido.
+  * Se conecta con Supabase para traer los datos del menú guardados desde `adminMenus.html`.
+  * Registra la orden en Supabase (`tragalero_orders`) y escucha en Tiempo Real (Realtime)
+    los cambios de estado del pedido.
+
+
+--------------------------------------------------------------------------------
+3. ¿POR QUÉ OCURRÍA EL CAMBIO DE DISEÑO Y CÓMO SE RESUELVE?
+--------------------------------------------------------------------------------
+
+1. Causa:
+   Si `menutechUI.js` se reescribe o reemplaza por una versión distinta de CSS/HTML,
+   el diseño que ve el comensal en `menu.html` cambiará inmediatamente, ya que `menu.html`
+   depende 100% de la plantilla interna que esté escrita dentro de `menutechUI.js`.
+
+2. Solución:
+   Para garantizar que el comensal vea SIEMPRE el diseño original exacto de Menutech:
+   - Toda la estructura CSS y HTML interna en `menutechUI.js` debe mantenerse idéntica
+     al diseño original.
+   - Lo único que debe hacer el código es consultar la data en las tablas de Supabase
+     (`tragalero_menus` y `tragalero_orders`) e inyectarla en la plantilla original de `menutechUI.js`.
+
+================================================================================
