@@ -163,5 +163,22 @@ DROP POLICY IF EXISTS "Owner manage physical menus" ON public.menutech_physical_
 CREATE POLICY "Owner manage physical menus" ON public.menutech_physical_menus FOR ALL USING (auth.uid() = user_id OR public.check_is_admin());
 
 -- 7. ACTIVAR REALTIME PARA ÓRDENES
-ALTER PUBLICATION supabase_realtime ADD TABLE public.tragalero_orders;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.menutech_orders;
+-- 7. ACTIVAR REALTIME PARA ÓRDENES (IDEMPOTENTE)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM pg_publication_tables
+            WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'tragalero_orders'
+        ) THEN
+            ALTER PUBLICATION supabase_realtime ADD TABLE public.tragalero_orders;
+        END IF;
+
+        IF NOT EXISTS (
+            SELECT 1 FROM pg_publication_tables
+            WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'menutech_orders'
+        ) THEN
+            ALTER PUBLICATION supabase_realtime ADD TABLE public.menutech_orders;
+        END IF;
+    END IF;
+END $$;

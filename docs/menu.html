@@ -145,9 +145,8 @@
 
         <div id="menu-app" class="d-none">
             <!-- Floating Cart Button -->
-            <button id="cart-float" class="cart-float-btn d-none" onclick="openCartModal()">
-                <i class="bi bi-cart-fill"></i>
-                <span>Ver Pedido</span>
+            <button id="cart-float" class="cart-float-btn d-none" onclick="openCartModal()" title="Carrito de Compras">
+                <i class="bi bi-bag-check-fill fs-5"></i>
                 <span class="cart-badge" id="cart-count">0</span>
             </button>
 
@@ -175,10 +174,10 @@
         </div>
     </div>
 
-    <!-- Dish Modal -->
+    <!-- Dish Side Drawer / Popup -->
     <div class="modal fade" id="dishModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 rounded-4 shadow-lg" style="background: var(--card); color: var(--text);">
+        <div class="modal-dialog modal-dialog-end modal-dialog-scrollable" style="margin-right: 0; margin-top: 0; margin-bottom: 0; min-height: 100vh; max-width: 420px;">
+            <div class="modal-content border-0 rounded-start-4 shadow-lg h-100" style="background: var(--card); color: var(--text); border-radius: 28px 0 0 28px !important;">
                 <div class="modal-header border-0 pb-0">
                     <h5 class="modal-title font-outfit fw-bold" id="modal-dish-name">Platillo</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
