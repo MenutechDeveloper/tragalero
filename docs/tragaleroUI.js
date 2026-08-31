@@ -1046,57 +1046,25 @@ if (!customElements.get('tragalero-menu')) {
     customElements.define('tragalero-menu', TragaleroMenu);
 }
 
-class TragaleroPlatformOrders extends HTMLElement {
-    constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
-    }
-
-    static get observedAttributes() {
-        return ['slug', 'restaurant', 'domain', 'height'];
-    }
-
-    attributeChangedCallback() {
-        this.render();
-    }
-
-    connectedCallback() {
-        this.render();
-    }
-
-    render() {
-        const slug = this.getAttribute('slug') || this.getAttribute('restaurant') || '';
-        const domain = this.getAttribute('domain') || '';
-        const height = this.getAttribute('height') || '850px';
-
-        let baseUrl = './menu.html';
-        if (window.location.hostname === 'tragalero.com') {
-            baseUrl = 'https://tragalero.com/menu.html';
+// Ensure menutechUI.js component is loaded for platform orders
+function registerPlatformOrders() {
+    if (window.MenutechPlatformOrders) {
+        if (!customElements.get('tragalero-platform-orders')) {
+            customElements.define('tragalero-platform-orders', window.MenutechPlatformOrders);
         }
-
-        let targetUrl = baseUrl;
-        if (slug) {
-            targetUrl += `?n=${encodeURIComponent(slug)}`;
-        } else if (domain) {
-            targetUrl += `?domain=${encodeURIComponent(domain)}`;
+        if (!customElements.get('menutech-platform-orders')) {
+            customElements.define('menutech-platform-orders', window.MenutechPlatformOrders);
         }
-
-        this.shadowRoot.innerHTML = `
-            <style>
-                :host { display: block; width: 100%; max-width: 1000px; margin: 0 auto; }
-                iframe { width: 100%; height: ${height}; border: none; border-radius: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); background: transparent; }
-            </style>
-            <iframe src="${targetUrl}" allow="geolocation; microphone; camera" loading="lazy"></iframe>
-        `;
     }
 }
 
-if (!customElements.get('tragalero-platform-orders')) {
-    customElements.define('tragalero-platform-orders', TragaleroPlatformOrders);
-}
-
-if (!customElements.get('menutech-platform-orders')) {
-    customElements.define('menutech-platform-orders', class extends TragaleroPlatformOrders {});
+if (!window.MenutechPlatformOrders) {
+    const script = document.createElement('script');
+    script.src = 'menutechUI.js';
+    script.onload = () => registerPlatformOrders();
+    document.head.appendChild(script);
+} else {
+    registerPlatformOrders();
 }
 
 // Global TragaleroUI object for legacy compatibility
