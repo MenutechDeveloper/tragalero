@@ -338,8 +338,8 @@
                     </div>
 
                     <div class="component-header">
-                        <h2 style="font-family:'Outfit', sans-serif; font-size:1.8rem; font-weight:700;">Categories</h2>
-                        <button id="btn-add-cat-top" class="btn-panel-top" style="padding: 10px 22px; font-size: 0.75rem; border-radius: 50px;" onclick="addCategory()">+ ADD CATEGORY</button>
+                        <h2>Categories</h2>
+                        <button id="btn-add-cat-top" class="btn-panel-top" style="padding: 8px 16px; font-size: 0.7rem;" onclick="addCategory()">+ Add Category</button>
                     </div>
 
                     <div id="categories-list"></div>
@@ -556,6 +556,9 @@
         };
 
         window.copySubdomain = () => {
+            if (!activeDomain || activeDomain === 'undetermined' || activeDomain.includes('tragalero')) {
+                return showToast("⚠️ Requiere un dominio personalizado registrado para copiar o compartir el menú de esta cuenta.", "warning");
+            }
             const slug = document.getElementById('slug-input').value;
             if (!slug) return showToast("No slug defined", "warning");
             const url = `https://tragalero.com/menu.html?n=${slug}`;
@@ -636,10 +639,15 @@
                 document.querySelectorAll('.btn-add-dish-top').forEach(tBtn => {
                     const cIdx = tBtn.dataset.catIdx;
                     const bBtn = document.getElementById(`btn-add-dish-bottom-${cIdx}`);
-                    if (bBtn) {
-                        const rect = tBtn.getBoundingClientRect();
-                        if (rect.bottom < 0) bBtn.classList.add('visible');
-                        else bBtn.classList.remove('visible');
+                    const dishesCont = document.getElementById(`dishes-${cIdx}`);
+                    if (bBtn && dishesCont) {
+                        if (!dishesCont.classList.contains('active')) {
+                            bBtn.classList.remove('visible');
+                        } else {
+                            const rect = tBtn.getBoundingClientRect();
+                            if (rect.bottom < 0) bBtn.classList.add('visible');
+                            else bBtn.classList.remove('visible');
+                        }
                     }
                 });
             };
@@ -650,8 +658,8 @@
             const copySnippet = document.getElementById('btn-copy-snippet');
             if (copySnippet) {
                 copySnippet.onclick = () => {
-                    if (!activeDomain || activeDomain === 'undetermined' || activeDomain.includes('tragalero') || !activeDomain.trim()) {
-                        return showToast("No tienes un dominio registrado en esta cuenta.", "warning");
+                    if (!activeDomain || activeDomain === 'undetermined' || activeDomain.includes('tragalero')) {
+                        return showToast("⚠️ Requiere un dominio registrado para esta cuenta para generar el código personalizado.", "warning");
                     }
                     const snippet = `<!-- Tragalero Menu -->\n<script src="https://tragalero.com/tragaleroUI.js"><\/script>\n<tragalero-platform-orders domain="${activeDomain}" view="popup"></tragalero-platform-orders>`;
                     navigator.clipboard.writeText(snippet).then(() => {
@@ -909,10 +917,8 @@
                             <svg title="Toggle Dishes" onclick="toggleDishes(${i})" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                         </div>
                     </div>
-                    <div style="margin-top: 15px; margin-left: 100px;">
-                        <button class="btn-panel-top btn-add-dish-top" data-cat-idx="${i}" style="padding: 8px 18px; font-size: 0.75rem; border-radius: 50px; text-transform: uppercase;" onclick="addDish(${i})">+ ADD DISH</button>
-                    </div>
                     <div class="dishes-container" id="dishes-${i}">
+                        <button class="btn-panel-top btn-add-dish-top" data-cat-idx="${i}" style="padding: 6px 12px; font-size: 0.65rem; margin-bottom: 15px;" onclick="addDish(${i})">+ Add Dish</button>
                         <div id="dishes-list-${i}"></div>
                         <button id="btn-add-dish-bottom-${i}" class="btn-add-main btn-add-dish-bottom" style="padding:12px; font-size:0.8rem;" onclick="addDish(${i})">+ Add Dish to ${cat.name || 'Category'}</button>
                     </div>
@@ -931,7 +937,14 @@
         window.updateCat = (i, field, val) => { setChanges(true); menuData.config.categories[i][field] = val; };
         window.deleteCat = (i) => { if(confirm('Delete category?')) { setChanges(true); menuData.config.categories.splice(i,1); renderCategories(); } };
         window.duplicateCat = (i) => { setChanges(true); const clone = JSON.parse(JSON.stringify(menuData.config.categories[i])); menuData.config.categories.splice(i+1, 0, clone); renderCategories(); };
-        window.toggleDishes = (i) => { document.getElementById(`dishes-${i}`).classList.toggle('active'); };
+        window.toggleDishes = (i) => {
+            const dishesCont = document.getElementById(`dishes-${i}`);
+            dishesCont.classList.toggle('active');
+            const bBtn = document.getElementById(`btn-add-dish-bottom-${i}`);
+            if (bBtn && !dishesCont.classList.contains('active')) {
+                bBtn.classList.remove('visible');
+            }
+        };
 
         let currentVisCat = null;
         window.openVisibility = (i) => {
