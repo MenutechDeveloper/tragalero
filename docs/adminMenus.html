@@ -556,9 +556,6 @@
         };
 
         window.copySubdomain = () => {
-            if (!activeDomain || activeDomain === 'undetermined' || activeDomain.includes('tragalero')) {
-                return showToast("⚠️ Requiere un dominio personalizado registrado para copiar o compartir el menú de esta cuenta.", "warning");
-            }
             const slug = document.getElementById('slug-input').value;
             if (!slug) return showToast("No slug defined", "warning");
             const url = `https://tragalero.com/menu.html?n=${slug}`;
@@ -1042,9 +1039,8 @@
                         cover_type: menuData.cover_type,
                         config: menuData.config
                     }, { onConflict: 'user_id' });
-                    if (fallback.error) throw error;
+                    if (fallback.error) throw fallback.error;
                 }
-                if (error) throw error;
                 showToast("Menu saved successfully!");
                 setChanges(false);
             } catch (e) { showToast(e.message, "error"); }
