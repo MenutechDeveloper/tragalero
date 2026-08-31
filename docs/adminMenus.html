@@ -575,7 +575,11 @@
             document.getElementById('menu-editor').classList.add('hidden');
             document.getElementById('no-menu-container').classList.add('hidden');
 
-            const { data } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
+            let { data } = await sb.from('tragalero_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
+            if (!data) {
+                const legacyRes = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
+                if (legacyRes.data) data = legacyRes.data;
+            }
 
             const owner = allOwners.find(o => o.id === activeOwnerId);
             if (owner) updateSubdomainLink(owner);
@@ -1018,7 +1022,7 @@
             }
 
             try {
-                const { error } = await sb.from('menutech_menus').upsert({
+                let { error } = await sb.from('tragalero_menus').upsert({
                     user_id: activeOwnerId,
                     domain: activeDomain || 'undetermined',
                     slug: menuData.slug,
@@ -1027,6 +1031,19 @@
                     cover_type: menuData.cover_type,
                     config: menuData.config
                 }, { onConflict: 'user_id' });
+
+                if (error) {
+                    const fallback = await sb.from('menutech_menus').upsert({
+                        user_id: activeOwnerId,
+                        domain: activeDomain || 'undetermined',
+                        slug: menuData.slug,
+                        menu_style: menuData.menu_style,
+                        cover_url: menuData.cover_url,
+                        cover_type: menuData.cover_type,
+                        config: menuData.config
+                    }, { onConflict: 'user_id' });
+                    if (fallback.error) throw error;
+                }
                 if (error) throw error;
                 showToast("Menu saved successfully!");
                 setChanges(false);
