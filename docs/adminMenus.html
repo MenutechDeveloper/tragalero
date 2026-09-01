@@ -1,20 +1,11 @@
 <!DOCTYPE html>
-<html data-bs-theme="light" lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu Admin | Tragalero</title>
-    <link rel="icon" type="image/png" href="./assets/img/tragalero_negro.png">
-    <link rel="shortcut icon" href="./assets/img/tragalero_negro.png">
-
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <link rel="stylesheet" href="./assets/css/pastel-theme.css">
-    <script src="./assets/js/theme.js"></script>
-
+    <title>Menu Admin | Menutech</title>
+    <link rel="icon" type="image/png" href="https://menutech.services/assets/img/logomt.png">
+<link rel="shortcut icon" href="https://menutech.services/assets/img/logomt.png">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 
@@ -31,33 +22,13 @@
             --dev: #8b5cf6;
         }
 
-        [data-bs-theme="dark"] {
+        body.dark-mode {
             --bg: #121418;
             --card: #1c1f26;
             --input: #242933;
             --text: #f8fafc;
             --text-dim: #94a3b8;
             --border: #2d333f;
-        }
-
-        [data-bs-theme="light"] {
-            --orange: #eab308;
-            --bg: #fffcf0;
-            --card: #ffffff;
-            --input: #fffef5;
-            --text: #1a1c1e;
-            --text-dim: #4a5568;
-            --border: #f8e8d8;
-        }
-
-        [data-bs-theme="medio"] {
-            --orange: #ff9533;
-            --bg: #fffcf0;
-            --card: #ffffff;
-            --input: #fffef5;
-            --text: #1a1c1e;
-            --text-dim: #4a5568;
-            --border: #f8e8d8;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -73,7 +44,7 @@
 
         .dashboard-layout { display: flex; min-height: calc(100vh - 160px); gap: 40px; }
 
-        /* Floating Client Drawer Sidebar (like adminWeb.html / adminTemplate.html) */
+        /* Unified Sidebar Container */
         .sidebar-container {
             position: fixed; left: 0; top: 120px; z-index: 6000; pointer-events: none; display: flex; align-items: flex-start;
             transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -81,18 +52,18 @@
         .sidebar-container > * { pointer-events: auto; }
         .sidebar-container.collapsed { transform: translateX(-340px) !important; }
 
-        .sidebar-drawer { width: 340px; height: 550px; display: flex; flex-direction: column; gap: 20px; }
+        .sidebar { width: 340px; height: 600px; display: flex; flex-direction: column; gap: 20px; }
         .main-content { flex: 1; min-width: 0; }
 
         .search-box { background: var(--card); border: 1px solid var(--border); border-radius: 32px; padding: 24px; position: relative; cursor: default; transition: opacity 0.3s; user-select: none; z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.15); height: 100%; display: flex; flex-direction: column; }
         .search-box label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--orange); text-transform: uppercase; margin-bottom: 15px; margin-left: 5px; pointer-events: none; }
         .search-box input { width: 100%; margin-bottom: 15px; border-radius: 16px; padding: 14px; background: var(--input); border: 1px solid var(--border); color: var(--text); }
 
-        .client-list { max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
+        .client-list { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
         .client-list::-webkit-scrollbar { width: 4px; }
         .client-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
-        .client-item { padding: 14px 18px; border-radius: 16px; background: var(--input); border: 1px solid var(--border); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; gap: 4px; }
+        .client-item { padding: 14px 18px; border-radius: 16px; background: var(--input); border: 1px solid var(--border); cursor: pointer; transition: 0.3s; }
         .client-item:hover { border-color: var(--orange); }
         .client-item.active { border-color: var(--orange); background: rgba(255,149,51,0.08); }
         .client-item .name { font-weight: 700; font-size: 0.85rem; display: block; }
@@ -109,11 +80,71 @@
         #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; pointer-events: none; }
         #top-nav > * { pointer-events: auto; }
 
+        /* Premium User Pill */
+        #user-display-pill {
+            background: var(--card); backdrop-filter: blur(20px); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border);
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); cursor: pointer; position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: auto; min-width: 220px; justify-content: flex-start;
+        }
+        #user-display-pill:hover { transform: translateY(-2px); border-color: var(--orange); box-shadow: 0 15px 45px rgba(255,149,51,0.15); }
+
+        #user-display-pill.admin-glow {
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 20%, #b38728 40%, #fbf5b7 60%, #aa771c 80%, #bf953f 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.admin-glow #user-name, #user-display-pill.admin-glow #user-role-label { color: #3e2b14 !important; }
+
+        #user-display-pill.dev-glow {
+            background: linear-gradient(135deg, #70706F 0%, #E9E9E7 20%, #70706F 40%, #E9E9E7 60%, #70706F 80%, #E9E9E7 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.dev-glow #user-name, #user-display-pill.dev-glow #user-role-label { color: #1e293b !important; }
+
+        #user-display-pill.owner-glow {
+            background: #000;
+            background-image: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.1) 20%, transparent 40%, rgba(255,255,255,0.1) 60%, transparent 80%, rgba(255,255,255,0.1) 100%);
+            background-size: 400% 400%; animation: foil-shine 25s ease infinite; border: none !important;
+        }
+        #user-display-pill.owner-glow #user-name, #user-display-pill.owner-glow #user-role-label { color: #fff !important; }
+
+        #user-display-pill #user-name, #user-display-pill #user-role-label { color: var(--text); transition: color 0.3s; }
+
+        @keyframes foil-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .pill-info { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+        #user-name { font-weight: 800; font-size: 0.85rem; font-family: 'Outfit', sans-serif; }
+        #user-role-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .pill-menu {
+            position: absolute; top: calc(100% + 12px); right: 0; background: var(--card) !important; border: 1px solid var(--border);
+            border-radius: 24px; padding: 12px; min-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            opacity: 0; transform: translateY(10px); pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 6000;
+            animation: none !important;
+        }
+        #user-display-pill.active .pill-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .pill-menu-item {
+            padding: 12px 18px; border-radius: 14px; font-size: 0.85rem; font-weight: 600; color: var(--text);
+            display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; text-decoration: none;
+        }
+        .pill-menu-item:hover { background: rgba(255, 149, 51, 0.1); color: var(--orange); }
+        .pill-menu-item.danger:hover { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+
+        .theme-switch {
+            width: 50px; height: 50px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s; box-shadow: 0 8px 30px rgba(0,0,0,0.1); pointer-events: auto; }
+        .theme-switch:hover { transform: translateY(-2px); border-color: var(--orange); }
+
+        .theme-switch svg { width: 24px; height: 24px; transition: 0.4s; }
+        .sun-icon { color: var(--orange); }
+        .moon-icon { color: #8b5cf6; display: none; }
+        body.dark-mode .sun-icon { display: none; }
+        body.dark-mode .moon-icon { display: block; }
+
         .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.4s; letter-spacing: 1.5px; box-shadow: 0 8px 25px rgba(255, 149, 51, 0.3); text-transform: uppercase; pointer-events: auto; }
         .btn-panel-top:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(255, 149, 51, 0.4); filter: brightness(1.1); }
         .btn-copy {
-            background: rgba(255, 149, 51, 0.1);
-            border: 1px solid rgba(255, 149, 51, 0.3);
+            background: #fff5eb;
+            border: 1px solid #ffd8b0;
             color: var(--orange);
             padding: 12px 24px;
             border-radius: 16px;
@@ -162,7 +193,7 @@
             display: flex; gap: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
             z-index: 7000; animation: footerSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        [data-bs-theme="dark"] #floating-footer { background: rgba(28, 31, 38, 0.8); }
+        body.dark-mode #floating-footer { background: rgba(28, 31, 38, 0.8); }
         @keyframes footerSlideUp { from { bottom: -100px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
 
         .btn-footer {
@@ -261,15 +292,23 @@
     <div id="toast-container"></div>
 
     <div id="top-nav" class="hidden">
-        <div><button class="btn-panel-top" onclick="location.href='admin.html'">PANEL</button></div>
-    </div>
-
-    <div class="theme-switcher-container d-flex align-items-center bg-white bg-opacity-10 p-2 rounded-pill shadow-sm">
-        <div id="authButtons" class="me-3 ps-2"></div>
-        <div class="theme-switcher-bar d-flex">
-            <button class="theme-btn" data-theme-value="light" title="Modo Amarillo"><i class="bi bi-sun-fill"></i></button>
-            <button class="theme-btn" data-theme-value="dark" title="Modo Oscuro"><i class="bi bi-moon-stars-fill"></i></button>
-            <button class="theme-btn" data-theme-value="medio" title="Modo Suave"><i class="bi bi-palette-fill"></i></button>
+        <div><button class="btn-panel-top" onclick="location.href='index.html'">PANEL</button></div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="theme-switch" id="theme-toggle">
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </div>
+            <div id="user-display-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px; height:20px; color: inherit;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div class="pill-info">
+                    <div id="user-name">&nbsp;</div>
+                    <div id="user-role-label">&nbsp;</div>
+                </div>
+                <div class="pill-menu">
+                    <a href="index.html" class="pill-menu-item">Home</a>
+                    <div class="pill-menu-item danger" onclick="logout()">Logout</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -280,7 +319,7 @@
 
     <div class="container hidden" id="main-app">
         <header>
-            <img src="./assets/img/tragalero_negro.png" class="logo-main" alt="Tragalero Logo">
+            <img src="https://menutech.services/assets/img/logomt.png" class="logo-main" alt="Menutech Logo">
             <p id="view-domain-title" style="font-weight: 700; color: var(--orange); font-size: 0.85rem; letter-spacing: 1px;"></p>
 
             <div style="margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
@@ -288,7 +327,7 @@
                 <label style="font-size: 0.6rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-top: 10px;">Menu Link</label>
                 <div style="display: flex; align-items: center; background: var(--input); padding: 12px 24px; border-radius: 16px; border: 1px solid var(--border); min-width: 400px; justify-content: center; margin-top: 5px; gap: 10px;">
                     <div style="display: flex; align-items: center;">
-                        <span style="font-size: 0.95rem; color: var(--orange); font-weight: 900;">tragalero.com/menu.html?n=</span>
+                        <span style="font-size: 0.95rem; color: var(--orange); font-weight: 900;">menutech.io/menu.html?n=</span>
                         <input type="text" id="slug-input" style="background:transparent; border:none; color:var(--orange); font-weight:900; font-size:0.95rem; padding:0; outline:none; width: auto; min-width: 50px;" oninput="updateSlug(this.value)">
                     </div>
                     <button class="copy-icon-btn" onclick="copySubdomain()" title="Copy Link">
@@ -300,20 +339,19 @@
         </header>
 
         <div class="dashboard-layout">
-            <!-- Sliding Client Drawer Sidebar -->
-            <div class="sidebar-container collapsed" id="sidebar-container">
-                <div class="sidebar-drawer" id="sidebar-drawer">
+            <div class="sidebar-container hidden" id="sidebar-container">
+                <div class="sidebar" id="sidebar">
                     <div class="search-box">
-                        <label>Buscar Cliente</label>
-                        <input type="text" id="client-search" placeholder="Nombre o dominio...">
+                        <label>Find Project</label>
+                        <input type="text" id="client-search" placeholder="Domain or Name...">
                         <div class="client-list" id="client-list"></div>
-                        <div id="project-info" style="width: 100%; padding-top: 15px; border-top: 1px solid var(--border); margin-top: auto;">
-                            <label style="font-size:0.7rem; font-weight:700; color:var(--orange); text-transform:uppercase;">Cuenta Activa</label>
-                            <div id="active-project-name" style="font-weight: 700; padding: 12px; background: var(--input); border-radius: 14px; border: 1px solid var(--border); font-size: 0.8rem; margin-top: 8px;">Ninguna seleccionada</div>
+                        <div id="project-info" class="switcher-box hidden" style="width: 100%; margin: 0; padding-top: 15px; border-top: 1px solid var(--border); margin-top: auto;">
+                            <label>Active Project</label>
+                            <div id="active-project-name" style="font-weight: 700; padding: 12px; background: var(--input); border-radius: 14px; border: 1px solid var(--border); font-size: 0.8rem; margin-top: 8px;">None Selected</div>
                         </div>
                     </div>
                 </div>
-                <div class="sidebar-tab" id="sidebar-tab">Clientes</div>
+                <div class="sidebar-tab" id="sidebar-tab">Find Project</div>
             </div>
 
             <div class="main-content">
@@ -421,13 +459,9 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS & Supabase Logic -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./assets/js/supabase_logic.js"></script>
-
-    <script>
-        const sb = supabaseClient;
+    <script type="module">
+        import { MT_CONFIG } from './config.js';
+        import { supabase as sb } from './supabase.js';
 
         let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
         let menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode2', config: { categories: [], toppings: [] } };
@@ -443,7 +477,6 @@
 
         window.showToast = (message, type = 'success') => {
             const container = document.getElementById('toast-container');
-            if (!container) return;
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             const msg = document.createElement('div');
@@ -453,62 +486,46 @@
         };
 
         document.addEventListener('DOMContentLoaded', async () => {
-            initEvents();
-            await checkSession();
+            initTheme(); initEvents();
+            checkSession();
         });
 
         async function checkSession() {
-            const profile = await getLoggedInUser();
-            if (!profile) { location.href = "login.html"; return; }
-            user = profile;
-            userRole = profile.role || 'Owner';
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) { location.href = "index.html"; return; }
+            user = session.user;
+            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            if (!profile) { userRole = 'owner'; activeOwnerId = user.id; showApp(null); return; }
+            userRole = profile.role;
 
-            const privilegedRoles = ['admin', 'developer', 'admincs', 'cs', 'admindesign', 'design', 'retention'];
-            const rawRole = userRole.toLowerCase();
-            const isPrivileged = privilegedRoles.includes(rawRole);
+            if (userRole === 'CS' || userRole === 'adminCS') {
+                location.href = "index.html";
+                return;
+            }
 
-            if (isPrivileged) {
-                const sbContainer = document.getElementById('sidebar-container');
-                if (sbContainer) {
-                    sbContainer.classList.remove('hidden');
-                    sbContainer.classList.add('collapsed');
-                }
-                const snippetSection = document.getElementById('snippet-section');
-                if (snippetSection) snippetSection.classList.remove('hidden');
+            if (userRole === 'admin' || userRole === 'developer') {
+                document.getElementById('sidebar-container').classList.remove('hidden');
+                document.getElementById('sidebar-container').classList.add('collapsed');
+                document.getElementById('snippet-section').classList.remove('hidden');
                 await setupContextSwitcher();
             }
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlOwnerId = urlParams.get('owner_id');
-            const passedId = urlOwnerId || sessionStorage.getItem('mt_edit_owner_id');
-
-            if (passedId && isPrivileged) {
-                sessionStorage.removeItem('mt_edit_owner_id');
-                await switchContext(passedId);
-            } else {
-                activeOwnerId = profile.id;
-                activeDomain = profile.domain;
-                await showApp(profile);
-            }
+            activeOwnerId = user.id; activeDomain = profile.domain;
+            showApp(profile);
         }
 
         async function setupContextSwitcher() {
-            const { data } = await sb.from('usuarios').select('*');
+            const { data } = await sb.from('profiles').select('*');
             allOwners = data || [];
             renderOwners(allOwners);
-            const searchInput = document.getElementById('client-search');
-            if (searchInput) {
-                searchInput.oninput = (e) => {
-                    const term = e.target.value.toLowerCase();
-                    renderOwners(allOwners.filter(o => (o.name||'').toLowerCase().includes(term) || (o.domain||'').toLowerCase().includes(term) || (o.email||'').toLowerCase().includes(term)));
-                };
-            }
+            document.getElementById('client-search').oninput = (e) => {
+                const term = e.target.value.toLowerCase();
+                renderOwners(allOwners.filter(o => (o.username||'').toLowerCase().includes(term) || (o.domain||'').toLowerCase().includes(term)));
+            };
         }
 
         function renderOwners(owners) {
             const list = document.getElementById('client-list');
-            if (!list) return;
-            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.name || o.email || 'User'}</span><span class="domain">${o.domain || o.id.substring(0,8)}</span></div>`).join('');
+            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.username || 'User'}</span><span class="domain">${o.domain || o.id.substring(0,8)}</span></div>`).join('');
         }
 
         window.switchContext = async (ownerId) => {
@@ -517,12 +534,9 @@
             activeOwnerId = ownerId; activeDomain = owner.domain;
             const domainLabel = document.getElementById('header-domain-label');
             if (domainLabel) domainLabel.textContent = activeDomain || "Workspace";
-            const viewTitle = document.getElementById('view-domain-title');
-            if (viewTitle) viewTitle.textContent = "";
-            const activeProject = document.getElementById('active-project-name');
-            if (activeProject) activeProject.textContent = owner.name || owner.email;
-            const projectInfo = document.getElementById('project-info');
-            if (projectInfo) projectInfo.classList.remove('hidden');
+            document.getElementById('view-domain-title').textContent = "";
+            document.getElementById('active-project-name').textContent = owner.username || owner.email;
+            document.getElementById('project-info').classList.remove('hidden');
             renderOwners(allOwners);
             await loadMenu();
             updateSubdomainLink(owner);
@@ -530,35 +544,34 @@
 
         function updateSubdomainLink(profile) {
             if (!profile) return;
+            // Improve slug generation: prioritize domain, then username
             let defaultSlug = '';
-            if (profile.domain && !profile.domain.includes('tragalero')) {
+            if (profile.domain && !profile.domain.includes('menutech')) {
+                // Remove .com, .io etc and handle common separators
                 defaultSlug = profile.domain.split('.')[0];
             } else {
-                defaultSlug = profile.name || 'restaurant';
+                defaultSlug = profile.username || 'restaurant';
             }
 
             const slug = menuData.slug || defaultSlug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
             menuData.slug = slug;
-            const slugInput = document.getElementById('slug-input');
-            if (slugInput) slugInput.value = slug;
-            const link = `tragalero.com/menu.html?n=${slug}`;
-            const subLink = document.getElementById('subdomain-link');
-            if (subLink) subLink.innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none; font-weight:800;">Go to Menu</a>`;
+            document.getElementById('slug-input').value = slug;
+            const link = `menutech.io/menu.html?n=${slug}`;
+            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none; font-weight:800;">Go to Menu</a>`;
         }
 
         window.updateSlug = (val) => {
             setChanges(true);
             const slug = val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
             menuData.slug = slug;
-            const link = `tragalero.com/menu.html?n=${slug}`;
-            const subLink = document.getElementById('subdomain-link');
-            if (subLink) subLink.innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none; font-weight:800;">Go to Menu</a>`;
+            const link = `menutech.io/menu.html?n=${slug}`;
+            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none; font-weight:800;">Go to Menu</a>`;
         };
 
         window.copySubdomain = () => {
             const slug = document.getElementById('slug-input').value;
             if (!slug) return showToast("No slug defined", "warning");
-            const url = `https://tragalero.com/menu.html?n=${slug}`;
+            const url = `https://menutech.io/menu.html?n=${slug}`;
             navigator.clipboard.writeText(url).then(() => {
                 showToast("Menu URL copied to clipboard!");
             });
@@ -567,17 +580,15 @@
         async function loadMenu() {
             if (!activeOwnerId) return;
             setChanges(false);
+            // Clear existing data to prevent bleed-through
             menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode2', config: { categories: [], toppings: [] } };
 
             document.getElementById('menu-editor').classList.add('hidden');
             document.getElementById('no-menu-container').classList.add('hidden');
 
-            let { data } = await sb.from('tragalero_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
-            if (!data) {
-                const legacyRes = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
-                if (legacyRes.data) data = legacyRes.data;
-            }
+            const { data } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
 
+            // Find the active owner profile to refresh UI
             const owner = allOwners.find(o => o.id === activeOwnerId);
             if (owner) updateSubdomainLink(owner);
 
@@ -585,12 +596,13 @@
                 menuData = data;
                 if (!menuData.config) menuData.config = { categories: [], toppings: [] };
                 menuData.menu_style = 'mode2';
+                // Ensure Topping IDs
                 (menuData.config.toppings || []).forEach(tg => {
                     if (!tg.id) tg.id = 'tg-' + Math.random().toString(36).substr(2, 9);
                 });
                 document.getElementById('menu-editor').classList.remove('hidden');
                 renderMenuEditor();
-                if (owner) updateSubdomainLink(owner);
+                if (owner) updateSubdomainLink(owner); // Re-run with loaded slug
             } else {
                 document.getElementById('no-menu-container').classList.remove('hidden');
             }
@@ -611,20 +623,28 @@
         };
 
         async function showApp(profile) {
-            await renderUserMenu('authButtons');
             document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('top-nav').classList.remove('hidden');
             if (profile) {
+                document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
+                document.getElementById('user-role-label').textContent = profile.role || 'User';
                 const domainLabel = document.getElementById('header-domain-label');
                 if (domainLabel) domainLabel.textContent = profile.domain || "Workspace";
-                const viewTitle = document.getElementById('view-domain-title');
-                if (viewTitle) viewTitle.textContent = "";
+                document.getElementById('view-domain-title').textContent = "";
 
-                await loadMenu();
+                await loadMenu(); // Wait for menu data before updating the link
                 updateSubdomainLink(profile);
             } else {
                 await loadMenu();
             }
+        }
+
+        function initTheme() {
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+            document.getElementById('theme-toggle').onclick = () => {
+                document.body.classList.toggle('dark-mode');
+                localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            };
         }
 
         function initEvents() {
@@ -637,39 +657,32 @@
                     else bottomBtn.classList.remove('visible');
                 }
 
+                // Dynamic Dish Buttons
                 document.querySelectorAll('.btn-add-dish-top').forEach(tBtn => {
                     const cIdx = tBtn.dataset.catIdx;
                     const bBtn = document.getElementById(`btn-add-dish-bottom-${cIdx}`);
-                    const dishesCont = document.getElementById(`dishes-${cIdx}`);
-                    if (bBtn && dishesCont) {
-                        if (!dishesCont.classList.contains('active')) {
-                            bBtn.classList.remove('visible');
-                        } else {
-                            const rect = tBtn.getBoundingClientRect();
-                            if (rect.bottom < 0) bBtn.classList.add('visible');
-                            else bBtn.classList.remove('visible');
-                        }
+                    if (bBtn) {
+                        const rect = tBtn.getBoundingClientRect();
+                        if (rect.bottom < 0) bBtn.classList.add('visible');
+                        else bBtn.classList.remove('visible');
                     }
                 });
             };
 
-            const sbTab = document.getElementById('sidebar-tab');
-            if (sbTab) sbTab.onclick = () => document.getElementById('sidebar-container').classList.toggle('collapsed');
-
-            const copySnippet = document.getElementById('btn-copy-snippet');
-            if (copySnippet) {
-                copySnippet.onclick = () => {
-                    if (!activeDomain || activeDomain === 'undetermined' || activeDomain.includes('tragalero')) {
-                        return showToast("⚠️ Requiere un dominio registrado para esta cuenta para generar el código personalizado.", "warning");
-                    }
-                    const snippet = `<!-- Tragalero Menu -->\n<script src="https://tragalero.com/tragaleroUI.js"><\/script>\n<tragalero-platform-orders domain="${activeDomain}" view="popup"></tragalero-platform-orders>`;
-                    navigator.clipboard.writeText(snippet).then(() => {
-                        showToast("Código copiado al portapapeles!");
-                        copySnippet.textContent = "COPIADO!";
-                        setTimeout(() => copySnippet.textContent = "COPY MENU CODE", 2000);
-                    });
-                };
-            }
+            document.getElementById('sidebar-tab').onclick = () => document.getElementById('sidebar-container').classList.toggle('collapsed');
+            const pill = document.getElementById('user-display-pill');
+            pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
+            document.addEventListener('click', () => pill.classList.remove('active'));
+            window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
+            document.getElementById('btn-copy-snippet').onclick = () => {
+                if (!activeDomain) return showToast("Assign a domain first.", "warning");
+                const snippet = `<!-- Menutech Menu -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-platform-orders domain="${activeDomain}" view="popup"></menutech-platform-orders>`;
+                navigator.clipboard.writeText(snippet).then(() => {
+                    const btn = document.getElementById('btn-copy-snippet');
+                    btn.textContent = "COPIED!";
+                    setTimeout(() => btn.textContent = "COPY MENU CODE", 2000);
+                });
+            };
         }
 
         function renderMenuEditor() {
@@ -879,6 +892,7 @@
             const zone = document.getElementById('cover-drop-zone');
             const placeholder = document.getElementById('cover-placeholder');
 
+            // Remove existing img or video elements while preserving the placeholder and input
             const media = zone.querySelector('img, video');
             if (media) media.remove();
 
@@ -926,6 +940,7 @@
                 </div>
             `).join('');
 
+            // Render dishes for each category
             menuData.config.categories.forEach((cat, i) => renderDishes(i));
             setTimeout(setupDragZones, 100);
         }
@@ -938,14 +953,7 @@
         window.updateCat = (i, field, val) => { setChanges(true); menuData.config.categories[i][field] = val; };
         window.deleteCat = (i) => { if(confirm('Delete category?')) { setChanges(true); menuData.config.categories.splice(i,1); renderCategories(); } };
         window.duplicateCat = (i) => { setChanges(true); const clone = JSON.parse(JSON.stringify(menuData.config.categories[i])); menuData.config.categories.splice(i+1, 0, clone); renderCategories(); };
-        window.toggleDishes = (i) => {
-            const dishesCont = document.getElementById(`dishes-${i}`);
-            dishesCont.classList.toggle('active');
-            const bBtn = document.getElementById(`btn-add-dish-bottom-${i}`);
-            if (bBtn && !dishesCont.classList.contains('active')) {
-                bBtn.classList.remove('visible');
-            }
-        };
+        window.toggleDishes = (i) => { document.getElementById(`dishes-${i}`).classList.toggle('active'); };
 
         let currentVisCat = null;
         window.openVisibility = (i) => {
@@ -982,20 +990,22 @@
         async function uploadMedia(file, target, idx) {
             if (!file) return;
             setChanges(true);
+            const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
             showToast("Uploading...", "warning");
             try {
-                const res = await uploadToCloudinary(file);
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/auto/upload`, { method: 'POST', body: fd });
+                const d = await res.json();
                 if (target === 'cover') {
-                    menuData.cover_url = res.url;
-                    menuData.cover_type = res.resource_type === 'video' ? 'video' : 'image';
+                    menuData.cover_url = d.secure_url;
+                    menuData.cover_type = d.resource_type === 'video' ? 'video' : 'image';
                     renderCover();
                 } else if (target === 'category') {
-                    menuData.config.categories[idx].image = res.url;
+                    menuData.config.categories[idx].image = d.secure_url;
                     renderCategories();
                     setTimeout(setupDragZones, 500);
                 } else if (target === 'dish') {
                     const [cIdx, dIdx] = idx;
-                    menuData.config.categories[cIdx].dishes[dIdx].image = res.url;
+                    menuData.config.categories[cIdx].dishes[dIdx].image = d.secure_url;
                     renderDishes(cIdx);
                 }
                 showToast("Upload complete!");
@@ -1011,15 +1021,16 @@
         window.saveChanges = async () => {
             if (!activeOwnerId) return;
             const btn = document.querySelector('.btn-save-all');
-            if (btn) btn.textContent = "SAVING...";
+            btn.textContent = "SAVING...";
 
+            // Ensure we have a slug
             if (!menuData.slug) {
                 const slugInput = document.getElementById('slug-input');
-                menuData.slug = slugInput ? (slugInput.value || 'restaurant') : 'restaurant';
+                menuData.slug = slugInput.value || 'restaurant';
             }
 
             try {
-                let { error } = await sb.from('tragalero_menus').upsert({
+                const { error } = await sb.from('menutech_menus').upsert({
                     user_id: activeOwnerId,
                     domain: activeDomain || 'undetermined',
                     slug: menuData.slug,
@@ -1028,23 +1039,11 @@
                     cover_type: menuData.cover_type,
                     config: menuData.config
                 }, { onConflict: 'user_id' });
-
-                if (error) {
-                    const fallback = await sb.from('menutech_menus').upsert({
-                        user_id: activeOwnerId,
-                        domain: activeDomain || 'undetermined',
-                        slug: menuData.slug,
-                        menu_style: menuData.menu_style,
-                        cover_url: menuData.cover_url,
-                        cover_type: menuData.cover_type,
-                        config: menuData.config
-                    }, { onConflict: 'user_id' });
-                    if (fallback.error) throw fallback.error;
-                }
+                if (error) throw error;
                 showToast("Menu saved successfully!");
                 setChanges(false);
             } catch (e) { showToast(e.message, "error"); }
-            if (btn) btn.textContent = "SAVE CHANGES";
+            btn.textContent = "SAVE CHANGES";
         }
     </script>
 </body>
