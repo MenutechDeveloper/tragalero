@@ -94,24 +94,31 @@
 
         async loadAndRender() {
             const params = new URLSearchParams(window.location.search);
-            const slug = this.getAttribute('slug') || this.getAttribute('restaurant') || params.get('n') || params.get('slug') || '';
-            const domain = this.getAttribute('domain') || params.get('domain') || '';
+            let slug = this.getAttribute('slug') || this.getAttribute('restaurant') || params.get('n') || params.get('slug') || '';
+            let domain = this.getAttribute('domain') || params.get('domain') || '';
+
+            if (slug) {
+                slug = slug.trim().toLowerCase();
+            }
+            if (domain) {
+                domain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].trim().toLowerCase();
+            }
 
             let menuRecord = null;
             if (slug) {
-                const res = await supabaseFetch('tragalero_menus', `slug=eq.${encodeURIComponent(slug)}`);
+                const res = await supabaseFetch('tragalero_menus', `slug=ilike.${encodeURIComponent(slug)}`);
                 if (res && res.length > 0) {
                     menuRecord = res[0];
                 } else {
-                    const fallback = await supabaseFetch('menutech_menus', `slug=eq.${encodeURIComponent(slug)}`);
+                    const fallback = await supabaseFetch('menutech_menus', `slug=ilike.${encodeURIComponent(slug)}`);
                     if (fallback && fallback.length > 0) menuRecord = fallback[0];
                 }
             } else if (domain) {
-                const res = await supabaseFetch('tragalero_menus', `domain=eq.${encodeURIComponent(domain)}`);
+                const res = await supabaseFetch('tragalero_menus', `domain=ilike.${encodeURIComponent(domain)}`);
                 if (res && res.length > 0) {
                     menuRecord = res[0];
                 } else {
-                    const fallback = await supabaseFetch('menutech_menus', `domain=eq.${encodeURIComponent(domain)}`);
+                    const fallback = await supabaseFetch('menutech_menus', `domain=ilike.${encodeURIComponent(domain)}`);
                     if (fallback && fallback.length > 0) menuRecord = fallback[0];
                 }
             } else {
