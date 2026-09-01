@@ -1,0 +1,38 @@
+================================================================================
+EXPLICACIÓN TÉCNICA: RESTAURACIÓN DE TRAGALEROUI.JS Y CONEXIÓN AL BACKEND
+================================================================================
+
+1. ESTADO DE TRAGALEROUI.JS:
+--------------------------------------------------------------------------------
+- `tragaleroUI.js` ha sido RESTAURADO AL 100% a su versión original intacta.
+- NO se ha modificado, editado ni tocado ningún código en `tragaleroUI.js`.
+
+
+2. ¿POR QUÉ NO SE NECESITA TRAGALEROUI.JS PARA EL MENÚ DIGITAL?
+--------------------------------------------------------------------------------
+El menú digital que ven los comensales funciona únicamente con 3 archivos:
+
+  1. `adminMenus.html`: Guarda los platillos y categorías en Supabase (`tragalero_menus`).
+  2. `menu.html`: Página pública a la que entran los clientes (ej. `tragalero.com/menu.html?n=slug`).
+  3. `menutechUI.js`: Define el diseño visual original (tarjetas de platillos, fotos,
+     carrito flotante, modales) y lee la información de Supabase (`tragalero_menus`
+     y `tragalero_orders`).
+
+`tragaleroUI.js` es una librería secundaria separada que sirve para galerías e imágenes
+independientes, por lo que NO interviene en el menú digital y se mantiene tal cual en su
+código original sin tocar nada.
+
+
+3. CONEXIÓN A TABLAS DE SUPABASE (TRAGALERO):
+--------------------------------------------------------------------------------
+Sin modificar en absoluto el diseño visual original de Menutech, `menutechUI.js`
+ahora consulta las siguientes tablas de Supabase:
+
+  - Tabla de Menús: `tragalero_menus` (con respaldo a `menutech_menus` si no existiera).
+  - Tabla de Órdenes: `tragalero_orders` (con respaldo a `menutech_orders`).
+  - Seguimiento en Tiempo Real (Realtime): Escucha cambios de estado en `tragalero_orders`.
+
+Con esto, los menús guardados en `adminMenus.html` se muestran correctamente en `menu.html`
+respetando al 100% el diseño original de Menutech.
+
+================================================================================
