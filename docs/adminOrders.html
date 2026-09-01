@@ -365,8 +365,12 @@
         </div>
     </div>
 
-    <script type="module">
-        import { supabase as sb } from './supabase.js';
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./assets/js/supabase_logic.js"></script>
+
+    <script>
+        const sb = supabaseClient;
 
         let user = null, userRole = null, activeOwnerId = null;
         let orders = [];
@@ -383,12 +387,12 @@
             initEvents();
 
             const { data: { session } } = await sb.auth.getSession();
-            if (!session) { location.href = 'index.html'; return; }
+            if (!session) { location.href = 'login.html'; return; }
             user = session.user;
 
-            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            const { data: profile } = await sb.from('usuarios').select('*').eq('id', user.id).single();
             if (!profile) {
-                userRole = 'owner';
+                userRole = 'Owner';
                 activeOwnerId = user.id;
                 showApp(null);
                 loadOrders();
@@ -396,10 +400,11 @@
                 return;
             }
 
-            userRole = profile.role;
+            userRole = profile.role || 'Owner';
             activeOwnerId = user.id;
 
-            if (userRole === 'admin' || userRole === 'developer' || userRole === 'CS' || userRole === 'adminCS') {
+            const normalizedRole = userRole.toUpperCase();
+            if (normalizedRole === 'ADMIN' || normalizedRole === 'DEVELOPER' || normalizedRole === 'CS' || normalizedRole === 'VENTAS') {
                 document.getElementById('sidebar-container').classList.remove('hidden');
                 document.getElementById('sidebar-container').classList.add('collapsed');
                 await setupContextSwitcher();
@@ -419,7 +424,7 @@
             const roleEl = document.getElementById('user-role-label');
 
             if (profile) {
-                nameEl.textContent = profile.username || user.email.split('@')[0];
+                nameEl.textContent = profile.name || user.email.split('@')[0];
                 roleEl.textContent = profile.role || 'User';
 
                 const role = (profile.role || 'user').trim().toUpperCase();
@@ -434,25 +439,25 @@
         }
 
         async function setupContextSwitcher() {
-            const { data } = await sb.from('profiles').select('*');
+            const { data } = await sb.from('usuarios').select('*');
             allOwners = data || [];
             renderOwners(allOwners);
             document.getElementById('client-search').oninput = (e) => {
                 const term = e.target.value.toLowerCase();
-                renderOwners(allOwners.filter(o => (o.username||'').toLowerCase().includes(term) || (o.domain||'').toLowerCase().includes(term)));
+                renderOwners(allOwners.filter(o => (o.name||'').toLowerCase().includes(term) || (o.email||'').toLowerCase().includes(term) || (o.domain||'').toLowerCase().includes(term)));
             };
         }
 
         function renderOwners(owners) {
             const list = document.getElementById('client-list');
-            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.username || 'User'}</span><span class="domain">${o.domain || o.id.substring(0,8)}</span></div>`).join('');
+            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.name || o.email || 'User'}</span><span class="domain">${o.domain || o.email || o.id.substring(0,8)}</span></div>`).join('');
         }
 
         window.switchContext = async (ownerId) => {
             const owner = allOwners.find(o => o.id === ownerId);
             if (!owner) return;
             activeOwnerId = ownerId;
-            document.getElementById('active-project-name').textContent = owner.username || owner.email;
+            document.getElementById('active-project-name').textContent = owner.name || owner.email;
             document.getElementById('project-info').classList.remove('hidden');
             renderOwners(allOwners);
 
@@ -465,60 +470,74 @@
         function mapOrder(o) {
             return {
                 ...o,
-                items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
+                customer_name: o.customer_name || o.client_name || 'Cliente',
+                customer_phone: o.customer_phone || o.client_phone || '',
+                address: o.address || o.client_address || '',
+                items: typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []),
                 total: parseFloat(o.total_amount || o.total || 0)
             };
         }
 
         async function loadOrders() {
-            const { data, error } = await sb.from('menutech_orders')
-                .select('*')
-                .eq('user_id', activeOwnerId)
-                .order('created_at', { ascending: false });
+            // Load orders from tragalero_orders & menutech_orders
+            const [tragaleroRes, menutechRes] = await Promise.all([
+                sb.from('tragalero_orders').select('*').eq('user_id', activeOwnerId).order('created_at', { ascending: false }),
+                sb.from('menutech_orders').select('*').eq('user_id', activeOwnerId).order('created_at', { ascending: false })
+            ]);
 
-            if (data) {
-                orders = data.map(mapOrder);
-                updateCounts();
-                renderOrders();
-            }
+            const list1 = (tragaleroRes.data || []).map(mapOrder);
+            const list2 = (menutechRes.data || []).map(mapOrder);
+
+            // Merge avoiding duplicates by id
+            const map = new Map();
+            [...list1, ...list2].forEach(o => {
+                if (!map.has(o.id)) map.set(o.id, o);
+            });
+
+            orders = Array.from(map.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            updateCounts();
+            renderOrders();
         }
 
         function subscribeToOrders() {
-            // Use a clean channel name
             const channelName = 'orders_realtime_' + activeOwnerId.substring(0, 8);
-            ordersChannel = sb.channel(channelName)
-                .on('postgres_changes', {
-                    event: '*', // Listen to all events for better reliability
-                    schema: 'public',
-                    table: 'menutech_orders'
-                }, (payload) => {
-                    // Filter by ownerId in JS to avoid subscription filter issues
-                    if (payload.new && payload.new.user_id === activeOwnerId) {
-                        if (payload.eventType === 'INSERT') {
-                            const newOrder = mapOrder(payload.new);
-                            // Avoid duplicates
-                            if (!orders.find(o => o.id === newOrder.id)) {
-                                orders.unshift(newOrder);
-                                updateCounts();
-                                renderOrders();
-                                // Ensure sound alert starts
-                                toggleAlertSound(true);
-                            }
-                        } else if (payload.eventType === 'UPDATE') {
-                            const idx = orders.findIndex(o => o.id === payload.new.id);
-                            if (idx !== -1) {
-                                orders[idx] = mapOrder(payload.new);
-                                updateCounts();
-                                renderOrders();
-                                if (selectedOrderId === payload.new.id) renderDetails(orders[idx]);
-                            }
-                        } else if (payload.eventType === 'DELETE') {
-                            orders = orders.filter(o => o.id !== payload.old.id);
+            const handlePayload = (payload) => {
+                if (payload.new && payload.new.user_id === activeOwnerId) {
+                    if (payload.eventType === 'INSERT') {
+                        const newOrder = mapOrder(payload.new);
+                        if (!orders.find(o => o.id === newOrder.id)) {
+                            orders.unshift(newOrder);
                             updateCounts();
                             renderOrders();
+                            toggleAlertSound(true);
                         }
+                    } else if (payload.eventType === 'UPDATE') {
+                        const idx = orders.findIndex(o => o.id === payload.new.id);
+                        if (idx !== -1) {
+                            orders[idx] = mapOrder(payload.new);
+                            updateCounts();
+                            renderOrders();
+                            if (selectedOrderId === payload.new.id) renderDetails(orders[idx]);
+                        }
+                    } else if (payload.eventType === 'DELETE') {
+                        orders = orders.filter(o => o.id !== payload.old.id);
+                        updateCounts();
+                        renderOrders();
                     }
-                })
+                }
+            };
+
+            ordersChannel = sb.channel(channelName)
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'tragalero_orders'
+                }, handlePayload)
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'menutech_orders'
+                }, handlePayload)
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
                         console.log('Realtime subscription active for owner:', activeOwnerId);
@@ -785,9 +804,13 @@
                 if (selectedOrderId === id) renderDetails(orders[orderIdx]);
             }
 
-            const { error } = await sb.from('menutech_orders')
-                .update(updates)
-                .eq('id', id);
+            // Attempt update in tragalero_orders, fallback to menutech_orders
+            let res = await sb.from('tragalero_orders').update(updates).eq('id', id);
+            let error = res.error;
+            if (error) {
+                const fallbackRes = await sb.from('menutech_orders').update(updates).eq('id', id);
+                error = fallbackRes.error;
+            }
 
             if (error) {
                 showToast('Error updating order: ' + error.message, 'error');
@@ -841,7 +864,7 @@
             const pill = document.getElementById('user-display-pill');
             pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
             document.addEventListener('click', () => pill.classList.remove('active'));
-            window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
+            window.logout = async () => { await sb.auth.signOut(); location.href = "login.html"; };
 
         }
 
