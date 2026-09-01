@@ -494,20 +494,16 @@
             const { data: { session } } = await sb.auth.getSession();
             if (!session) { location.href = "index.html"; return; }
             user = session.user;
-            let { data: profile } = await sb.from('usuarios').select('*').eq('id', user.id).maybeSingle();
-            if (!profile) {
-                const { data: legacyProfile } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
-                profile = legacyProfile;
-            }
+            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
             if (!profile) { userRole = 'owner'; activeOwnerId = user.id; showApp(null); return; }
-            userRole = profile.role || profile.role_name;
+            userRole = profile.role;
 
             if (userRole === 'CS' || userRole === 'adminCS') {
                 location.href = "index.html";
                 return;
             }
 
-            if (userRole === 'admin' || userRole === 'developer' || userRole === 'Admin') {
+            if (userRole === 'admin' || userRole === 'developer') {
                 document.getElementById('sidebar-container').classList.remove('hidden');
                 document.getElementById('sidebar-container').classList.add('collapsed');
                 document.getElementById('snippet-section').classList.remove('hidden');
@@ -518,23 +514,18 @@
         }
 
         async function setupContextSwitcher() {
-            const { data: usersData } = await sb.from('usuarios').select('*');
-            if (usersData && usersData.length > 0) {
-                allOwners = usersData;
-            } else {
-                const { data: profilesData } = await sb.from('profiles').select('*');
-                allOwners = profilesData || [];
-            }
+            const { data } = await sb.from('profiles').select('*');
+            allOwners = data || [];
             renderOwners(allOwners);
             document.getElementById('client-search').oninput = (e) => {
                 const term = e.target.value.toLowerCase();
-                renderOwners(allOwners.filter(o => (o.name||o.username||'').toLowerCase().includes(term) || (o.domain||'').toLowerCase().includes(term)));
+                renderOwners(allOwners.filter(o => (o.username||'').toLowerCase().includes(term) || (o.domain||'').toLowerCase().includes(term)));
             };
         }
 
         function renderOwners(owners) {
             const list = document.getElementById('client-list');
-            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.name || o.username || 'User'}</span><span class="domain">${o.domain || o.id.substring(0,8)}</span></div>`).join('');
+            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.username || 'User'}</span><span class="domain">${o.domain || o.id.substring(0,8)}</span></div>`).join('');
         }
 
         window.switchContext = async (ownerId) => {
@@ -544,7 +535,7 @@
             const domainLabel = document.getElementById('header-domain-label');
             if (domainLabel) domainLabel.textContent = activeDomain || "Workspace";
             document.getElementById('view-domain-title').textContent = "";
-            document.getElementById('active-project-name').textContent = owner.name || owner.username || owner.email;
+            document.getElementById('active-project-name').textContent = owner.username || owner.email;
             document.getElementById('project-info').classList.remove('hidden');
             renderOwners(allOwners);
             await loadMenu();
@@ -595,11 +586,7 @@
             document.getElementById('menu-editor').classList.add('hidden');
             document.getElementById('no-menu-container').classList.add('hidden');
 
-            let { data } = await sb.from('tragalero_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
-            if (!data) {
-                const { data: fallbackData } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
-                data = fallbackData;
-            }
+            const { data } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
 
             // Find the active owner profile to refresh UI
             const owner = allOwners.find(o => o.id === activeOwnerId);
@@ -1043,7 +1030,7 @@
             }
 
             try {
-                const { error } = await sb.from('tragalero_menus').upsert({
+                const { error } = await sb.from('menutech_menus').upsert({
                     user_id: activeOwnerId,
                     domain: activeDomain || 'undetermined',
                     slug: menuData.slug,
