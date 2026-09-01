@@ -386,7 +386,11 @@
             if (!session) { location.href = 'index.html'; return; }
             user = session.user;
 
-            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            let { data: profile } = await sb.from('usuarios').select('*').eq('id', user.id).maybeSingle();
+            if (!profile) {
+                const { data: legacyProfile } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+                profile = legacyProfile;
+            }
             if (!profile) {
                 userRole = 'owner';
                 activeOwnerId = user.id;
@@ -396,10 +400,10 @@
                 return;
             }
 
-            userRole = profile.role;
+            userRole = profile.role || profile.role_name;
             activeOwnerId = user.id;
 
-            if (userRole === 'admin' || userRole === 'developer' || userRole === 'CS' || userRole === 'adminCS') {
+            if (userRole === 'admin' || userRole === 'developer' || userRole === 'CS' || userRole === 'adminCS' || userRole === 'Admin') {
                 document.getElementById('sidebar-container').classList.remove('hidden');
                 document.getElementById('sidebar-container').classList.add('collapsed');
                 await setupContextSwitcher();
@@ -419,10 +423,10 @@
             const roleEl = document.getElementById('user-role-label');
 
             if (profile) {
-                nameEl.textContent = profile.username || user.email.split('@')[0];
-                roleEl.textContent = profile.role || 'User';
+                nameEl.textContent = profile.name || profile.username || user.email.split('@')[0];
+                roleEl.textContent = profile.role || profile.role_name || 'User';
 
-                const role = (profile.role || 'user').trim().toUpperCase();
+                const role = (profile.role || profile.role_name || 'user').trim().toUpperCase();
                 if (role === 'ADMIN') pill.classList.add('admin-glow');
                 else if (role === 'DEVELOPER') pill.classList.add('dev-glow');
                 else pill.classList.add('owner-glow');
@@ -434,25 +438,30 @@
         }
 
         async function setupContextSwitcher() {
-            const { data } = await sb.from('profiles').select('*');
-            allOwners = data || [];
+            const { data: usersData } = await sb.from('usuarios').select('*');
+            if (usersData && usersData.length > 0) {
+                allOwners = usersData;
+            } else {
+                const { data: profilesData } = await sb.from('profiles').select('*');
+                allOwners = profilesData || [];
+            }
             renderOwners(allOwners);
             document.getElementById('client-search').oninput = (e) => {
                 const term = e.target.value.toLowerCase();
-                renderOwners(allOwners.filter(o => (o.username||'').toLowerCase().includes(term) || (o.domain||'').toLowerCase().includes(term)));
+                renderOwners(allOwners.filter(o => (o.name||o.username||'').toLowerCase().includes(term) || (o.domain||'').toLowerCase().includes(term)));
             };
         }
 
         function renderOwners(owners) {
             const list = document.getElementById('client-list');
-            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.username || 'User'}</span><span class="domain">${o.domain || o.id.substring(0,8)}</span></div>`).join('');
+            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.name || o.username || 'User'}</span><span class="domain">${o.domain || o.id.substring(0,8)}</span></div>`).join('');
         }
 
         window.switchContext = async (ownerId) => {
             const owner = allOwners.find(o => o.id === ownerId);
             if (!owner) return;
             activeOwnerId = ownerId;
-            document.getElementById('active-project-name').textContent = owner.username || owner.email;
+            document.getElementById('active-project-name').textContent = owner.name || owner.username || owner.email;
             document.getElementById('project-info').classList.remove('hidden');
             renderOwners(allOwners);
 
@@ -465,60 +474,76 @@
         function mapOrder(o) {
             return {
                 ...o,
-                items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
+                customer_name: o.customer_name || o.client_name,
+                customer_phone: o.customer_phone || o.client_phone,
+                address: o.address || o.client_address,
+                items: typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []),
                 total: parseFloat(o.total_amount || o.total || 0)
             };
         }
 
         async function loadOrders() {
-            const { data, error } = await sb.from('menutech_orders')
+            let { data, error } = await sb.from('tragalero_orders')
                 .select('*')
                 .eq('user_id', activeOwnerId)
                 .order('created_at', { ascending: false });
 
-            if (data) {
-                orders = data.map(mapOrder);
-                updateCounts();
-                renderOrders();
-            }
+            const { data: fallbackData } = await sb.from('menutech_orders')
+                .select('*')
+                .eq('user_id', activeOwnerId)
+                .order('created_at', { ascending: false });
+
+            const combined = [...(data || []), ...(fallbackData || [])];
+            // Remove duplicates by id if any
+            const uniqueMap = new Map();
+            combined.forEach(o => { if (!uniqueMap.has(o.id)) uniqueMap.set(o.id, o); });
+            const allOrders = Array.from(uniqueMap.values());
+            allOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            orders = allOrders.map(mapOrder);
+            updateCounts();
+            renderOrders();
         }
 
         function subscribeToOrders() {
-            // Use a clean channel name
+            const handleOrderPayload = (payload) => {
+                if (payload.new && payload.new.user_id === activeOwnerId) {
+                    if (payload.eventType === 'INSERT') {
+                        const newOrder = mapOrder(payload.new);
+                        if (!orders.find(o => o.id === newOrder.id)) {
+                            orders.unshift(newOrder);
+                            updateCounts();
+                            renderOrders();
+                            toggleAlertSound(true);
+                        }
+                    } else if (payload.eventType === 'UPDATE') {
+                        const idx = orders.findIndex(o => o.id === payload.new.id);
+                        if (idx !== -1) {
+                            orders[idx] = mapOrder(payload.new);
+                            updateCounts();
+                            renderOrders();
+                            if (selectedOrderId === payload.new.id) renderDetails(orders[idx]);
+                        }
+                    } else if (payload.eventType === 'DELETE') {
+                        orders = orders.filter(o => o.id !== payload.old.id);
+                        updateCounts();
+                        renderOrders();
+                    }
+                }
+            };
+
             const channelName = 'orders_realtime_' + activeOwnerId.substring(0, 8);
             ordersChannel = sb.channel(channelName)
                 .on('postgres_changes', {
-                    event: '*', // Listen to all events for better reliability
+                    event: '*',
+                    schema: 'public',
+                    table: 'tragalero_orders'
+                }, handleOrderPayload)
+                .on('postgres_changes', {
+                    event: '*',
                     schema: 'public',
                     table: 'menutech_orders'
-                }, (payload) => {
-                    // Filter by ownerId in JS to avoid subscription filter issues
-                    if (payload.new && payload.new.user_id === activeOwnerId) {
-                        if (payload.eventType === 'INSERT') {
-                            const newOrder = mapOrder(payload.new);
-                            // Avoid duplicates
-                            if (!orders.find(o => o.id === newOrder.id)) {
-                                orders.unshift(newOrder);
-                                updateCounts();
-                                renderOrders();
-                                // Ensure sound alert starts
-                                toggleAlertSound(true);
-                            }
-                        } else if (payload.eventType === 'UPDATE') {
-                            const idx = orders.findIndex(o => o.id === payload.new.id);
-                            if (idx !== -1) {
-                                orders[idx] = mapOrder(payload.new);
-                                updateCounts();
-                                renderOrders();
-                                if (selectedOrderId === payload.new.id) renderDetails(orders[idx]);
-                            }
-                        } else if (payload.eventType === 'DELETE') {
-                            orders = orders.filter(o => o.id !== payload.old.id);
-                            updateCounts();
-                            renderOrders();
-                        }
-                    }
-                })
+                }, handleOrderPayload)
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
                         console.log('Realtime subscription active for owner:', activeOwnerId);
@@ -785,9 +810,16 @@
                 if (selectedOrderId === id) renderDetails(orders[orderIdx]);
             }
 
-            const { error } = await sb.from('menutech_orders')
+            let { error } = await sb.from('tragalero_orders')
                 .update(updates)
                 .eq('id', id);
+
+            if (error) {
+                const fallbackRes = await sb.from('menutech_orders')
+                    .update(updates)
+                    .eq('id', id);
+                error = fallbackRes.error;
+            }
 
             if (error) {
                 showToast('Error updating order: ' + error.message, 'error');
