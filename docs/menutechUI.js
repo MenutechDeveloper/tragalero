@@ -1,6 +1,6 @@
 const MT_UI_CONFIG = {
-    url: "https://eemqyrysdgasfjlitads.supabase.co",
-    key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlbXF5cnlzZGdhc2ZqbGl0YWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA0NDUsImV4cCI6MjA4OTI5NjQ0NX0.UiyZLqhXSQ1Z_FoL006PDrDYKXbr_pxCOugYTulhdPY"
+    url: "https://jqmmzufomzcsyzdskxze.supabase.co",
+    key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxbW16dWZvbXpjc3l6ZHNreHplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE1NTgsImV4cCI6MjA4ODMxNzU1OH0.mAd28JHZmLZGLd4Z3r59SgtSdeEpMyZd_WJdrD381Vs"
 };
 
 /**
@@ -105,7 +105,7 @@ class MenutechGallery extends HTMLElement {
             const typePromise = attrType
                 ? Promise.resolve({ data: { gallery_type: attrType } })
                 : this.supabase
-                    .from('profiles')
+                    .from('usuarios')
                     .select('gallery_type')
                     .eq('domain', domain)
                     .limit(1)
@@ -1425,15 +1425,28 @@ class MenutechPlatformOrders extends HTMLElement {
     async fetchMenuData(identifier, isSlug = false) {
         if (!this.supabase) await this.initSupabase();
         try {
-            const query = this.supabase.from('menutech_menus').select('*');
+            // Priority 1: Query tragalero_menus
+            let query = this.supabase.from('tragalero_menus').select('*');
             if (isSlug) {
-                query.eq('slug', identifier);
+                query = query.eq('slug', identifier);
             } else {
-                query.eq('domain', identifier);
+                query = query.eq('domain', identifier);
             }
-            const { data, error } = await query.single();
-            if (error) return null;
-            return data;
+            let { data, error } = await query.maybeSingle();
+
+            // Fallback: Query menutech_menus
+            if (!data) {
+                let fallbackQuery = this.supabase.from('menutech_menus').select('*');
+                if (isSlug) {
+                    fallbackQuery = fallbackQuery.eq('slug', identifier);
+                } else {
+                    fallbackQuery = fallbackQuery.eq('domain', identifier);
+                }
+                const res = await fallbackQuery.maybeSingle();
+                data = res.data;
+            }
+
+            return data || null;
         } catch (err) {
             return null;
         }
@@ -2821,7 +2834,17 @@ class MenutechPlatformOrders extends HTMLElement {
                 status: 'pending'
             };
 
-            const { data, error } = await this.supabase.from('menutech_orders').insert(orderData).select('id').single();
+            let res = await this.supabase.from('tragalero_orders').insert(orderData).select('id').single();
+            let data = res.data;
+            let error = res.error;
+
+            if (error) {
+                // Fallback to menutech_orders if tragalero_orders fails
+                console.warn('tragalero_orders insert failed, attempting menutech_orders fallback:', error.message);
+                const fallbackRes = await this.supabase.from('menutech_orders').insert(orderData).select('id').single();
+                data = fallbackRes.data;
+                error = fallbackRes.error;
+            }
 
             if (error) {
                 console.error('Supabase error inserting order:', error);
@@ -2848,7 +2871,12 @@ class MenutechPlatformOrders extends HTMLElement {
         if (!lastId) return;
 
         if (!this.supabase) await this.initSupabase();
-        const { data } = await this.supabase.from('menutech_orders').select('status').eq('id', lastId).single();
+        let { data } = await this.supabase.from('tragalero_orders').select('status').eq('id', lastId).maybeSingle();
+        if (!data) {
+            const fallbackRes = await this.supabase.from('menutech_orders').select('status').eq('id', lastId).maybeSingle();
+            data = fallbackRes.data;
+        }
+
         if (data && (data.status === 'delivered' || data.status === 'rejected')) {
             localStorage.removeItem('mt_last_order_id');
             this.renderFloatingTracker();
@@ -2911,6 +2939,15 @@ class MenutechPlatformOrders extends HTMLElement {
             .on('postgres_changes', {
                 event: 'UPDATE',
                 schema: 'public',
+                table: 'tragalero_orders',
+                filter: 'id=eq.' + orderId
+            }, (payload) => {
+                console.log('Order status updated:', payload.new.status);
+                this.renderTrackingUI(payload.new);
+            })
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
                 table: 'menutech_orders',
                 filter: 'id=eq.' + orderId
             }, (payload) => {
@@ -2923,7 +2960,11 @@ class MenutechPlatformOrders extends HTMLElement {
                 }
             });
 
-        const { data: order } = await this.supabase.from('menutech_orders').select('*').eq('id', orderId).single();
+        let { data: order } = await this.supabase.from('tragalero_orders').select('*').eq('id', orderId).maybeSingle();
+        if (!order) {
+            const fallback = await this.supabase.from('menutech_orders').select('*').eq('id', orderId).maybeSingle();
+            order = fallback.data;
+        }
         if (order) {
             this.renderTrackingUI(order);
         }

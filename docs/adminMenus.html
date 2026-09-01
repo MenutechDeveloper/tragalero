@@ -459,9 +459,12 @@
         </div>
     </div>
 
-    <script type="module">
-        import { MT_CONFIG } from './config.js';
-        import { supabase as sb } from './supabase.js';
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./assets/js/supabase_logic.js"></script>
+
+    <script>
+        const sb = supabaseClient;
 
         let user = null, userRole = null, activeOwnerId = null, activeDomain = null;
         let menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode2', config: { categories: [], toppings: [] } };
@@ -492,50 +495,46 @@
 
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
-            if (!session) { location.href = "index.html"; return; }
+            if (!session) { location.href = "login.html"; return; }
             user = session.user;
-            const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-            if (!profile) { userRole = 'owner'; activeOwnerId = user.id; showApp(null); return; }
-            userRole = profile.role;
+            const { data: profile } = await sb.from('usuarios').select('*').eq('id', user.id).single();
+            if (!profile) { userRole = 'Owner'; activeOwnerId = user.id; showApp(null); return; }
+            userRole = profile.role || 'Owner';
 
-            if (userRole === 'CS' || userRole === 'adminCS') {
-                location.href = "index.html";
-                return;
-            }
-
-            if (userRole === 'admin' || userRole === 'developer') {
+            const normalizedRole = userRole.toUpperCase();
+            if (normalizedRole === 'ADMIN' || normalizedRole === 'DEVELOPER' || normalizedRole === 'CS' || normalizedRole === 'VENTAS') {
                 document.getElementById('sidebar-container').classList.remove('hidden');
                 document.getElementById('sidebar-container').classList.add('collapsed');
                 document.getElementById('snippet-section').classList.remove('hidden');
                 await setupContextSwitcher();
             }
-            activeOwnerId = user.id; activeDomain = profile.domain;
+            activeOwnerId = user.id; activeDomain = profile.domain || '';
             showApp(profile);
         }
 
         async function setupContextSwitcher() {
-            const { data } = await sb.from('profiles').select('*');
+            const { data } = await sb.from('usuarios').select('*');
             allOwners = data || [];
             renderOwners(allOwners);
             document.getElementById('client-search').oninput = (e) => {
                 const term = e.target.value.toLowerCase();
-                renderOwners(allOwners.filter(o => (o.username||'').toLowerCase().includes(term) || (o.domain||'').toLowerCase().includes(term)));
+                renderOwners(allOwners.filter(o => (o.name||'').toLowerCase().includes(term) || (o.email||'').toLowerCase().includes(term) || (o.domain||'').toLowerCase().includes(term)));
             };
         }
 
         function renderOwners(owners) {
             const list = document.getElementById('client-list');
-            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.username || 'User'}</span><span class="domain">${o.domain || o.id.substring(0,8)}</span></div>`).join('');
+            list.innerHTML = owners.map(o => `<div class="client-item ${activeOwnerId === o.id ? 'active' : ''}" onclick="switchContext('${o.id}')"><span class="name">${o.name || o.email || 'User'}</span><span class="domain">${o.domain || o.email || o.id.substring(0,8)}</span></div>`).join('');
         }
 
         window.switchContext = async (ownerId) => {
             const owner = allOwners.find(o => o.id === ownerId);
             if (!owner) return;
-            activeOwnerId = ownerId; activeDomain = owner.domain;
+            activeOwnerId = ownerId; activeDomain = owner.domain || '';
             const domainLabel = document.getElementById('header-domain-label');
-            if (domainLabel) domainLabel.textContent = activeDomain || "Workspace";
+            if (domainLabel) domainLabel.textContent = activeDomain || owner.name || "Workspace";
             document.getElementById('view-domain-title').textContent = "";
-            document.getElementById('active-project-name').textContent = owner.username || owner.email;
+            document.getElementById('active-project-name').textContent = owner.name || owner.email;
             document.getElementById('project-info').classList.remove('hidden');
             renderOwners(allOwners);
             await loadMenu();
@@ -544,28 +543,26 @@
 
         function updateSubdomainLink(profile) {
             if (!profile) return;
-            // Improve slug generation: prioritize domain, then username
             let defaultSlug = '';
-            if (profile.domain && !profile.domain.includes('menutech')) {
-                // Remove .com, .io etc and handle common separators
+            if (profile.domain && !profile.domain.includes('tragalero') && !profile.domain.includes('menutech')) {
                 defaultSlug = profile.domain.split('.')[0];
             } else {
-                defaultSlug = profile.username || 'restaurant';
+                defaultSlug = profile.name || 'restaurant';
             }
 
             const slug = menuData.slug || defaultSlug.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
             menuData.slug = slug;
             document.getElementById('slug-input').value = slug;
-            const link = `menutech.io/menu.html?n=${slug}`;
-            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none; font-weight:800;">Go to Menu</a>`;
+            const link = `./menu.html?n=${slug}`;
+            document.getElementById('subdomain-link').innerHTML = `<a href="${link}" target="_blank" style="color:var(--orange); text-decoration:none; font-weight:800;">Go to Menu</a>`;
         }
 
         window.updateSlug = (val) => {
             setChanges(true);
             const slug = val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
             menuData.slug = slug;
-            const link = `menutech.io/menu.html?n=${slug}`;
-            document.getElementById('subdomain-link').innerHTML = `<a href="https://${link}" target="_blank" style="color:var(--orange); text-decoration:none; font-weight:800;">Go to Menu</a>`;
+            const link = `./menu.html?n=${slug}`;
+            document.getElementById('subdomain-link').innerHTML = `<a href="${link}" target="_blank" style="color:var(--orange); text-decoration:none; font-weight:800;">Go to Menu</a>`;
         };
 
         window.copySubdomain = () => {
@@ -580,15 +577,18 @@
         async function loadMenu() {
             if (!activeOwnerId) return;
             setChanges(false);
-            // Clear existing data to prevent bleed-through
             menuData = { cover_url: '', cover_type: 'image', menu_style: 'mode2', config: { categories: [], toppings: [] } };
 
             document.getElementById('menu-editor').classList.add('hidden');
             document.getElementById('no-menu-container').classList.add('hidden');
 
-            const { data } = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
+            // Query tragalero_menus first, fallback to menutech_menus
+            let { data } = await sb.from('tragalero_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
+            if (!data) {
+                const fallback = await sb.from('menutech_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
+                data = fallback.data;
+            }
 
-            // Find the active owner profile to refresh UI
             const owner = allOwners.find(o => o.id === activeOwnerId);
             if (owner) updateSubdomainLink(owner);
 
@@ -596,13 +596,12 @@
                 menuData = data;
                 if (!menuData.config) menuData.config = { categories: [], toppings: [] };
                 menuData.menu_style = 'mode2';
-                // Ensure Topping IDs
                 (menuData.config.toppings || []).forEach(tg => {
                     if (!tg.id) tg.id = 'tg-' + Math.random().toString(36).substr(2, 9);
                 });
                 document.getElementById('menu-editor').classList.remove('hidden');
                 renderMenuEditor();
-                if (owner) updateSubdomainLink(owner); // Re-run with loaded slug
+                if (owner) updateSubdomainLink(owner);
             } else {
                 document.getElementById('no-menu-container').classList.remove('hidden');
             }
@@ -626,13 +625,13 @@
             document.getElementById('main-app').classList.remove('hidden');
             document.getElementById('top-nav').classList.remove('hidden');
             if (profile) {
-                document.getElementById('user-name').textContent = profile.username || user.email.split('@')[0];
+                document.getElementById('user-name').textContent = profile.name || user.email.split('@')[0];
                 document.getElementById('user-role-label').textContent = profile.role || 'User';
                 const domainLabel = document.getElementById('header-domain-label');
-                if (domainLabel) domainLabel.textContent = profile.domain || "Workspace";
+                if (domainLabel) domainLabel.textContent = profile.domain || profile.name || "Workspace";
                 document.getElementById('view-domain-title').textContent = "";
 
-                await loadMenu(); // Wait for menu data before updating the link
+                await loadMenu();
                 updateSubdomainLink(profile);
             } else {
                 await loadMenu();
@@ -673,10 +672,10 @@
             const pill = document.getElementById('user-display-pill');
             pill.onclick = (e) => { e.stopPropagation(); pill.classList.toggle('active'); };
             document.addEventListener('click', () => pill.classList.remove('active'));
-            window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
+            window.logout = async () => { await sb.auth.signOut(); location.href = "login.html"; };
             document.getElementById('btn-copy-snippet').onclick = () => {
                 if (!activeDomain) return showToast("Assign a domain first.", "warning");
-                const snippet = `<!-- Menutech Menu -->\n<script src="https://menutech.io/menutechUI.js"><\/script>\n<menutech-platform-orders domain="${activeDomain}" view="popup"></menutech-platform-orders>`;
+                const snippet = `<!-- Tragalero Menu -->\n<script src="https://tragalero.com/menutechUI.js"><\/script>\n<menutech-platform-orders domain="${activeDomain}" view="popup"></menutech-platform-orders>`;
                 navigator.clipboard.writeText(snippet).then(() => {
                     const btn = document.getElementById('btn-copy-snippet');
                     btn.textContent = "COPIED!";
@@ -990,26 +989,27 @@
         async function uploadMedia(file, target, idx) {
             if (!file) return;
             setChanges(true);
-            const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
             showToast("Uploading...", "warning");
             try {
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/auto/upload`, { method: 'POST', body: fd });
-                const d = await res.json();
+                const uploadRes = await uploadToCloudinary(file);
+                const secureUrl = uploadRes.url;
+                const resourceType = uploadRes.resource_type;
+
                 if (target === 'cover') {
-                    menuData.cover_url = d.secure_url;
-                    menuData.cover_type = d.resource_type === 'video' ? 'video' : 'image';
+                    menuData.cover_url = secureUrl;
+                    menuData.cover_type = resourceType === 'video' ? 'video' : 'image';
                     renderCover();
                 } else if (target === 'category') {
-                    menuData.config.categories[idx].image = d.secure_url;
+                    menuData.config.categories[idx].image = secureUrl;
                     renderCategories();
                     setTimeout(setupDragZones, 500);
                 } else if (target === 'dish') {
                     const [cIdx, dIdx] = idx;
-                    menuData.config.categories[cIdx].dishes[dIdx].image = d.secure_url;
+                    menuData.config.categories[cIdx].dishes[dIdx].image = secureUrl;
                     renderDishes(cIdx);
                 }
                 showToast("Upload complete!");
-            } catch (e) { showToast("Upload failed", "error"); }
+            } catch (e) { showToast("Upload failed: " + e.message, "error"); }
         }
 
         window.openPreview = () => {
@@ -1023,23 +1023,28 @@
             const btn = document.querySelector('.btn-save-all');
             btn.textContent = "SAVING...";
 
-            // Ensure we have a slug
             if (!menuData.slug) {
                 const slugInput = document.getElementById('slug-input');
                 menuData.slug = slugInput.value || 'restaurant';
             }
 
+            const payload = {
+                user_id: activeOwnerId,
+                domain: activeDomain || 'undetermined',
+                slug: menuData.slug,
+                menu_style: menuData.menu_style,
+                cover_url: menuData.cover_url,
+                cover_type: menuData.cover_type,
+                config: menuData.config
+            };
+
             try {
-                const { error } = await sb.from('menutech_menus').upsert({
-                    user_id: activeOwnerId,
-                    domain: activeDomain || 'undetermined',
-                    slug: menuData.slug,
-                    menu_style: menuData.menu_style,
-                    cover_url: menuData.cover_url,
-                    cover_type: menuData.cover_type,
-                    config: menuData.config
-                }, { onConflict: 'user_id' });
-                if (error) throw error;
+                let { error } = await sb.from('tragalero_menus').upsert(payload, { onConflict: 'user_id' });
+                if (error) {
+                    console.warn('tragalero_menus save failed, attempting menutech_menus fallback:', error.message);
+                    const fallback = await sb.from('menutech_menus').upsert(payload, { onConflict: 'user_id' });
+                    if (fallback.error) throw fallback.error;
+                }
                 showToast("Menu saved successfully!");
                 setChanges(false);
             } catch (e) { showToast(e.message, "error"); }
