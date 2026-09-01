@@ -3320,7 +3320,7 @@ class MenutechFooter extends HTMLElement {
                     ` : ''}
 
                     <div class="f-row">
-                        <div class="f-copyright">&copy; ${yearDisplay} Powered by <a href="https://menutech.xyz/" target="_blank">Menutech</a></div>
+                        <div class="f-copyright">&copy; ${yearDisplay} Powered by <a href="https://tragalero.com/" target="_blank">Tragalero</a></div>
                     </div>
                 </div>
             </div>
