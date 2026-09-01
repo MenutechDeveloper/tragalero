@@ -1060,7 +1060,8 @@ function registerPlatformOrders() {
 
 if (!window.MenutechPlatformOrders) {
     const script = document.createElement('script');
-    script.src = 'menutechUI.js';
+    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    script.src = isLocalHost ? 'menutechUI.js' : 'https://tragalero.com/menutechUI.js';
     script.onload = () => registerPlatformOrders();
     document.head.appendChild(script);
 } else {
