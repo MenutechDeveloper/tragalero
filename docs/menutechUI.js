@@ -1431,7 +1431,7 @@ class MenutechPlatformOrders extends HTMLElement {
             } else {
                 query = query.eq('domain', identifier);
             }
-            let { data, error } = await query.single();
+            let { data, error } = await query.maybeSingle();
             if (error || !data) {
                 let fallbackQuery = this.supabase.from('menutech_menus').select('*');
                 if (isSlug) {
@@ -1439,7 +1439,7 @@ class MenutechPlatformOrders extends HTMLElement {
                 } else {
                     fallbackQuery = fallbackQuery.eq('domain', identifier);
                 }
-                const res = await fallbackQuery.single();
+                const res = await fallbackQuery.maybeSingle();
                 data = res.data;
             }
             return data;
