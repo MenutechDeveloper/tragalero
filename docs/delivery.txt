@@ -1,0 +1,47 @@
+================================================================================
+  GUÍA DIRECTA Y RESUMIDA: CONFIGURACIÓN DE DELIVERY Y EDGE FUNCTIONS
+================================================================================
+
+1. ¿ES CORRECTO PONER LOS CAMPOS DE APIS / CLIENT SECRET EN ADMINDELIVERY.HTML?
+--------------------------------------------------------------------------------
+SÍ, ES TOTALMENTE CORRECTO Y ES LA PRÁCTICA ESTÁNDAR PROFESIONAL.
+
+Explicación corta:
+- Cada negocio o restaurante ("Salsita", "Clamatos", etc.) tiene sus propias
+  cuentas e API Keys privadas en Rappi Cargo y Uber Direct.
+- El panel `admindelivery.html` es la interfaz donde el Administrador o el Dueño
+  ingresa sus credenciales (Client ID, Client Secret, Store ID).
+- Al hacer clic en "Guardar Configuración", estas llaves SE GUARDAN EN LA BASE DE
+  DATOS DE SUPABASE (`tragalero_delivery_config`) protegidas con RLS.
+
+
+2. ¿CÓMO INTERACTÚAN LOS CAMPOS DEL FRONTEND CON LA EDGE FUNCTION DE SUPABASE?
+--------------------------------------------------------------------------------
+1. El usuario/administrador llena los campos en `admindelivery.html` y guarda.
+2. La Edge Function (`delivery-service`) creada en el Dashboard de Supabase corre
+   100% en el SERVIDOR.
+3. Cuando presionas "Probar Conexión" o cotizas un envío, el navegador NO le envía
+   las llaves secretas a Rappi ni a Uber. Únicamente envía el `user_id` a la
+   Edge Function.
+4. La Edge Function lee de forma privada las llaves secretas guardadas en la DB
+   usando `SUPABASE_SERVICE_ROLE_KEY`, ejecuta la autenticación servidor-a-servidor
+   con Rappi/Uber y devuelve solo la respuesta final al navegador.
+5. De esta manera, NUNCA se exponen los Client Secrets en la red del navegador (F12).
+
+
+3. NAVEGACIÓN Y CONFIGURACIÓN MULTI-CLIENTE (SALSITA, CLAMATOS, ETC.)
+--------------------------------------------------------------------------------
+- Como Administrador:
+  En `admindelivery.html`, abre el cajón flotante de "CLIENTES" a la izquierda.
+  Selecciona "Salsita" o "Clamatos". Al seleccionarlo, la pantalla se actualiza y
+  te permite consultar, configurar o probar el Rappi y Uber específico de esa cuenta.
+
+- Como Propietario (Owner):
+  Ve únicamente la configuración de su propia cuenta.
+
+
+4. SLOT EN ADMIN.HTML
+--------------------------------------------------------------------------------
+El botón/slot "Delivery" ya está disponible y activo en `admin.html` apuntando a
+`./admindelivery.html`.
+================================================================================
