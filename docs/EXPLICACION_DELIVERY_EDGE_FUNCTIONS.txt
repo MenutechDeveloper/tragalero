@@ -36,7 +36,7 @@ Solución Profesional Implementada:
   el resultado al cliente.
 
 
-2. PASO 1: CREAR LA TABLA EN SUPABASE SQL EDITOR
+2. PASO 1: SCRIPT SQL OBLIGATORIO EN SUPABASE SQL EDITOR
 --------------------------------------------------------------------------------
 Copia y ejecuta el siguiente script SQL en tu panel de Supabase:
 (Menú SQL Editor -> New Query -> Run)
@@ -75,19 +75,16 @@ CREATE POLICY "Owner manage delivery config" ON public.tragalero_delivery_config
 --------------------------------------------------------------------------------
 Para configurar y desplegar la Edge Function en Supabase:
 
-OPCIÓN A: Desde la consola / CLI de Supabase (Recomendado):
-1. Instala el CLI de Supabase o desde tu terminal ejecuta:
-   `supabase functions new delivery-service`
-2. En la carpeta generada `supabase/functions/delivery-service/index.ts`,
-   pega el código TypeScript de abajo.
-3. Despliega la función con:
-   `supabase functions deploy delivery-service`
-
-OPCIÓN B: Desde el Dashboard de Supabase:
+OPCIÓN A: Desde el Dashboard de Supabase (Recomendado por el usuario):
 1. Ingresa a tu proyecto en Supabase Dashboard (https://app.supabase.com).
 2. Ve a la sección "Edge Functions" en el menú lateral izquierdo.
 3. Haz clic en "Create a new Function" y asígnale el nombre `delivery-service`.
 4. Pega el código TypeScript que se detalla a continuación.
+
+OPCIÓN B: Desde la consola / CLI de Supabase:
+1. Executa `supabase functions new delivery-service`
+2. Pega el código TypeScript en `supabase/functions/delivery-service/index.ts`.
+3. Despliega con `supabase functions deploy delivery-service`.
 
 Código TypeScript Completo para Servidor (`delivery-service/index.ts`):
 
@@ -197,7 +194,6 @@ serve(async (req) => {
 
     // 4. COTIZACIÓN DE ENVÍO
     if (action === "get_quote") {
-      // Aquí se ejecuta la llamada a las APIs de cotización de Rappi/Uber usando la sesión del servidor
       return new Response(
         JSON.stringify({
           success: true,
@@ -226,21 +222,16 @@ serve(async (req) => {
 ```
 
 
-4. FUNCIONAMIENTO MULTI-CLIENTE (PANEL DE NAVEGACIÓN Y CONFIGURACIÓN)
+4. MODELO DE MÚLTIPLES RESTAURANTES (RAPPI CARGO Y UBER DIRECT)
 --------------------------------------------------------------------------------
-- Para Administradores (Admin, CS, Ventas):
-  Pueden desplegar la barra lateral "CLIENTES" y hacer clic en cualquier negocio
-  (p. ej. "Salsita", "Clamatos").
-  1. El frontend carga los datos guardados de ese negocio desde `tragalero_delivery_config`.
-  2. Si el Admin actualiza o edita las llaves y presiona "Guardar", se persisten
-     exclusivamente para ese `user_id`.
-  3. Al presionar "Probar Conexión", el navegador llama a la Edge Function
-     pasando el `user_id` de "Salsita" o "Clamatos".
-  4. La Edge Function lee las credenciales secretas de la DB y ejecuta la
-     autenticación segura con Rappi/Uber.
+Hay 2 formas de registrar múltiples restaurantes:
 
-- Para Dueños ('Owner'):
-  Únicamente ven y configuran las credenciales de su propio restaurante sin
-  opción a ver ni editar otros restaurantes.
+1. Modelo Cuenta Maestra Tragalero:
+   Tú como plataforma tienes 1 par de Client ID/Secret de Uber/Rappi. Cada restaurante
+   solo requiere su `Store ID` (Rappi) o `Customer ID` (Uber) para solicitar repartidores
+   bajo tu cuenta matriz.
 
+2. Modelo Cuentas Propias:
+   Cada restaurante ("Salsita", "Clamatos") genera sus propias credenciales en los
+   portales de Rappi Cargo y Uber Direct, y las ingresa individualmente en `admindelivery.html`.
 ================================================================================
