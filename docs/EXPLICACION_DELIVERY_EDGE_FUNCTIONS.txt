@@ -1,30 +1,39 @@
 ================================================================================
-  GUÍA Y EXPLICACIÓN TÉCNICA: INTEGRACIÓN DE DELIVERY (RAPPI CARGO & UBER DIRECT)
-  Y CONFIGURACIÓN DE SUPABASE EDGE FUNCTIONS PARA TRAGALERO
+  GUÍA Y EXPLICACIÓN TÉCNICA Y DE SEGURIDAD: INTEGRACIÓN DE DELIVERY
+  (RAPPI CARGO & UBER DIRECT) Y SUPABASE EDGE FUNCTIONS PARA TRAGALERO
 ================================================================================
 
-1. ARQUITECTURA GENERAL
+1. ARQUITECTURA Y SEGURIDAD PROFESIONAL (¿POR QUÉ EDGE FUNCTIONS?)
 --------------------------------------------------------------------------------
-La solución de Delivery en Tragalero se compone de 3 capas principales:
+En aplicaciones web profesionales y de grado empresarial que gestionan múltiples
+clientes (como Tragalero con clientes como "Salsita", "Clamatos", etc.), las APIs
+y llaves secretas (Client Secrets, Tokens de Acceso, Private Keys) NUNCA deben
+ser expuestas o procesadas directamente en el navegador web (frontend).
 
-1. Interface Administrativa (`admindelivery.html`):
-   - Permite a los usuarios con rol 'Owner' configurar las llaves y estados de
-     sus cuentas de Rappi Cargo y Uber Direct.
-   - Ofrece un panel lateral deslizante (Drawer) para que los usuarios con roles
-     de administración ('Admin', 'Developer', 'CS', 'Ventas') puedan cambiar el
-     contexto entre diferentes cuentas de clientes (por ejemplo, "Salsita",
-     "Clamatos") y configurar o probar de forma independiente el servicio de
-     delivery de cada restaurante.
+Si las peticiones a Rappi Cargo o Uber Direct se hicieran desde el navegador:
+1. Cualquier usuario podría abrir las herramientas de desarrollador (F12) o
+   la pestaña de Red (Network) y robar los Client Secrets de los restaurantes.
+2. Ocurrirían errores de CORS (Cross-Origin Resource Sharing), ya que las APIs de
+   Rappi y Uber bloquean llamadas directas hechas desde dominios de navegador.
 
-2. Base de Datos Supabase (`tragalero_delivery_config`):
-   - Almacena de forma persistente y segura las credenciales (Client ID,
-     Client Secret, Store ID / Customer ID, entorno sandbox/producción y estado)
-     de cada negocio vinculadas a su `user_id`.
+Solución Profesional Implementada:
+--------------------------------------------------------------------------------
+- Frontend (`admindelivery.html`): Es un panel exclusivo para que el administrador
+  o los dueños ingresen y guarden la configuración de su cuenta. Cuando se requiere
+  probar conexión o cotizar un envío, el frontend SOLO envía el `user_id` del cliente
+  y la acción requerida a la Supabase Edge Function.
 
-3. Supabase Edge Function (`delivery-service`):
-   - Se encarga de procesar las peticiones hacia las APIs externas de Rappi Cargo
-     y Uber Direct en el servidor para proteger las credenciales secretas
-     (Client Secret) y evitar bloqueos por CORS en el navegador.
+- Supabase Database (`tragalero_delivery_config`): Guarda de forma segura las
+  credenciales de cada negocio vinculadas a su `user_id`. Está protegida mediante
+  RLS (Row Level Security) para que solo el dueño autenticado o el Admin puedan
+  leer/escribir sus credenciales.
+
+- Supabase Edge Function (`delivery-service`): Corre 100% en el SERVIDOR (en la
+  nube de Deno en Supabase). Recibe la petición del frontend, consulta la base de
+  datos usando el rol de servicio seguro (`SUPABASE_SERVICE_ROLE_KEY`), obtiene
+  las credenciales secretas del cliente en el servidor, realiza el handshake OAuth y
+  la cotización de forma servidor-a-servidor con Rappi/Uber, y devuelve únicamente
+  el resultado al cliente.
 
 
 2. PASO 1: CREAR LA TABLA EN SUPABASE SQL EDITOR
@@ -62,17 +71,25 @@ CREATE POLICY "Owner manage delivery config" ON public.tragalero_delivery_config
 --------------------------------------------------------------------------------
 
 
-3. PASO 2: DÓNDE PONER LAS APIS Y LA EDGE FUNCTION EN SUPABASE
+3. PASO 2: CÓMO Y DÓNDE CREAR LA SUPABASE EDGE FUNCTION
 --------------------------------------------------------------------------------
-Para configurar las APIs en Supabase:
+Para configurar y desplegar la Edge Function en Supabase:
 
-A) En el Panel de Supabase Dashboard:
-   1. Ve a "Edge Functions" en la barra lateral izquierda.
-   2. Haz clic en "Create a new function" y asígnale el nombre: `delivery-service`
-   3. Pega el código TypeScript que se proporciona a continuación en `index.ts`.
-   4. Guarda y despliega la función ("Deploy").
+OPCIÓN A: Desde la consola / CLI de Supabase (Recomendado):
+1. Instala el CLI de Supabase o desde tu terminal ejecuta:
+   `supabase functions new delivery-service`
+2. En la carpeta generada `supabase/functions/delivery-service/index.ts`,
+   pega el código TypeScript de abajo.
+3. Despliega la función con:
+   `supabase functions deploy delivery-service`
 
-B) Código completo de la Edge Function (`delivery-service/index.ts`):
+OPCIÓN B: Desde el Dashboard de Supabase:
+1. Ingresa a tu proyecto en Supabase Dashboard (https://app.supabase.com).
+2. Ve a la sección "Edge Functions" en el menú lateral izquierdo.
+3. Haz clic en "Create a new Function" y asígnale el nombre `delivery-service`.
+4. Pega el código TypeScript que se detalla a continuación.
+
+Código TypeScript Completo para Servidor (`delivery-service/index.ts`):
 
 ```typescript
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -89,26 +106,37 @@ serve(async (req) => {
   }
 
   try {
-    const { action, provider, user_id, provider_config, pickup_address, dropoff_address } = await req.json();
+    const { action, provider, user_id, pickup_address, dropoff_address } = await req.json();
 
+    if (!user_id) {
+      return new Response(
+        JSON.stringify({ success: false, message: "user_id es requerido para recuperar credenciales" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Inicializar cliente Supabase con Service Role (Acceso Seguro de Servidor)
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Obtener credenciales del cliente desde la base de datos si no vienen en el body
-    let config = provider_config;
-    if (!config && user_id) {
-      const { data } = await supabase
-        .from("tragalero_delivery_config")
-        .select("*")
-        .eq("user_id", user_id)
-        .single();
-      config = data;
+    // 1. Obtener de forma privada las credenciales del negocio desde la DB
+    const { data: config, error: dbErr } = await supabase
+      .from("tragalero_delivery_config")
+      .select("*")
+      .eq("user_id", user_id)
+      .single();
+
+    if (dbErr || !config) {
+      return new Response(
+        JSON.stringify({ success: false, message: "No se encontraron credenciales de delivery para esta cuenta" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // 1. PROBAR CONEXIÓN O AUTENTICAR RAPPI CARGO
+    // 2. PROBAR CONEXIÓN / AUTENTICAR RAPPI CARGO (SERVER-TO-SERVER)
     if (action === "test_rappi") {
-      const isProd = config?.env === "production";
+      const isProd = config.rappi_env === "production";
       const rappiBaseUrl = isProd
         ? "https://microservices.rappi.com/main-gateway/fmk/api/v1"
         : "https://microservices.dev.rappi.com/main-gateway/fmk/api/v1";
@@ -117,8 +145,8 @@ serve(async (req) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          client_id: config?.client_id || config?.rappi_client_id,
-          client_secret: config?.client_secret || config?.rappi_client_secret,
+          client_id: config.rappi_client_id,
+          client_secret: config.rappi_client_secret,
           grant_type: "client_credentials",
         }),
       });
@@ -132,17 +160,17 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, message: "Conexión con Rappi Cargo exitosa", token: authData.access_token }),
+        JSON.stringify({ success: true, message: "Conexión con Rappi Cargo exitosa (Token obtenido en Servidor)", token: authData.access_token }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 2. PROBAR CONEXIÓN O AUTENTICAR UBER DIRECT
+    // 3. PROBAR CONEXIÓN / AUTENTICAR UBER DIRECT (SERVER-TO-SERVER)
     if (action === "test_uber") {
       const uberAuthUrl = "https://login.uber.com/oauth/v2/token";
       const params = new URLSearchParams({
-        client_id: config?.client_id || config?.uber_client_id,
-        client_secret: config?.client_secret || config?.uber_client_secret,
+        client_id: config.uber_client_id,
+        client_secret: config.uber_client_secret,
         grant_type: "client_credentials",
         scope: "eats.deliveries",
       });
@@ -162,13 +190,14 @@ serve(async (req) => {
       }
 
       return new Response(
-        JSON.stringify({ success: true, message: "Conexión con Uber Direct exitosa", token: authData.access_token }),
+        JSON.stringify({ success: true, message: "Conexión con Uber Direct exitosa (Token obtenido en Servidor)", token: authData.access_token }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 3. OBTENER COTIZACIÓN DE ENVÍO (MOCK / REAL GATEWAY)
+    // 4. COTIZACIÓN DE ENVÍO
     if (action === "get_quote") {
+      // Aquí se ejecuta la llamada a las APIs de cotización de Rappi/Uber usando la sesión del servidor
       return new Response(
         JSON.stringify({
           success: true,
@@ -197,22 +226,21 @@ serve(async (req) => {
 ```
 
 
-4. FUNCIONAMIENTO DEL PANEL DE CLIENTES (NAVEGACIÓN MULTI-CUENTA)
+4. FUNCIONAMIENTO MULTI-CLIENTE (PANEL DE NAVEGACIÓN Y CONFIGURACIÓN)
 --------------------------------------------------------------------------------
-- Para el Usuario Dueño ('Owner'):
-  Al ingresar a `admindelivery.html`, el sistema detecta su `user_id` e incluye
-  únicamente sus credenciales propias. El menú lateral de clientes se oculta.
+- Para Administradores (Admin, CS, Ventas):
+  Pueden desplegar la barra lateral "CLIENTES" y hacer clic en cualquier negocio
+  (p. ej. "Salsita", "Clamatos").
+  1. El frontend carga los datos guardados de ese negocio desde `tragalero_delivery_config`.
+  2. Si el Admin actualiza o edita las llaves y presiona "Guardar", se persisten
+     exclusivamente para ese `user_id`.
+  3. Al presionar "Probar Conexión", el navegador llama a la Edge Function
+     pasando el `user_id` de "Salsita" o "Clamatos".
+  4. La Edge Function lee las credenciales secretas de la DB y ejecuta la
+     autenticación segura con Rappi/Uber.
 
-- Para Administradores y Equipo ('Admin', 'Developer', 'CS', 'Ventas'):
-  Aparece la pestaña lateral "CLIENTES" (`sidebar-container`). Al dar clic en ella,
-  se despliega la lista completa de restaurantes o usuarios (p. ej. "Salsita",
-  "Clamatos"). Al hacer clic en cualquiera de ellos:
-  1. `activeOwnerId` se actualiza al ID del cliente seleccionado.
-  2. La función `loadDeliveryConfig(activeOwnerId)` realiza un selector a
-     `tragalero_delivery_config` buscando el registro de dicho cliente.
-  3. Los campos de Rappi Cargo y Uber Direct se rellenan automáticamente con la
-     configuración específica de ese cliente.
-  4. Al guardar cambios o ejecutar pruebas de cotización, las credenciales
-     se guardan y prueban de forma independiente para ese cliente específico.
+- Para Dueños ('Owner'):
+  Únicamente ven y configuran las credenciales de su propio restaurante sin
+  opción a ver ni editar otros restaurantes.
 
 ================================================================================

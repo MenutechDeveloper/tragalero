@@ -573,24 +573,16 @@
         }
 
         async function testConnection(provider) {
-            showToast(`Probando conexión con ${provider.toUpperCase()}...`);
+            showToast(`Probando conexión segura con ${provider.toUpperCase()}...`);
 
             try {
+                // Se envía únicamente el user_id para que la Edge Function consulte de forma privada
+                // las credenciales guardadas en la base de datos (Server-side) sin exponérselas al cliente
                 const { data, error } = await sb.functions.invoke('delivery-service', {
                     body: {
                         action: `test_${provider}`,
                         user_id: activeOwnerId,
-                        provider_config: provider === 'rappi' ? {
-                            client_id: document.getElementById('rappi_client_id').value,
-                            client_secret: document.getElementById('rappi_client_secret').value,
-                            store_id: document.getElementById('rappi_store_id').value,
-                            env: document.getElementById('rappi_env').value
-                        } : {
-                            customer_id: document.getElementById('uber_customer_id').value,
-                            client_id: document.getElementById('uber_client_id').value,
-                            client_secret: document.getElementById('uber_client_secret').value,
-                            env: document.getElementById('uber_env').value
-                        }
+                        provider: provider
                     }
                 });
 
@@ -599,7 +591,7 @@
                 if (data && data.success) {
                     showToast(`Conexión exitosa con ${provider.toUpperCase()}!`, "success");
                 } else {
-                    showToast(`Respuesta de ${provider}: ` + (data?.message || 'Revisa tus credenciales'), "error");
+                    showToast(`Respuesta de ${provider}: ` + (data?.message || 'Revisa tus credenciales guardadas'), "error");
                 }
             } catch (err) {
                 showToast(`Nota: La Edge Function 'delivery-service' responderá cuando esté desplegada en Supabase (${err.message})`, "error");
