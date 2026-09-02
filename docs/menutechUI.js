@@ -2822,10 +2822,13 @@ class MenutechPlatformOrders extends HTMLElement {
                 user_id: this.menuData.user_id,
                 items: this.cart,
                 total: total,
+                client_name: name,
+                client_phone: phone,
+                client_address: address,
                 customer_name: name,
                 customer_phone: phone,
-                order_type: orderType,
                 address: address,
+                order_type: orderType,
                 reference: reference,
                 delivery_time_mode: timeMode,
                 delivery_date: date,
@@ -2834,16 +2837,46 @@ class MenutechPlatformOrders extends HTMLElement {
                 status: 'pending'
             };
 
+            const sanitizeOrderData = (data) => {
+                const copy = { ...data };
+                delete copy.address;
+                delete copy.customer_name;
+                delete copy.customer_phone;
+                delete copy.order_type;
+                delete copy.reference;
+                delete copy.delivery_time_mode;
+                delete copy.delivery_date;
+                delete copy.delivery_time;
+                delete copy.payment_method;
+                return copy;
+            };
+
             let res = await this.supabase.from('tragalero_orders').insert(orderData).select('id').single();
             let data = res.data;
             let error = res.error;
 
             if (error) {
+                console.warn('tragalero_orders insert with full orderData failed, trying sanitized orderData:', error.message);
+                const fallbackTragalero = await this.supabase.from('tragalero_orders').insert(sanitizeOrderData(orderData)).select('id').single();
+                if (!fallbackTragalero.error) {
+                    data = fallbackTragalero.data;
+                    error = null;
+                }
+            }
+
+            if (error) {
                 // Fallback to menutech_orders if tragalero_orders fails
                 console.warn('tragalero_orders insert failed, attempting menutech_orders fallback:', error.message);
-                const fallbackRes = await this.supabase.from('menutech_orders').insert(orderData).select('id').single();
+                let fallbackRes = await this.supabase.from('menutech_orders').insert(orderData).select('id').single();
                 data = fallbackRes.data;
                 error = fallbackRes.error;
+
+                if (error) {
+                    console.warn('menutech_orders insert with full orderData failed, trying sanitized orderData:', error.message);
+                    const fallbackMenutech = await this.supabase.from('menutech_orders').insert(sanitizeOrderData(orderData)).select('id').single();
+                    data = fallbackMenutech.data;
+                    error = fallbackMenutech.error;
+                }
             }
 
             if (error) {
