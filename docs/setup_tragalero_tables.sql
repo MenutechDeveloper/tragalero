@@ -107,6 +107,12 @@ ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS delivery_time_mode 
 ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS delivery_date TEXT;
 ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS delivery_time TEXT;
 ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS payment_method TEXT;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS preparing_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS ready_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
 
 ALTER TABLE public.menutech_orders ADD COLUMN IF NOT EXISTS customer_name TEXT;
 ALTER TABLE public.menutech_orders ADD COLUMN IF NOT EXISTS customer_phone TEXT;
