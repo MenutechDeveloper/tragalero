@@ -512,15 +512,15 @@
                             toggleAlertSound(true);
                         }
                     } else if (payload.eventType === 'UPDATE') {
-                        const idx = orders.findIndex(o => o.id === payload.new.id);
+                        const idx = orders.findIndex(o => String(o.id) === String(payload.new.id));
                         if (idx !== -1) {
                             orders[idx] = mapOrder(payload.new);
                             updateCounts();
                             renderOrders();
-                            if (selectedOrderId === payload.new.id) renderDetails(orders[idx]);
+                            if (String(selectedOrderId) === String(payload.new.id)) renderDetails(orders[idx]);
                         }
                     } else if (payload.eventType === 'DELETE') {
-                        orders = orders.filter(o => o.id !== payload.old.id);
+                        orders = orders.filter(o => String(o.id) !== String(payload.old.id));
                         updateCounts();
                         renderOrders();
                     }
@@ -646,7 +646,7 @@
             }
 
             list.innerHTML = filtered.map(order => `
-                <div class="order-card-compact ${order.status} ${selectedOrderId === order.id ? 'active' : ''}" onclick="selectOrder('${order.id}')">
+                <div class="order-card-compact ${order.status} ${String(selectedOrderId) === String(order.id) ? 'active' : ''}" onclick="selectOrder('${order.id}')">
                     <div class="status-dot"></div>
                     <h4>${order.customer_name}</h4>
                     <p>${order.items.length} items • $${order.total.toFixed(2)}</p>
@@ -657,7 +657,7 @@
 
         window.selectOrder = (id) => {
             selectedOrderId = id;
-            const order = orders.find(o => o.id === id);
+            const order = orders.find(o => String(o.id) === String(id));
             renderOrders();
             renderDetails(order);
             if (window.innerWidth <= 768) {
@@ -777,7 +777,7 @@
         window.toggleItem = (itemId) => {
             if (crossedItems.has(itemId)) crossedItems.delete(itemId);
             else crossedItems.add(itemId);
-            const order = orders.find(o => o.id === selectedOrderId);
+            const order = orders.find(o => String(o.id) === String(selectedOrderId));
             renderDetails(order);
         };
 
@@ -796,12 +796,12 @@
             }
 
             // Optimistic update
-            const orderIdx = orders.findIndex(o => o.id === id);
+            const orderIdx = orders.findIndex(o => String(o.id) === String(id));
             if (orderIdx !== -1) {
                 Object.assign(orders[orderIdx], updates);
                 updateCounts();
                 renderOrders();
-                if (selectedOrderId === id) renderDetails(orders[orderIdx]);
+                if (String(selectedOrderId) === String(id)) renderDetails(orders[orderIdx]);
             }
 
             // Attempt update in tragalero_orders, fallback to menutech_orders
