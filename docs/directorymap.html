@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Registra tu Negocio - Tragalero</title>
+    <title>Configura tu Negocio - Tragalero</title>
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -94,6 +94,56 @@
             display: none;
         }
 
+        /* Sliding Client Drawer Sidebar */
+        .sidebar-container {
+            position: fixed; left: 0; top: 120px; z-index: 6000; pointer-events: none; display: flex; align-items: flex-start;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sidebar-container > * { pointer-events: auto; }
+        .sidebar-container.collapsed { transform: translateX(-340px) !important; }
+
+        .sidebar-drawer { width: 340px; height: 550px; display: flex; flex-direction: column; gap: 20px; }
+
+        .search-box { background: var(--bs-body-bg, #fff); border: 1px solid rgba(0,0,0,0.1); border-radius: 32px; padding: 24px; position: relative; cursor: default; transition: opacity 0.3s; user-select: none; z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.15); height: 100%; display: flex; flex-direction: column; }
+        [data-bs-theme="dark"] .search-box { background: #1e293b; border-color: rgba(255,255,255,0.1); }
+        .search-box label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--bs-primary, #f2a04a); text-transform: uppercase; margin-bottom: 15px; margin-left: 5px; pointer-events: none; }
+        .search-box input { width: 100%; margin-bottom: 15px; border-radius: 16px; padding: 14px; background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1); color: var(--bs-body-color); }
+        [data-bs-theme="dark"] .search-box input { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #fff; }
+
+        .client-list { max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
+        .client-list::-webkit-scrollbar { width: 4px; }
+        .client-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+
+        .client-item { padding: 14px 18px; border-radius: 16px; background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; gap: 4px; }
+        [data-bs-theme="dark"] .client-item { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.05); }
+        .client-item:hover { border-color: var(--bs-primary, #f2a04a); }
+        .client-item.active { border-color: var(--bs-primary, #f2a04a); background: rgba(242,160,74,0.1); }
+        .client-item .name { font-weight: 700; font-size: 0.85rem; display: block; }
+        .client-item .domain { font-size: 0.7rem; opacity: 0.7; }
+
+        .sidebar-tab {
+            width: 45px; height: 160px; background: #f2a04a; color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 0 16px 16px 0; cursor: pointer; writing-mode: vertical-lr; text-orientation: mixed; font-weight: 800; font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; box-shadow: 10px 0 30px rgba(242, 160, 74, 0.2); transition: 0.4s; margin-top: 40px; position: relative;
+        }
+        .sidebar-tab:hover { width: 55px; padding-left: 10px; }
+
+        .btn-panel-link {
+            background: var(--bs-primary, #f2a04a);
+            color: #fff !important;
+            border-radius: 20px;
+            font-weight: 800;
+            padding: 8px 20px;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .btn-panel-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            filter: brightness(1.05);
+        }
     </style>
 </head>
 
@@ -103,7 +153,10 @@
             <a class="navbar-brand d-flex align-items-center" href="./restaurantapp.html">
                 <img src="./assets/img/tragalero_negro.png" alt="Tragalero" height="40" class="me-2 logo-img">
             </a>
-            <div class="ms-auto d-flex align-items-center">
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <a href="./admin.html" class="btn btn-panel-link me-2">
+                    <i class="bi bi-grid-fill me-1"></i>PANEL
+                </a>
                 <div class="theme-switcher-container d-flex align-items-center bg-white bg-opacity-10 p-2 rounded-pill shadow-sm">
                     <div id="authButtons" class="me-3 ps-2"></div>
                     <div class="theme-switcher-bar d-flex">
@@ -116,6 +169,22 @@
         </div>
     </nav>
 
+    <!-- Sliding Client Drawer Sidebar -->
+    <div class="sidebar-container collapsed" id="sidebar-container" style="display: none;">
+        <div class="sidebar-drawer" id="sidebar-drawer">
+            <div class="search-box">
+                <label>Buscar Cliente</label>
+                <input type="text" id="client-search" placeholder="Nombre o dominio...">
+                <div class="client-list" id="client-list"></div>
+                <div id="project-info" style="width: 100%; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.1); margin-top: auto;">
+                    <label style="font-size:0.7rem; font-weight:700; color:var(--bs-primary, #f2a04a); text-transform:uppercase;">Cuenta Activa</label>
+                    <div id="active-project-name" style="font-weight: 700; padding: 12px; background: rgba(0,0,0,0.03); border-radius: 14px; border: 1px solid rgba(0,0,0,0.05); font-size: 0.8rem; margin-top: 8px;">Cargando...</div>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar-tab" id="sidebar-tab">Clientes</div>
+    </div>
+
     <main class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-8">
@@ -124,7 +193,7 @@
                         <i class="bi bi-arrow-left me-2"></i>Volver a Usuarios
                     </a>
                 </div>
-                <h2 class="fw-bold mb-4 animate-fade-in">Registra tu Negocio</h2>
+                <h2 class="fw-bold mb-4 animate-fade-in" id="formTitle">Información de tu Restaurante</h2>
 
                 <form id="businessForm">
                     <!-- General Info -->
@@ -132,17 +201,11 @@
                         <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-info-circle me-2"></i>Información General</h5>
                         <div class="row g-3">
                             <div class="col-md-12">
-                                <label class="form-label">Nombre del Negocio</label>
+                                <label class="form-label">Nombre del Restaurante</label>
                                 <input type="text" id="bizName" class="form-control" placeholder="Ej. El Herradero" required>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Categoría</label>
-                                <select id="bizCategory" class="form-select" required>
-                                    <option value="Restaurantes" selected>Restaurantes</option>
-                                </select>
-                            </div>
                             <div class="col-md-12">
-                                <label class="form-label">Logo / Imagen del Negocio</label>
+                                <label class="form-label">Logo / Imagen del Restaurante</label>
                                 <div class="upload-area" id="dropZone">
                                     <i class="bi bi-cloud-arrow-up"></i>
                                     <p>Arrastra tu logo aquí o haz clic para buscar</p>
@@ -214,7 +277,7 @@
                     </div>
 
                     <!-- Restaurant Options -->
-                    <div class="form-section animate-fade-in delay-2" id="restaurantFields" style="display: none;">
+                    <div class="form-section animate-fade-in delay-2" id="restaurantFields">
                         <h5 class="fw-bold mb-4 text-primary"><i class="bi bi-egg-fried me-2"></i>Opciones de Restaurante</h5>
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -302,6 +365,8 @@
         let sessionUser = null;
         let ownerIdParam = null;
         let targetOwnerId = null;
+        let existingBiz = null;
+        let allOwners = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             await renderUserMenu('authButtons');
@@ -325,11 +390,192 @@
             if (ownerIdParam && ownerIdParam !== sessionUser.id && sessionUser.role === 'Admin') {
                 document.getElementById('adminNav').style.display = 'block';
             }
+
+            const privilegedRoles = ['ADMIN', 'DEVELOPER', 'CS', 'VENTAS', 'SUPPORT', 'DESIGN', 'RETENTION'];
+            const userRoleUpper = (sessionUser.role || '').toUpperCase();
+
+            if (privilegedRoles.includes(userRoleUpper)) {
+                setupClientDrawer();
+            }
+
+            await loadBusinessData(targetOwnerId);
         });
 
+        async function setupClientDrawer() {
+            const drawerContainer = document.getElementById('sidebar-container');
+            if (drawerContainer) {
+                drawerContainer.style.display = 'flex';
+                drawerContainer.classList.add('collapsed');
+            }
+
+            const sbTab = document.getElementById('sidebar-tab');
+            if (sbTab) {
+                sbTab.onclick = () => {
+                    drawerContainer.classList.toggle('collapsed');
+                };
+            }
+
+            try {
+                const { data, error } = await supabaseClient.from('usuarios').select('*');
+                if (error) throw error;
+                allOwners = data || [];
+                renderOwnersList(allOwners);
+
+                const searchInput = document.getElementById('client-search');
+                if (searchInput) {
+                    searchInput.oninput = (e) => {
+                        const term = e.target.value.toLowerCase();
+                        const filtered = allOwners.filter(o =>
+                            (o.name || '').toLowerCase().includes(term) ||
+                            (o.domain || '').toLowerCase().includes(term) ||
+                            (o.email || '').toLowerCase().includes(term)
+                        );
+                        renderOwnersList(filtered);
+                    };
+                }
+            } catch (e) {
+                console.error("Error al cargar lista de usuarios:", e);
+            }
+        }
+
+        function renderOwnersList(owners) {
+            const list = document.getElementById('client-list');
+            if (!list) return;
+            list.innerHTML = owners.map(o => `
+                <div class="client-item ${o.id === targetOwnerId ? 'active' : ''}" onclick="switchContext('${o.id}', '${escapeHtml(o.name || o.domain || o.email || 'Cliente')}')">
+                    <span class="name">${escapeHtml(o.name || 'Sin nombre')}</span>
+                    <span class="domain">${escapeHtml(o.domain || o.email || '')}</span>
+                </div>
+            `).join('');
+        }
+
+        window.switchContext = async function(ownerId, name) {
+            targetOwnerId = ownerId;
+            const activeNameEl = document.getElementById('active-project-name');
+            if (activeNameEl) activeNameEl.textContent = name;
+            renderOwnersList(allOwners);
+            await loadBusinessData(targetOwnerId);
+        };
+
+        async function loadBusinessData(ownerId) {
+            existingBiz = null;
+            resetForm();
+
+            // Set active account name label
+            const activeUser = allOwners.find(o => o.id === ownerId);
+            const activeNameEl = document.getElementById('active-project-name');
+            if (activeNameEl) {
+                activeNameEl.textContent = activeUser ? (activeUser.name || activeUser.email || activeUser.domain) : sessionUser.name;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('businesses')
+                    .select('*')
+                    .eq('owner_id', ownerId)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (error && error.code !== 'PGRST116') {
+                    console.error("Error al cargar datos del negocio:", error);
+                }
+
+                if (data) {
+                    existingBiz = data;
+                    populateForm(data);
+                }
+            } catch (err) {
+                console.error("Error inesperado al cargar negocio:", err);
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('bizName').value = '';
+            document.getElementById('bizCity').value = '';
+            document.getElementById('bizState').value = '';
+            document.getElementById('bizZip').value = '';
+            document.getElementById('bizAddress').value = '';
+            document.getElementById('bizLat').value = '';
+            document.getElementById('bizLng').value = '';
+            document.getElementById('bizWebsite').value = '';
+            document.getElementById('bizFB').value = '';
+            document.getElementById('bizIG').value = '';
+            document.getElementById('bizWA').value = '';
+            document.getElementById('bizCuid').value = '';
+            document.getElementById('bizRuid').value = '';
+            document.getElementById('orderBgColor').value = '#f2a04a';
+            document.getElementById('orderBgText').value = '#f2a04a';
+            document.getElementById('orderTextColor').value = '#ffffff';
+            document.getElementById('orderTextText').value = '#ffffff';
+            document.getElementById('resBgColor').value = '#2f4854';
+            document.getElementById('resBgText').value = '#2f4854';
+            document.getElementById('resTextColor').value = '#ffffff';
+            document.getElementById('resTextText').value = '#ffffff';
+            document.getElementById('hasReservation').checked = false;
+            document.getElementById('bizOrder').value = '';
+            document.getElementById('bizReservation').value = '';
+            document.getElementById('bizLogo').value = '';
+
+            const filePreview = document.getElementById('filePreview');
+            const dropZone = document.getElementById('dropZone');
+            filePreview.src = '';
+            filePreview.style.display = 'none';
+            dropZone.querySelector('i').style.display = 'inline-block';
+            dropZone.querySelector('p').style.display = 'block';
+        }
+
+        function populateForm(data) {
+            if (data.name) document.getElementById('bizName').value = data.name;
+            if (data.city) document.getElementById('bizCity').value = data.city;
+            if (data.state) document.getElementById('bizState').value = data.state;
+            if (data.zip) document.getElementById('bizZip').value = data.zip;
+            if (data.address_detail) document.getElementById('bizAddress').value = data.address_detail;
+            if (data.latitude) document.getElementById('bizLat').value = data.latitude;
+            if (data.longitude) document.getElementById('bizLng').value = data.longitude;
+            if (data.website) document.getElementById('bizWebsite').value = data.website;
+
+            if (data.social_media && typeof data.social_media === 'object') {
+                if (data.social_media.facebook) document.getElementById('bizFB').value = data.social_media.facebook;
+                if (data.social_media.instagram) document.getElementById('bizIG').value = data.social_media.instagram;
+                if (data.social_media.whatsapp) document.getElementById('bizWA').value = data.social_media.whatsapp;
+            }
+
+            if (data.cuid) document.getElementById('bizCuid').value = data.cuid;
+            if (data.ruid) document.getElementById('bizRuid').value = data.ruid;
+
+            if (data.order_bg_color) {
+                document.getElementById('orderBgColor').value = data.order_bg_color;
+                document.getElementById('orderBgText').value = data.order_bg_color;
+            }
+            if (data.order_text_color) {
+                document.getElementById('orderTextColor').value = data.order_text_color;
+                document.getElementById('orderTextText').value = data.order_text_color;
+            }
+            if (data.res_bg_color) {
+                document.getElementById('resBgColor').value = data.res_bg_color;
+                document.getElementById('resBgText').value = data.res_bg_color;
+            }
+            if (data.res_text_color) {
+                document.getElementById('resTextColor').value = data.res_text_color;
+                document.getElementById('resTextText').value = data.res_text_color;
+            }
+
+            document.getElementById('hasReservation').checked = !!data.has_reservation;
+            if (data.order_url) document.getElementById('bizOrder').value = data.order_url;
+            if (data.reservation_url) document.getElementById('bizReservation').value = data.reservation_url;
+
+            if (data.logo_url) {
+                const filePreview = document.getElementById('filePreview');
+                const dropZone = document.getElementById('dropZone');
+                filePreview.src = data.logo_url;
+                filePreview.style.display = 'inline-block';
+                dropZone.querySelector('i').style.display = 'none';
+                dropZone.querySelector('p').style.display = 'none';
+            }
+        }
+
         const form = document.getElementById('businessForm');
-        const bizCategory = document.getElementById('bizCategory');
-        const restaurantFields = document.getElementById('restaurantFields');
         const statusMsg = document.getElementById('statusMsg');
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('bizLogo');
@@ -356,9 +602,6 @@
                 );
             };
         }
-
-        // Category Toggle (Always on for restaurants)
-        restaurantFields.style.display = 'block';
 
         // Drag & Drop Handlers
         dropZone.onclick = () => fileInput.click();
@@ -411,7 +654,6 @@
         setupColorSync('resBgColor', 'resBgText');
         setupColorSync('resTextColor', 'resTextText');
 
-
         function ensureHttps(url) {
             if (!url) return '';
             url = url.trim();
@@ -431,8 +673,8 @@
             statusMsg.className = 'alert d-none';
 
             try {
-                // Check business limit for target user
-                if (sessionUser.role !== 'Admin') {
+                // Check business limit for target user if creating brand new business
+                if (!existingBiz && sessionUser.role !== 'Admin') {
                     const { count, error: countError } = await supabaseClient
                         .from('businesses')
                         .select('*', { count: 'exact', head: true })
@@ -458,7 +700,7 @@
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Subiendo...';
 
                 const logoFile = fileInput.files[0];
-                let logoUrl = '';
+                let logoUrl = existingBiz ? existingBiz.logo_url : '';
 
                 if (logoFile) {
                     try {
@@ -472,7 +714,7 @@
                 const bizData = {
                     owner_id: targetOwnerId,
                     name: document.getElementById('bizName').value,
-                    category: bizCategory.value,
+                    category: 'Restaurantes',
                     city: document.getElementById('bizCity').value,
                     state: document.getElementById('bizState').value,
                     zip: document.getElementById('bizZip').value,
@@ -481,7 +723,7 @@
                     longitude: document.getElementById('bizLng').value ? parseFloat(document.getElementById('bizLng').value) : null,
                     logo_url: logoUrl,
                     website: ensureHttps(document.getElementById('bizWebsite').value),
-                    is_restaurant: bizCategory.value === 'Restaurantes',
+                    is_restaurant: true,
                     cuid: document.getElementById('bizCuid').value,
                     ruid: document.getElementById('bizRuid').value,
                     order_bg_color: document.getElementById('orderBgColor').value,
@@ -498,15 +740,28 @@
                     }
                 };
 
-                const { error: insertError } = await supabaseClient
-                    .from('businesses')
-                    .insert([bizData]);
+                if (existingBiz && existingBiz.id) {
+                    const { error: updateError } = await supabaseClient
+                        .from('businesses')
+                        .update(bizData)
+                        .eq('id', existingBiz.id);
 
-                if (insertError) throw insertError;
+                    if (updateError) throw updateError;
+                } else {
+                    const { data: newBiz, error: insertError } = await supabaseClient
+                        .from('businesses')
+                        .insert([bizData])
+                        .select()
+                        .single();
 
-                statusMsg.textContent = '¡Negocio registrado con éxito! Redirigiendo...';
+                    if (insertError) throw insertError;
+                    existingBiz = newBiz;
+                }
+
+                statusMsg.textContent = '¡Información del restaurante guardada con éxito!';
                 statusMsg.className = 'alert alert-success d-block';
-                setTimeout(() => window.location.href = './restaurantapp.html', 2000);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-upload me-2"></i>Guardar y Publicar';
 
             } catch (err) {
                 console.error(err);
