@@ -2885,7 +2885,7 @@ class MenutechPlatformOrders extends HTMLElement {
             }
 
             if (data && data.id) {
-                localStorage.setItem('mt_last_order_id', data.id);
+                localStorage.setItem('mt_last_order_id', String(data.id));
             }
 
             this.showSuccessAnimation(data ? data.id : null);
@@ -2907,11 +2907,13 @@ class MenutechPlatformOrders extends HTMLElement {
         let { data } = await this.supabase.from('tragalero_orders').select('status').eq('id', lastId).maybeSingle();
         if (!data) {
             const fallbackRes = await this.supabase.from('menutech_orders').select('status').eq('id', lastId).maybeSingle();
-            data = fallbackRes.data;
+            data = fallbackRes ? fallbackRes.data : null;
         }
 
         if (data && (data.status === 'delivered' || data.status === 'rejected')) {
             localStorage.removeItem('mt_last_order_id');
+            this.renderFloatingTracker();
+        } else {
             this.renderFloatingTracker();
         }
     }
@@ -2957,6 +2959,8 @@ class MenutechPlatformOrders extends HTMLElement {
     async showOrderTracking(orderId) {
         if (!this.supabase) await this.initSupabase();
 
+        const orderIdStr = String(orderId);
+
         // Open modal immediately with loading state
         const overlay = this.popupRoot.getElementById('popup');
         const popupContent = this.popupRoot.getElementById('popup-content');
@@ -2968,12 +2972,12 @@ class MenutechPlatformOrders extends HTMLElement {
         // Subscribe to real-time updates
         if (this.trackingChannel) this.supabase.removeChannel(this.trackingChannel);
 
-        this.trackingChannel = this.supabase.channel('tracking_' + orderId.substring(0, 8))
+        this.trackingChannel = this.supabase.channel('tracking_' + orderIdStr.substring(0, 8))
             .on('postgres_changes', {
                 event: 'UPDATE',
                 schema: 'public',
                 table: 'tragalero_orders',
-                filter: 'id=eq.' + orderId
+                filter: 'id=eq.' + orderIdStr
             }, (payload) => {
                 console.log('Order status updated:', payload.new.status);
                 this.renderTrackingUI(payload.new);
@@ -2982,21 +2986,21 @@ class MenutechPlatformOrders extends HTMLElement {
                 event: 'UPDATE',
                 schema: 'public',
                 table: 'menutech_orders',
-                filter: 'id=eq.' + orderId
+                filter: 'id=eq.' + orderIdStr
             }, (payload) => {
                 console.log('Order status updated:', payload.new.status);
                 this.renderTrackingUI(payload.new);
             })
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
-                    console.log('Subscribed to tracking for:', orderId);
+                    console.log('Subscribed to tracking for:', orderIdStr);
                 }
             });
 
-        let { data: order } = await this.supabase.from('tragalero_orders').select('*').eq('id', orderId).maybeSingle();
+        let { data: order } = await this.supabase.from('tragalero_orders').select('*').eq('id', orderIdStr).maybeSingle();
         if (!order) {
-            const fallback = await this.supabase.from('menutech_orders').select('*').eq('id', orderId).maybeSingle();
-            order = fallback.data;
+            const fallback = await this.supabase.from('menutech_orders').select('*').eq('id', orderIdStr).maybeSingle();
+            order = fallback ? fallback.data : null;
         }
         if (order) {
             this.renderTrackingUI(order);
@@ -3008,6 +3012,7 @@ class MenutechPlatformOrders extends HTMLElement {
         if (!popupContent) return;
 
         const status = order.status;
+        const orderIdStr = String(order.id);
         const steps = [
             { id: 'pending', label: 'Received', active: true },
             { id: 'accepted', label: 'Accepted', active: ['accepted', 'preparing', 'finished', 'delivered'].includes(status) },
@@ -3060,7 +3065,7 @@ class MenutechPlatformOrders extends HTMLElement {
                     `).join('')}
                 </div>
 
-                <div class="order-id">Order ID: ${order.id.substring(0, 8)}</div>
+                <div class="order-id">Order ID: ${orderIdStr.substring(0, 8)}</div>
                 ${(status === 'delivered' || status === 'rejected') ? `
                     <button class="btn-track-done" id="track-finish-btn">ORDER AGAIN</button>
                 ` : `
