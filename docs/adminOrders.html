@@ -479,22 +479,8 @@
         }
 
         async function loadOrders() {
-            // Load orders from tragalero_orders & menutech_orders
-            const [tragaleroRes, menutechRes] = await Promise.all([
-                sb.from('tragalero_orders').select('*').eq('user_id', activeOwnerId).order('created_at', { ascending: false }),
-                sb.from('menutech_orders').select('*').eq('user_id', activeOwnerId).order('created_at', { ascending: false })
-            ]);
-
-            const list1 = (tragaleroRes.data || []).map(mapOrder);
-            const list2 = (menutechRes.data || []).map(mapOrder);
-
-            // Merge avoiding duplicates by id
-            const map = new Map();
-            [...list1, ...list2].forEach(o => {
-                if (!map.has(o.id)) map.set(o.id, o);
-            });
-
-            orders = Array.from(map.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const { data } = await sb.from('tragalero_orders').select('*').eq('user_id', activeOwnerId).order('created_at', { ascending: false });
+            orders = (data || []).map(mapOrder);
             updateCounts();
             renderOrders();
         }
@@ -505,7 +491,7 @@
                 if (payload.new && payload.new.user_id === activeOwnerId) {
                     if (payload.eventType === 'INSERT') {
                         const newOrder = mapOrder(payload.new);
-                        if (!orders.find(o => o.id === newOrder.id)) {
+                        if (!orders.find(o => String(o.id) === String(newOrder.id))) {
                             orders.unshift(newOrder);
                             updateCounts();
                             renderOrders();
@@ -532,11 +518,6 @@
                     event: '*',
                     schema: 'public',
                     table: 'tragalero_orders'
-                }, handlePayload)
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'menutech_orders'
                 }, handlePayload)
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
@@ -804,12 +785,15 @@
                 if (String(selectedOrderId) === String(id)) renderDetails(orders[orderIdx]);
             }
 
-            // Attempt update in tragalero_orders, fallback to menutech_orders
+            // Attempt update in tragalero_orders with full timestamp updates first
             let res = await sb.from('tragalero_orders').update(updates).eq('id', id);
             let error = res.error;
+
             if (error) {
-                const fallbackRes = await sb.from('menutech_orders').update(updates).eq('id', id);
-                error = fallbackRes.error;
+                // If timestamp column is missing from schema, fallback to updating status only
+                console.warn('Full update failed, retrying status-only update:', error.message);
+                const statusOnlyRes = await sb.from('tragalero_orders').update({ status }).eq('id', id);
+                error = statusOnlyRes.error;
             }
 
             if (error) {

@@ -2864,20 +2864,6 @@ class MenutechPlatformOrders extends HTMLElement {
                 }
             }
 
-            if (error) {
-                // Fallback to menutech_orders if tragalero_orders fails
-                console.warn('tragalero_orders insert failed, attempting menutech_orders fallback:', error.message);
-                let fallbackRes = await this.supabase.from('menutech_orders').insert(orderData).select('id').single();
-                data = fallbackRes.data;
-                error = fallbackRes.error;
-
-                if (error) {
-                    console.warn('menutech_orders insert with full orderData failed, trying sanitized orderData:', error.message);
-                    const fallbackMenutech = await this.supabase.from('menutech_orders').insert(sanitizeOrderData(orderData)).select('id').single();
-                    data = fallbackMenutech.data;
-                    error = fallbackMenutech.error;
-                }
-            }
 
             if (error) {
                 console.error('Supabase error inserting order:', error);
@@ -2905,10 +2891,6 @@ class MenutechPlatformOrders extends HTMLElement {
 
         if (!this.supabase) await this.initSupabase();
         let { data } = await this.supabase.from('tragalero_orders').select('status').eq('id', lastId).maybeSingle();
-        if (!data) {
-            const fallbackRes = await this.supabase.from('menutech_orders').select('status').eq('id', lastId).maybeSingle();
-            data = fallbackRes ? fallbackRes.data : null;
-        }
 
         if (data && (data.status === 'delivered' || data.status === 'rejected')) {
             localStorage.removeItem('mt_last_order_id');
@@ -2982,15 +2964,6 @@ class MenutechPlatformOrders extends HTMLElement {
                 console.log('Order status updated:', payload.new.status);
                 this.renderTrackingUI(payload.new);
             })
-            .on('postgres_changes', {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'menutech_orders',
-                filter: 'id=eq.' + orderIdStr
-            }, (payload) => {
-                console.log('Order status updated:', payload.new.status);
-                this.renderTrackingUI(payload.new);
-            })
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
                     console.log('Subscribed to tracking for:', orderIdStr);
@@ -2998,10 +2971,6 @@ class MenutechPlatformOrders extends HTMLElement {
             });
 
         let { data: order } = await this.supabase.from('tragalero_orders').select('*').eq('id', orderIdStr).maybeSingle();
-        if (!order) {
-            const fallback = await this.supabase.from('menutech_orders').select('*').eq('id', orderIdStr).maybeSingle();
-            order = fallback ? fallback.data : null;
-        }
         if (order) {
             this.renderTrackingUI(order);
         }
