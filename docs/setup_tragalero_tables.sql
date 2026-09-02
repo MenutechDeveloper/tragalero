@@ -59,6 +59,15 @@ CREATE TABLE IF NOT EXISTS public.tragalero_orders (
     client_name TEXT,
     client_phone TEXT,
     client_address TEXT,
+    customer_name TEXT,
+    customer_phone TEXT,
+    address TEXT,
+    order_type TEXT,
+    reference TEXT,
+    delivery_time_mode TEXT,
+    delivery_date TEXT,
+    delivery_time TEXT,
+    payment_method TEXT,
     items JSONB DEFAULT '[]'::jsonb,
     total NUMERIC(10,2) DEFAULT 0,
     status TEXT DEFAULT 'pending', -- pending, in_progress, completed, cancelled
@@ -72,12 +81,42 @@ CREATE TABLE IF NOT EXISTS public.menutech_orders (
     client_name TEXT,
     client_phone TEXT,
     client_address TEXT,
+    customer_name TEXT,
+    customer_phone TEXT,
+    address TEXT,
+    order_type TEXT,
+    reference TEXT,
+    delivery_time_mode TEXT,
+    delivery_date TEXT,
+    delivery_time TEXT,
+    payment_method TEXT,
     items JSONB DEFAULT '[]'::jsonb,
     total NUMERIC(10,2) DEFAULT 0,
     status TEXT DEFAULT 'pending', -- pending, in_progress, completed, cancelled
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Asegurar columnas opcionales si las tablas ya existían antes
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS customer_name TEXT;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS customer_phone TEXT;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS order_type TEXT;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS reference TEXT;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS delivery_time_mode TEXT;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS delivery_date TEXT;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS delivery_time TEXT;
+ALTER TABLE public.tragalero_orders ADD COLUMN IF NOT EXISTS payment_method TEXT;
+
+ALTER TABLE public.menutech_orders ADD COLUMN IF NOT EXISTS customer_name TEXT;
+ALTER TABLE public.menutech_orders ADD COLUMN IF NOT EXISTS customer_phone TEXT;
+ALTER TABLE public.menutech_orders ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE public.menutech_orders ADD COLUMN IF NOT EXISTS order_type TEXT;
+ALTER TABLE public.menutech_orders ADD COLUMN IF NOT EXISTS reference TEXT;
+ALTER TABLE public.menutech_orders ADD COLUMN IF NOT EXISTS delivery_time_mode TEXT;
+ALTER TABLE public.menutech_orders ADD COLUMN IF NOT EXISTS delivery_date TEXT;
+ALTER TABLE public.menutech_orders ADD COLUMN IF NOT EXISTS delivery_time TEXT;
+ALTER TABLE public.menutech_orders ADD COLUMN IF NOT EXISTS payment_method TEXT;
 
 -- 4. TABLA PARA MENÚS FÍSICOS (physicalMenu.html)
 CREATE TABLE IF NOT EXISTS public.tragalero_physical_menus (
