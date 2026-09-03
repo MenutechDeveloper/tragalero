@@ -61,7 +61,7 @@ y cómo genera tareas para el equipo de Atención a Clientes (CS).
 
 ### PASO B: Guardar tu API Key de OpenAI de Forma Segura
 1. Entra a tu panel de Supabase.
-2. En el menú de la izquierda ve a **Project Settings** (el ícono de engrane ⚙️) -> **Secrets** (o en la sección **Edge Functions** -> **Secrets**).
+2. En el menú de la izquierda ve a **Project Settings** (el ícono de engrane) -> **Secrets** (o en la sección **Edge Functions** -> **Secrets**).
 3. Haz clic en **Add new secret**.
 4. En Nombre (Name) pon: `OPENAI_API_KEY`
 5. En Valor (Value) pega tu clave que empieza con `sk-...` de OpenAI.
@@ -232,7 +232,7 @@ Si el usuario te pide un servicio externo (como publicar en Facebook, diseño, o
 
         const formattedDate = dueDate.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
         return new Response(JSON.stringify({
-          reply: `¡Perfecto! He registrado tu solicitud para "${args.title}". Quedó programada para ser publicada el día ${formattedDate} (dando los 5 días de anticipación). Tu ejecutivo de CS ya tiene la tarea en su panel.`
+          reply: `¡Listo! Tu post quedará listo el día ${formattedDate}.`
         }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }
