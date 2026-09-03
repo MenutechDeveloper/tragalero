@@ -49,7 +49,7 @@
                         </div>
                         <div>
                             <div class="fw-bold" style="font-size: 0.95rem;">Asistente IA Tragalero</div>
-                            <div class="small opacity-75" style="font-size: 0.72rem;"><i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i>En línea • Permisos Admin</div>
+                            <div class="small opacity-75" style="font-size: 0.72rem;"><i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i>En línea</div>
                         </div>
                     </div>
                     <button class="chatbot-close-btn" id="chatbot-close-btn"><i class="bi bi-x-lg"></i></button>
