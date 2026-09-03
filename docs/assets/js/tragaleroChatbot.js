@@ -234,61 +234,61 @@
         const lowerMsg = msg.toLowerCase();
         const sb = window.supabaseClient;
 
-        // A) DISH PRICE UPDATE PATTERN
-        // Match phrases like "cambia el precio de X a Y", "cambiar precio de X a 50", "precio de X a 60 pesos"
-        const pricePattern = /(?:cambi|actualiz|pon|modific).*?(?:precio).*?(?:de|del)?\s+([a-záéíóúñ\s]+?)\s+(?:a|en)\s+\$?(\d+(?:\.\d+)?)/i;
-        const priceMatch = lowerMsg.match(pricePattern) || lowerMsg.match(/(?:precio).*?([a-záéíóúñ\s]+?)\s+(?:a|en)\s+\$?(\d+(?:\.\d+)?)/i);
-
-        if (priceMatch) {
-            const rawDishName = priceMatch[1].trim();
-            const newPrice = parseFloat(priceMatch[2]);
-
-            if (sb && user) {
-                // Fetch user's menu from tragalero_menus or menutech_menus
-                let { data: menu } = await sb.from('tragalero_menus').select('*').eq('user_id', user.id).maybeSingle();
-                if (!menu) {
-                    const fallback = await sb.from('menutech_menus').select('*').eq('user_id', user.id).maybeSingle();
+        if (sb && user) {
+            // Fetch user's menu first to inspect dishes or perform price updates
+            let { data: menu } = await sb.from('tragalero_menus').select('*').eq('user_id', user.id).maybeSingle();
+            let tableName = 'tragalero_menus';
+            if (!menu) {
+                const fallback = await sb.from('menutech_menus').select('*').eq('user_id', user.id).maybeSingle();
+                if (fallback.data) {
                     menu = fallback.data;
-                }
-
-                if (menu && menu.config && menu.config.categories) {
-                    let updated = false;
-                    let foundName = rawDishName;
-
-                    menu.config.categories.forEach(cat => {
-                        (cat.dishes || []).forEach(dish => {
-                            if ((dish.name || '').toLowerCase().includes(rawDishName.toLowerCase())) {
-                                dish.price = newPrice;
-                                foundName = dish.name;
-                                updated = true;
-                            }
-                        });
-                    });
-
-                    if (updated) {
-                        await sb.from('tragalero_menus').upsert({
-                            user_id: user.id,
-                            config: menu.config,
-                            updated_at: new Date()
-                        }, { onConflict: 'user_id' });
-
-                        return `¡Listo, ${user.name || 'Owner'}! He entrado a tu cuenta y he actualizado el precio del platillo <b>"${foundName}"</b> a <b>$${newPrice} MXN</b> en tu menú digital.`;
-                    } else {
-                        return `No logré encontrar un platillo parecido a "${rawDishName}" en tu menú actual. Por favor verifica el nombre.`;
-                    }
-                } else {
-                    return `No tienes un menú creado todavía. Puedes crearlo en la sección de Menús Digitales.`;
+                    tableName = 'menutech_menus';
                 }
             }
-        }
 
-        // B) EXTERNAL REQUEST / FACEBOOK POST / CS TASK CREATION
-        // Match requests for posts, facebook, design, social media, custom tasks
-        if (lowerMsg.includes('post') || lowerMsg.includes('facebook') || lowerMsg.includes('publica') || lowerMsg.includes('redes') || lowerMsg.includes('diseño') || imageUrl) {
-            const dueDate = new Date();
-            dueDate.setDate(dueDate.getDate() + 5);
+            // Extract potential numbers for price update
+            const numbersInMsg = lowerMsg.match(/\d+(?:\.\d+)?/g);
+            const targetPrice = numbersInMsg ? parseFloat(numbersInMsg[numbersInMsg.length - 1]) : null;
 
-            if (sb && user) {
+            let dishToUpdate = null;
+            if (menu && menu.config && menu.config.categories && targetPrice !== null) {
+                // Check if any dish name in user's menu is mentioned in the message
+                menu.config.categories.forEach(cat => {
+                    (cat.dishes || []).forEach(dish => {
+                        if (dish.name && dish.name.trim().length > 1) {
+                            const cleanDishName = dish.name.toLowerCase().trim();
+                            if (lowerMsg.includes(cleanDishName)) {
+                                dishToUpdate = dish;
+                            }
+                        }
+                    });
+                });
+            }
+
+            // A) DISH PRICE UPDATE EXECUTION
+            if (dishToUpdate && targetPrice !== null) {
+                dishToUpdate.price = targetPrice;
+
+                const payload = {
+                    ...menu,
+                    user_id: user.id,
+                    config: menu.config,
+                    updated_at: new Date().toISOString()
+                };
+
+                const upsertRes = await sb.from('tragalero_menus').upsert(payload, { onConflict: 'user_id' });
+                if (upsertRes.error) {
+                    await sb.from('menutech_menus').upsert(payload, { onConflict: 'user_id' });
+                }
+
+                return `¡Listo! Menú actualizado.`;
+            }
+
+            // B) CS TASK CREATION (Facebook post, social media, custom tasks, image upload)
+            if (lowerMsg.includes('post') || lowerMsg.includes('facebook') || lowerMsg.includes('publica') || lowerMsg.includes('redes') || lowerMsg.includes('diseño') || lowerMsg.includes('imagen') || imageUrl) {
+                const dueDate = new Date();
+                dueDate.setDate(dueDate.getDate() + 5);
+
                 const title = msg.length > 50 ? msg.substring(0, 47) + '...' : msg;
 
                 await sb.from('tragalero_tasks').insert({
@@ -304,14 +304,12 @@
 
                 const formattedDate = dueDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
 
-                return `¡Perfecto, ${user.name || 'Cliente'}! He registrado tu tarea en el panel de Atención a Clientes (CS).<br><br>Quedó programada para el día <b>${formattedDate}</b> (dando los 5 días de anticipación). Tu ejecutivo asignado revisará la imagen y los detalles para completar la publicación.`;
+                return `¡Listo! Tu post quedará listo el día ${formattedDate}.`;
             }
         }
 
-        // C) DEFAULT ASSISTANT RESPONSE
-        return `Entendido. Puedo ayudarte a:<br>
-        1. <b>Cambiar precios de platillos</b> (ej: "Cámbiame el precio de las Enchiladas a 50 pesos").<br>
-        2. <b>Agendar posts de Facebook / Solicitudes CS</b> con imagen adjunta y 5 días de anticipación.`;
+        // Default response without internal operational details
+        return `¡Listo! ¿En qué más te puedo ayudar?`;
     }
 
     function addUserMessage(text, imgUrl) {
