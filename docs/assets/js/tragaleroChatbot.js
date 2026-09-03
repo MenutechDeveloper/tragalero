@@ -204,7 +204,7 @@
         // Determine target user ID (Check if admin is switching context on adminMenus.html)
         const targetUserId = (typeof activeOwnerId !== 'undefined' && activeOwnerId) ? activeOwnerId : currentUser.id;
 
-        // 1. Try calling Edge Function 'ai-assistant'
+        // 1. Call Edge Function 'ai-assistant' (OpenAI)
         try {
             if (window.supabaseClient) {
                 const { data, error } = await window.supabaseClient.functions.invoke('ai-assistant', {
@@ -223,9 +223,13 @@
                     }
                     return;
                 }
+
+                if (error) {
+                    console.error("Error devuelto por la Edge Function de OpenAI:", error);
+                }
             }
         } catch (e) {
-            console.log("Edge Function not available or returned error, running client fallback logic:", e);
+            console.error("Error al conectar con la Edge Function:", e);
         }
 
         // 2. Client-side processing logic
@@ -233,7 +237,7 @@
             removeTypingIndicator(typingId);
             const reply = await processClientSideAI(userMsg, imageForMsg, targetUserId);
             addBotMessage(reply);
-        }, 1000);
+        }, 500);
     }
 
     async function processClientSideAI(msg, imageUrl, userIdArg) {

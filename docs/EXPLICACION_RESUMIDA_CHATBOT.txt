@@ -1,0 +1,25 @@
+================================================================================
+  EXPLICACIÓN DIRECTA Y RESUMIDA
+================================================================================
+
+1. ¿POR QUÉ APARECÍAN MENSAJES PREFABRICADOS?
+   En el código del navegador existía un mecanismo de respaldo (fallback) que
+   se activaba de forma automática si la Edge Function con OpenAI no respondía
+   o tardaba en conectar. Ese respaldo capturaba el texto del usuario con reglas
+   fijas de JavaScript y devolvía frases duras como "¡Listo! Menú actualizado."
+   sin pasar por la inteligencia de OpenAI.
+
+2. ¿POR QUÉ PARECÍA QUE NO HACÍA LOS CAMBIOS EN EL MENÚ?
+   Cuando estabas en la página de menús y cambiabas de proyecto en el panel
+   lateral, el chatbot seguía usando tu ID de usuario de inicio de sesión en
+   lugar del ID del proyecto que habías seleccionado en pantalla. Por eso el
+   cambio se guardaba en otro perfil y no se reflejaba en la vista activa.
+
+3. ¿CÓMO QUEDÓ SOLUCIONADO AHORA?
+   - Se conectó el chatbot directamente al ID del proyecto que tengas activo
+     en la barra lateral.
+   - Al recibir la respuesta de la Edge Function, la interfaz se refresca
+     automáticamente (`loadMenu()`) para mostrar los nuevos platillos y precios.
+   - Si la Edge Function de OpenAI no responde, el sistema ahora muestra el
+     error real de la conexión en lugar de fingir que todo salió bien.
+================================================================================
