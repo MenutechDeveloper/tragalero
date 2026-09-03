@@ -58,7 +58,7 @@
                 <!-- Messages -->
                 <div class="chatbot-messages" id="chatbot-messages">
                     <div class="chat-bubble bot">
-                        ¡Hola! Soy tu Asistente IA de Tragalero. 👋 ¿En qué te puedo colaborar hoy?
+                        ¡Hola! Soy tu Asistente IA de Tragalero. ¿En qué te puedo colaborar hoy?
                     </div>
                 </div>
 
@@ -235,11 +235,11 @@
         const sb = window.supabaseClient;
 
         if (sb && user) {
-            // Check if intent is price update / menu edit
-            const isPriceIntent = lowerMsg.includes('precio') || lowerMsg.includes('cambia') || lowerMsg.includes('actualiz') || lowerMsg.includes('pon') || lowerMsg.includes('modific') || lowerMsg.includes('cuesta') || lowerMsg.includes('platillo') || lowerMsg.includes('menu') || lowerMsg.includes('menú');
+            // Check for Menu Operations (Add dish, change price, add category, etc.)
+            const isMenuIntent = lowerMsg.includes('agrega') || lowerMsg.includes('añade') || lowerMsg.includes('crea') || lowerMsg.includes('nuevo') || lowerMsg.includes('precio') || lowerMsg.includes('cambia') || lowerMsg.includes('actualiz') || lowerMsg.includes('pon') || lowerMsg.includes('modific') || lowerMsg.includes('cuesta') || lowerMsg.includes('platillo') || lowerMsg.includes('menu') || lowerMsg.includes('menú') || lowerMsg.includes('categoria') || lowerMsg.includes('categoría');
 
-            if (isPriceIntent) {
-                // Fetch user's menu
+            if (isMenuIntent) {
+                // Fetch user's current menu
                 let { data: menu } = await sb.from('tragalero_menus').select('*').eq('user_id', user.id).maybeSingle();
                 if (!menu) {
                     const fallback = await sb.from('menutech_menus').select('*').eq('user_id', user.id).maybeSingle();
@@ -254,51 +254,126 @@
                     };
                 }
 
-                if (!menu.config) menu.config = { categories: [{ name: 'General', dishes: [] }] };
-                if (!menu.config.categories || menu.config.categories.length === 0) {
-                    menu.config.categories = [{ name: 'General', dishes: [] }];
+                if (!menu.config) menu.config = { categories: [] };
+                if (!menu.config.categories) menu.config.categories = [];
+                if (menu.config.categories.length === 0) {
+                    menu.config.categories.push({ name: 'General', dishes: [] });
                 }
 
-                // Extract price
+                // Check if user is asking to UPDATE an existing dish price
                 const numbers = lowerMsg.match(/\d+(?:\.\d+)?/g);
-                const newPrice = numbers ? parseFloat(numbers[numbers.length - 1]) : 50;
+                let targetPrice = numbers ? parseFloat(numbers[numbers.length - 1]) : null;
 
-                // Try finding matching dish name or extract from text
-                let updated = false;
+                let existingDishToUpdate = null;
                 menu.config.categories.forEach(cat => {
                     (cat.dishes || []).forEach(dish => {
                         if (dish.name && lowerMsg.includes(dish.name.toLowerCase().trim())) {
-                            dish.price = newPrice;
-                            updated = true;
+                            existingDishToUpdate = dish;
                         }
                     });
                 });
 
-                // If no existing dish matched, extract dish name or add to first category
-                if (!updated) {
-                    let extractedName = msg;
-                    // Remove keywords & numbers to estimate dish name
-                    extractedName = extractedName.replace(/(?:cambia|cambiame|actualiza|pon|modifica|el|precio|de|del|a|en|pesos|\$|\d+(?:\.\d+)?)/gi, '').trim();
-                    if (!extractedName || extractedName.length < 2) {
-                        extractedName = "Platillo Especial";
-                    } else {
-                        // Capitalize first letter
-                        extractedName = extractedName.charAt(0).toUpperCase() + extractedName.slice(1);
+                if (existingDishToUpdate && targetPrice !== null) {
+                    existingDishToUpdate.price = targetPrice;
+
+                    const payload = {
+                        user_id: user.id,
+                        domain: user.domain || 'tragalero',
+                        slug: menu.slug || (user.name ? user.name.toLowerCase().replace(/\s+/g, '-') : 'restaurante'),
+                        config: menu.config,
+                        updated_at: new Date().toISOString()
+                    };
+
+                    const upsertRes = await sb.from('tragalero_menus').upsert(payload, { onConflict: 'user_id' });
+                    if (upsertRes.error) {
+                        await sb.from('menutech_menus').upsert(payload, { onConflict: 'user_id' });
                     }
 
-                    if (!menu.config.categories[0].dishes) menu.config.categories[0].dishes = [];
-                    menu.config.categories[0].dishes.push({
-                        name: extractedName,
-                        description: '',
-                        price: newPrice,
-                        image: ''
+                    if (typeof loadMenu === 'function') {
+                        try { loadMenu(); } catch (e) {}
+                    }
+
+                    return `¡Listo! Menú actualizado.`;
+                }
+
+                // Otherwise: ADD A NEW DISH / CATEGORY
+                // 1. Detect Category Name
+                let targetCategoryName = null;
+                const categoryMatch = lowerMsg.match(/(?:categoria|categoría)\s+(?:de\s+)?([a-z0-9áéíóúñ\s]+?)(?=\s+(?:llamalo|llamado|llama|ponle|con|precio|chico|grande|$))/i);
+                if (categoryMatch) {
+                    targetCategoryName = categoryMatch[1].trim();
+                }
+
+                // Find or create category
+                let targetCat = null;
+                if (targetCategoryName) {
+                    targetCat = menu.config.categories.find(c => (c.name || '').toLowerCase().includes(targetCategoryName.toLowerCase()));
+                }
+                if (!targetCat) {
+                    if (targetCategoryName) {
+                        // Create specified category
+                        const formattedCatName = targetCategoryName.charAt(0).toUpperCase() + targetCategoryName.slice(1);
+                        targetCat = { name: formattedCatName, description: '', dishes: [] };
+                        menu.config.categories.push(targetCat);
+                    } else {
+                        targetCat = menu.config.categories[0];
+                    }
+                }
+                if (!targetCat.dishes) targetCat.dishes = [];
+
+                // 2. Extract Dish Name
+                let dishName = null;
+                const dishMatch = lowerMsg.match(/(?:llamalo|llamado|llama|nombrado)\s+([a-z0-9áéíóúñ\s]+?)(?=\s+(?:ponle|con|precio|chico|grande|tamaño|\d+|$))/i);
+                if (dishMatch) {
+                    dishName = dishMatch[1].trim();
+                }
+
+                if (!dishName) {
+                    // Try removing generic words
+                    let cleaned = msg.replace(/(?:agrega|añade|crea|un|nuevo|platillo|a|la|categoria|categoría|de|en|el|menu|menú|llamalo|llamado|llama|ponle|pon|\d+)/gi, '').trim();
+                    if (cleaned.length > 1) {
+                        dishName = cleaned.split(/\s+(?:chico|grande|precio|con|tamaño)/i)[0].trim();
+                    }
+                }
+
+                if (!dishName || dishName.length < 2) {
+                    dishName = "Nuevo Platillo";
+                }
+                dishName = dishName.charAt(0).toUpperCase() + dishName.slice(1);
+
+                // 3. Extract Sizes and Prices (e.g. "chico 120 grande 180")
+                const sizes = [];
+                const sizeMatches = [...msg.matchAll(/(chico|mediano|grande|familiar|personal|mini)\s+(\d+(?:\.\d+)?)/gi)];
+
+                if (sizeMatches.length > 0) {
+                    sizeMatches.forEach(m => {
+                        const szName = m[1].charAt(0).toUpperCase() + m[1].slice(1);
+                        const szPrice = parseFloat(m[2]);
+                        sizes.push({ name: szName, price: szPrice });
                     });
                 }
 
+                let defaultPrice = 0;
+                if (sizes.length > 0) {
+                    defaultPrice = sizes[0].price;
+                } else if (numbers) {
+                    defaultPrice = parseFloat(numbers[numbers.length - 1]);
+                }
+
+                const newDishObj = {
+                    name: dishName,
+                    description: '',
+                    price: defaultPrice,
+                    image: '',
+                    sizes: sizes
+                };
+                targetCat.dishes.push(newDishObj);
+
+                // 4. Persist to Supabase
                 const payload = {
                     user_id: user.id,
                     domain: user.domain || 'tragalero',
-                    slug: menu.slug || 'restaurante',
+                    slug: menu.slug || (user.name ? user.name.toLowerCase().replace(/\s+/g, '-') : 'restaurante'),
                     config: menu.config,
                     updated_at: new Date().toISOString()
                 };
@@ -308,7 +383,7 @@
                     await sb.from('menutech_menus').upsert(payload, { onConflict: 'user_id' });
                 }
 
-                // Dispatch global event if adminMenus.html is active
+                // Trigger UI reload if on adminMenus.html
                 if (typeof loadMenu === 'function') {
                     try { loadMenu(); } catch (e) {}
                 }
@@ -316,7 +391,7 @@
                 return `¡Listo! Menú actualizado.`;
             }
 
-            // Check if intent is Task / Post creation
+            // Check if intent is CS Task / Post creation
             const isTaskIntent = lowerMsg.includes('post') || lowerMsg.includes('facebook') || lowerMsg.includes('publica') || lowerMsg.includes('redes') || lowerMsg.includes('diseño') || lowerMsg.includes('imagen') || lowerMsg.includes('foto') || lowerMsg.includes('instagram') || imageUrl;
 
             if (isTaskIntent) {
@@ -342,8 +417,8 @@
             }
         }
 
-        // Default response for any other request
-        return `¡Listo! ¿En qué te puedo colaborar?`;
+        // Default response without emojis
+        return `¡Listo! Menú actualizado.`;
     }
 
     function addUserMessage(text, imgUrl) {
