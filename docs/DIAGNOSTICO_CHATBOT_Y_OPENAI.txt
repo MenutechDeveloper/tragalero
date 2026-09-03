@@ -1,0 +1,45 @@
+================================================================================
+  DIAGNOSTICO DE FUNCIONAMIENTO DEL CHATBOT CON IA Y GUÍA DE OPENAI - TRAGALERO
+================================================================================
+
+1. COMPROBACIÓN DEL PROYECTO Y ARCHIVOS
+--------------------------------------------------------------------------------
+- **Código Frontend (`docs/assets/js/tragaleroChatbot.js`)**: ¡Correcto!
+  * Invoca adecuadamente la Supabase Edge Function llamada `ai-assistant`.
+  * Soporta entrada por texto y voz (Web Speech API en español).
+  * Permite adjuntar imágenes subiéndolas automáticamente a Cloudinary.
+  * Respeta la cuenta seleccionada por el Admin (`activeOwnerId` del drawer de clientes). Si eres Admin y cambias de cliente en la barra lateral de la plataforma, el chatbot automáticamente trabajará sobre el menú y tareas de la cuenta del cliente activo.
+- **Edge Function (`ai-assistant`) & Tablas SQL**: ¡Correctos!
+  * La función en TypeScript utiliza el modelo `gpt-4o-mini` con Function Calling (herramientas `update_dish_price` y `create_task`).
+  * Conecta de forma segura con las tablas `tragalero_menus` y `tragalero_tasks`.
+  * Lee la clave secreta `OPENAI_API_KEY` guardada en Supabase Secrets.
+
+--------------------------------------------------------------------------------
+2. ACLARACIÓN SOBRE PLANES Y SALDO DE OPENAI
+--------------------------------------------------------------------------------
+¿A qué le debo meter dinero: GPT 5.6 SOL, GPT 5.6 TERRA o GPT 5.6 LUNA?
+
+Respuesta corta: **Ninguno de esos tres.**
+Esos nombres ("GPT 5.6 SOL", "GPT 5.6 TERRA", "GPT 5.6 LUNA") **NO son planes ni modelos oficiales de OpenAI**. Suelen ser revendedores, plataformas externas de terceros o chatbots ajenos a la API oficial de OpenAI.
+
+Para que tu Edge Function de Supabase funcione correctamente, debes cargar crédito directamente en la plataforma oficial de desarrolladores de OpenAI:
+
+### Paso a Paso para recargar saldo oficial de OpenAI API:
+1. Ingresa a la página oficial de desarrolladores: **https://platform.openai.com/** (o https://platform.openai.com/settings/organization/billing/overview).
+2. Inicia sesión con la misma cuenta donde creaste tu clave `sk-...` (API Key).
+3. En el menú lateral izquierdo ve a **Settings** -> **Billing** (Facturación).
+4. Haz clic en **Add funds** / **Add prepaid credit** (Agregar crédito prepagado).
+5. Ingresa los datos de tu tarjeta y recarga un monto mínimo de **$5 USD a $10 USD**.
+6. ¡Listo! El modelo `gpt-4o-mini` consumirá centavos por cada interacción, por lo que $5 USD rinden miles de mensajes para tu chatbot.
+
+--------------------------------------------------------------------------------
+3. ¿CÓMO FUNCIONA LA SELECCIÓN DE CUENTA PARA USUARIOS ADMIN?
+--------------------------------------------------------------------------------
+- **Para usuarios regulares (Owner / Dueño de restaurante)**:
+  El chatbot opera automáticamente sobre su propia cuenta (`currentUser.id`).
+- **Para usuarios Administradores**:
+  En pantallas como `adminMenus.html`, `adminTemplate.html`, `adminOrders.html`, etc., existe un panel lateral desplegable (Drawer de Clientes).
+  * Cuando seleccionas un cliente en ese panel, la variable global `activeOwnerId` se actualiza con el ID de ese cliente.
+  * El chatbot detecta automáticamente `activeOwnerId`. Por lo tanto, cualquier instrucción que le des al chatbot ("cambia el precio del taco a $45") afectará directamente a la cuenta del cliente que tienes activo en pantalla.
+
+================================================================================
