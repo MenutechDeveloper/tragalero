@@ -58,8 +58,7 @@
                 <!-- Messages -->
                 <div class="chatbot-messages" id="chatbot-messages">
                     <div class="chat-bubble bot">
-                        ¡Hola! Soy tu Asistente IA de Tragalero. 👋<br><br>
-                        Puedo ayudarte a <b>cambiar precios de platillos en tu menú por voz o chat</b> (ej: <i>"Cámbiame el precio de las Enchiladas a 50 pesos"</i>) o agendar solicitudes para redes sociales con <b>5 días de anticipación</b> para tu ejecutivo de CS.
+                        ¡Hola! Soy tu Asistente IA de Tragalero. 👋 ¿En qué te puedo colaborar hoy?
                     </div>
                 </div>
 
