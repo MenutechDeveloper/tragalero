@@ -1,0 +1,261 @@
+================================================================================
+  GUÍA SENCILLA: INTEGRACIÓN DEL CHATBOT DE IA CON OPENAI Y TAREAS (CS)
+  PARA TRAGALERO
+================================================================================
+
+¡Hola! Esta guía está explicada paso a paso de forma súper sencilla (sin rodeos
+técnicos ni complicaciones) para que entiendas exactamente cómo funciona tu
+nuevo Chatbot con Inteligencia Artificial, cómo cambia precios automáticamente
+y cómo genera tareas para el equipo de Atención a Clientes (CS).
+
+--------------------------------------------------------------------------------
+1. ¿CÓMO FUNCIONA EL CHATBOT CON IA EN TU PLATAFORMA?
+--------------------------------------------------------------------------------
+1. **Atención Inteligente**: Cuando un cliente (tipo Owner/Dueño) inicia sesión en
+   Tragalero, verá un botón circular flotante en la esquina inferior derecha.
+   Al darle clic o usar el micrófono (voz), puede pedirle cosas al chatbot en
+   lenguaje natural (ej. "Cámbiame el precio de las Enchiladas a $50 pesos").
+
+2. **Acción Directa en el Menú**:
+   - El chatbot reconoce qué usuario y negocio está solicitando la orden.
+   - Entra directamente a la base de datos de su menú (`tragalero_menus`) y
+     actualiza el precio del platillo en tiempo real sin que tengas que hacerlo a mano.
+
+3. **Solicitudes Externas (ej. Publicación de Facebook con Imagen)**:
+   - Si el cliente te pide algo que no es directo en la app (como "Publica este arte en Facebook"):
+   - El chatbot le pide la imagen al usuario, la sube a Cloudinary y crea automáticamente
+     una tarea en el sistema asignando una fecha límite con **5 días de anticipación**.
+   - Al cliente le confirma: "Tu publicación quedó agendada para el día [Fecha]".
+   - Al equipo de CS le aparece la tarea en la pantalla de **adminTask.html** para realizarla
+     en esos 5 días.
+
+
+--------------------------------------------------------------------------------
+2. ¿DÓNDE VA LA API DE OPENAI Y QUÉ ES LA EDGE FUNCTION? (EXPLICACIÓN SENCILLA)
+--------------------------------------------------------------------------------
+- **¿Por qué la API Key NO va en la página web (frontend)?**
+  Imagínate que tu API Key de OpenAI es la clave secreta de tu tarjeta de crédito.
+  Si la pones en la página web, cualquiera podría presionar F12 en su navegador,
+  ver tu clave secreta y gastar tu saldo de OpenAI.
+
+- **¿Qué es la Edge Function?**
+  Es como un "Mesero Seguro" en la nube.
+  - Tu página web le envía el mensaje del cliente a la Edge Function.
+  - La Edge Function (que vive segura en Supabase) toma tu API Key secreta guardada
+    en un cajón fuerte (Secrets), consulta a OpenAI y realiza los cambios en la base de datos.
+  - Finalmente le devuelve la respuesta bonita al cliente en la pantalla.
+
+
+--------------------------------------------------------------------------------
+3. PASO A PASO: LO QUE DEBES HACER EN TU PANEL DE SUPABASE
+--------------------------------------------------------------------------------
+
+### PASO A: Crear la Tabla de Tareas en Supabase (SQL Editor)
+1. Entra a tu panel de Supabase (https://app.supabase.com).
+2. En el menú de la izquierda, entra a **SQL Editor**.
+3. Haz clic en **New Query**.
+4. Abre y copia el contenido del archivo `docs/setup_chatbot_tasks_tables.sql`
+   que ya está listo en tu proyecto y pégalo ahí.
+5. Haz clic en el botón verde **Run**. ¡Listo!
+
+
+### PASO B: Guardar tu API Key de OpenAI de Forma Segura
+1. Entra a tu panel de Supabase.
+2. En el menú de la izquierda ve a **Project Settings** (el ícono de engrane ⚙️) -> **Secrets** (o en la sección **Edge Functions** -> **Secrets**).
+3. Haz clic en **Add new secret**.
+4. En Nombre (Name) pon: `OPENAI_API_KEY`
+5. En Valor (Value) pega tu clave que empieza con `sk-...` de OpenAI.
+6. Guarda los cambios.
+
+
+### PASO C: Crear la Edge Function llamada `ai-assistant`
+1. En tu panel de Supabase, ve al menú lateral izquierdo a la sección **Edge Functions**.
+2. Haz clic en **Create a new Function** y nombrala: `ai-assistant`
+3. Copia y pega el código TypeScript que se muestra a continuación:
+
+```typescript
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const { user_id, message, image_url } = await req.json();
+
+    if (!user_id || !message) {
+      return new Response(
+        JSON.stringify({ success: false, message: "user_id y message son requeridos." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const openAiApiKey = Deno.env.get("OPENAI_API_KEY");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Obtener datos del usuario
+    const { data: profile } = await supabase.from("usuarios").select("*").eq("id", user_id).single();
+    const clientName = profile?.name || "Cliente";
+    const clientDomain = profile?.domain || "tragalero";
+
+    // 1. Obtener el menú del usuario
+    let { data: menu } = await supabase.from("tragalero_menus").select("*").eq("user_id", user_id).maybeSingle();
+    if (!menu) {
+      const fallback = await supabase.from("menutech_menus").select("*").eq("user_id", user_id).maybeSingle();
+      menu = fallback.data;
+    }
+
+    // Solicitud a la API de OpenAI con Herramientas (Function Calling)
+    const systemPrompt = `Eres el asistente inteligente de administración de Tragalero. Ayudas a los dueños de restaurantes a gestionar su menú y coordinar servicios con atención a clientes (CS).
+Nombre del cliente: ${clientName}
+Dominio: ${clientDomain}
+Menú actual: ${JSON.stringify(menu?.config || {})}
+
+Si el usuario te pide cambiar el precio de un platillo, usa la herramienta 'update_dish_price'.
+Si el usuario te pide un servicio externo (como publicar en Facebook, diseño, o cualquier tarea asistida), usa la herramienta 'create_task'.`;
+
+    const openAiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openAiApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: message }
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "update_dish_price",
+              description: "Cambia el precio de un platillo específico en el menú del restaurante.",
+              parameters: {
+                type: "object",
+                properties: {
+                  dish_name: { type: "string", description: "Nombre exacto o aproximado del platillo" },
+                  new_price: { type: "number", description: "Nuevo precio en pesos MXN" }
+                },
+                required: ["dish_name", "new_price"]
+              }
+            }
+          },
+          {
+            type: "function",
+            function: {
+              name: "create_task",
+              description: "Crea una tarea para el equipo de CS cuando el cliente pide un servicio externo como post de Facebook.",
+              parameters: {
+                type: "object",
+                properties: {
+                  title: { type: "string", description: "Título descriptivo de la tarea" },
+                  description: { type: "string", description: "Detalles completos de lo solicitado" }
+                },
+                required: ["title", "description"]
+              }
+            }
+          }
+        ],
+        tool_choice: "auto"
+      })
+    });
+
+    const aiData = await openAiRes.json();
+    const choice = aiData.choices?.[0]?.message;
+
+    if (choice?.tool_calls?.length > 0) {
+      const toolCall = choice.tool_calls[0];
+      const fnName = toolCall.function.name;
+      const args = JSON.parse(toolCall.function.arguments);
+
+      if (fnName === "update_dish_price") {
+        if (!menu || !menu.config || !menu.config.categories) {
+          return new Response(JSON.stringify({
+            reply: `No encontré un menú activo para cambiar el precio de ${args.dish_name}. Por favor crea tu menú en la sección de Menús.`
+          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        let updated = false;
+        let foundDishName = args.dish_name;
+        menu.config.categories.forEach((cat: any) => {
+          (cat.dishes || []).forEach((dish: any) => {
+            if (dish.name.toLowerCase().includes(args.dish_name.toLowerCase())) {
+              dish.price = args.new_price;
+              foundDishName = dish.name;
+              updated = true;
+            }
+          });
+        });
+
+        if (updated) {
+          await supabase.from("tragalero_menus").upsert({
+            user_id: user_id,
+            config: menu.config,
+            updated_at: new Date()
+          }, { onConflict: "user_id" });
+
+          return new Response(JSON.stringify({
+            reply: `¡Listo! He actualizado el precio del platillo "${foundDishName}" a $${args.new_price} MXN en tu menú.`
+          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        } else {
+          return new Response(JSON.stringify({
+            reply: `No pude encontrar el platillo "${args.dish_name}" en tu menú actual. Por favor verifica el nombre.`
+          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
+
+      if (fnName === "create_task") {
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 5);
+
+        await supabase.from("tragalero_tasks").insert({
+          user_id: user_id,
+          client_name: clientName,
+          client_domain: clientDomain,
+          title: args.title,
+          description: args.description,
+          image_url: image_url || null,
+          due_date: dueDate.toISOString(),
+          status: "Pendiente"
+        });
+
+        const formattedDate = dueDate.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+        return new Response(JSON.stringify({
+          reply: `¡Perfecto! He registrado tu solicitud para "${args.title}". Quedó programada para ser publicada el día ${formattedDate} (dando los 5 días de anticipación). Tu ejecutivo de CS ya tiene la tarea en su panel.`
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    }
+
+    return new Response(JSON.stringify({
+      reply: choice?.content || "Entendido. ¿En qué más te puedo colaborar hoy?"
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+});
+```
+
+--------------------------------------------------------------------------------
+4. ¡LISTO!
+--------------------------------------------------------------------------------
+Tu sistema ya cuenta con:
+1. El archivo `adminTask.html` en el Panel de Control.
+2. El Widget del Chatbot con Voz en la esquina inferior derecha.
+3. La capacidad de cambiar precios de platillos por voz/chat e ingresar solicitudes
+   de redes sociales con 5 días de anticipación.
+================================================================================
