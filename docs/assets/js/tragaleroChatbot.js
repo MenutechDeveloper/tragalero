@@ -235,43 +235,70 @@
         const sb = window.supabaseClient;
 
         if (sb && user) {
-            // Fetch user's menu first to inspect dishes or perform price updates
-            let { data: menu } = await sb.from('tragalero_menus').select('*').eq('user_id', user.id).maybeSingle();
-            let tableName = 'tragalero_menus';
-            if (!menu) {
-                const fallback = await sb.from('menutech_menus').select('*').eq('user_id', user.id).maybeSingle();
-                if (fallback.data) {
-                    menu = fallback.data;
-                    tableName = 'menutech_menus';
+            // Check if intent is price update / menu edit
+            const isPriceIntent = lowerMsg.includes('precio') || lowerMsg.includes('cambia') || lowerMsg.includes('actualiz') || lowerMsg.includes('pon') || lowerMsg.includes('modific') || lowerMsg.includes('cuesta') || lowerMsg.includes('platillo') || lowerMsg.includes('menu') || lowerMsg.includes('menú');
+
+            if (isPriceIntent) {
+                // Fetch user's menu
+                let { data: menu } = await sb.from('tragalero_menus').select('*').eq('user_id', user.id).maybeSingle();
+                if (!menu) {
+                    const fallback = await sb.from('menutech_menus').select('*').eq('user_id', user.id).maybeSingle();
+                    menu = fallback ? fallback.data : null;
                 }
-            }
 
-            // Extract potential numbers for price update
-            const numbersInMsg = lowerMsg.match(/\d+(?:\.\d+)?/g);
-            const targetPrice = numbersInMsg ? parseFloat(numbersInMsg[numbersInMsg.length - 1]) : null;
+                if (!menu) {
+                    menu = {
+                        user_id: user.id,
+                        slug: user.name ? user.name.toLowerCase().replace(/\s+/g, '-') : 'restaurante',
+                        config: { categories: [{ name: 'General', dishes: [] }] }
+                    };
+                }
 
-            let dishToUpdate = null;
-            if (menu && menu.config && menu.config.categories && targetPrice !== null) {
-                // Check if any dish name in user's menu is mentioned in the message
+                if (!menu.config) menu.config = { categories: [{ name: 'General', dishes: [] }] };
+                if (!menu.config.categories || menu.config.categories.length === 0) {
+                    menu.config.categories = [{ name: 'General', dishes: [] }];
+                }
+
+                // Extract price
+                const numbers = lowerMsg.match(/\d+(?:\.\d+)?/g);
+                const newPrice = numbers ? parseFloat(numbers[numbers.length - 1]) : 50;
+
+                // Try finding matching dish name or extract from text
+                let updated = false;
                 menu.config.categories.forEach(cat => {
                     (cat.dishes || []).forEach(dish => {
-                        if (dish.name && dish.name.trim().length > 1) {
-                            const cleanDishName = dish.name.toLowerCase().trim();
-                            if (lowerMsg.includes(cleanDishName)) {
-                                dishToUpdate = dish;
-                            }
+                        if (dish.name && lowerMsg.includes(dish.name.toLowerCase().trim())) {
+                            dish.price = newPrice;
+                            updated = true;
                         }
                     });
                 });
-            }
 
-            // A) DISH PRICE UPDATE EXECUTION
-            if (dishToUpdate && targetPrice !== null) {
-                dishToUpdate.price = targetPrice;
+                // If no existing dish matched, extract dish name or add to first category
+                if (!updated) {
+                    let extractedName = msg;
+                    // Remove keywords & numbers to estimate dish name
+                    extractedName = extractedName.replace(/(?:cambia|cambiame|actualiza|pon|modifica|el|precio|de|del|a|en|pesos|\$|\d+(?:\.\d+)?)/gi, '').trim();
+                    if (!extractedName || extractedName.length < 2) {
+                        extractedName = "Platillo Especial";
+                    } else {
+                        // Capitalize first letter
+                        extractedName = extractedName.charAt(0).toUpperCase() + extractedName.slice(1);
+                    }
+
+                    if (!menu.config.categories[0].dishes) menu.config.categories[0].dishes = [];
+                    menu.config.categories[0].dishes.push({
+                        name: extractedName,
+                        description: '',
+                        price: newPrice,
+                        image: ''
+                    });
+                }
 
                 const payload = {
-                    ...menu,
                     user_id: user.id,
+                    domain: user.domain || 'tragalero',
+                    slug: menu.slug || 'restaurante',
                     config: menu.config,
                     updated_at: new Date().toISOString()
                 };
@@ -281,11 +308,18 @@
                     await sb.from('menutech_menus').upsert(payload, { onConflict: 'user_id' });
                 }
 
+                // Dispatch global event if adminMenus.html is active
+                if (typeof loadMenu === 'function') {
+                    try { loadMenu(); } catch (e) {}
+                }
+
                 return `¡Listo! Menú actualizado.`;
             }
 
-            // B) CS TASK CREATION (Facebook post, social media, custom tasks, image upload)
-            if (lowerMsg.includes('post') || lowerMsg.includes('facebook') || lowerMsg.includes('publica') || lowerMsg.includes('redes') || lowerMsg.includes('diseño') || lowerMsg.includes('imagen') || imageUrl) {
+            // Check if intent is Task / Post creation
+            const isTaskIntent = lowerMsg.includes('post') || lowerMsg.includes('facebook') || lowerMsg.includes('publica') || lowerMsg.includes('redes') || lowerMsg.includes('diseño') || lowerMsg.includes('imagen') || lowerMsg.includes('foto') || lowerMsg.includes('instagram') || imageUrl;
+
+            if (isTaskIntent) {
                 const dueDate = new Date();
                 dueDate.setDate(dueDate.getDate() + 5);
 
@@ -308,8 +342,8 @@
             }
         }
 
-        // Default response without internal operational details
-        return `¡Listo! ¿En qué más te puedo ayudar?`;
+        // Default response for any other request
+        return `¡Listo! ¿En qué te puedo colaborar?`;
     }
 
     function addUserMessage(text, imgUrl) {
