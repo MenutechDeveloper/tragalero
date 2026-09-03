@@ -201,12 +201,15 @@
             return;
         }
 
+        // Determine target user ID (Check if admin is switching context on adminMenus.html)
+        const targetUserId = (typeof activeOwnerId !== 'undefined' && activeOwnerId) ? activeOwnerId : currentUser.id;
+
         // 1. Try calling Edge Function 'ai-assistant'
         try {
             if (window.supabaseClient) {
                 const { data, error } = await window.supabaseClient.functions.invoke('ai-assistant', {
                     body: {
-                        user_id: currentUser.id,
+                        user_id: targetUserId,
                         message: userMsg,
                         image_url: imageForMsg
                     }
@@ -215,6 +218,9 @@
                 if (!error && data && data.reply) {
                     removeTypingIndicator(typingId);
                     addBotMessage(data.reply);
+                    if (typeof loadMenu === 'function') {
+                        try { loadMenu(); } catch (e) {}
+                    }
                     return;
                 }
             }
@@ -222,34 +228,35 @@
             console.log("Edge Function not available or returned error, running client fallback logic:", e);
         }
 
-        // 2. Client-side AI fallback logic
+        // 2. Client-side processing logic
         setTimeout(async () => {
             removeTypingIndicator(typingId);
-            const reply = await processClientSideAI(userMsg, imageForMsg, currentUser);
+            const reply = await processClientSideAI(userMsg, imageForMsg, targetUserId);
             addBotMessage(reply);
         }, 1000);
     }
 
-    async function processClientSideAI(msg, imageUrl, user) {
+    async function processClientSideAI(msg, imageUrl, userIdArg) {
         const lowerMsg = msg.toLowerCase();
         const sb = window.supabaseClient;
+        const targetUserId = (typeof userIdArg === 'string') ? userIdArg : (userIdArg ? userIdArg.id : currentUser?.id);
 
-        if (sb && user) {
+        if (sb && targetUserId) {
             // Check for Menu Operations (Add dish, change price, add category, etc.)
             const isMenuIntent = lowerMsg.includes('agrega') || lowerMsg.includes('añade') || lowerMsg.includes('crea') || lowerMsg.includes('nuevo') || lowerMsg.includes('precio') || lowerMsg.includes('cambia') || lowerMsg.includes('actualiz') || lowerMsg.includes('pon') || lowerMsg.includes('modific') || lowerMsg.includes('cuesta') || lowerMsg.includes('platillo') || lowerMsg.includes('menu') || lowerMsg.includes('menú') || lowerMsg.includes('categoria') || lowerMsg.includes('categoría');
 
             if (isMenuIntent) {
-                // Fetch user's current menu
-                let { data: menu } = await sb.from('tragalero_menus').select('*').eq('user_id', user.id).maybeSingle();
+                // Fetch user's current menu by targetUserId
+                let { data: menu } = await sb.from('tragalero_menus').select('*').eq('user_id', targetUserId).maybeSingle();
                 if (!menu) {
-                    const fallback = await sb.from('menutech_menus').select('*').eq('user_id', user.id).maybeSingle();
+                    const fallback = await sb.from('menutech_menus').select('*').eq('user_id', targetUserId).maybeSingle();
                     menu = fallback ? fallback.data : null;
                 }
 
                 if (!menu) {
                     menu = {
-                        user_id: user.id,
-                        slug: user.name ? user.name.toLowerCase().replace(/\s+/g, '-') : 'restaurante',
+                        user_id: targetUserId,
+                        slug: 'restaurante',
                         config: { categories: [{ name: 'General', dishes: [] }] }
                     };
                 }
@@ -277,9 +284,9 @@
                     existingDishToUpdate.price = targetPrice;
 
                     const payload = {
-                        user_id: user.id,
-                        domain: user.domain || 'tragalero',
-                        slug: menu.slug || (user.name ? user.name.toLowerCase().replace(/\s+/g, '-') : 'restaurante'),
+                        user_id: targetUserId,
+                        domain: menu.domain || 'tragalero',
+                        slug: menu.slug || 'restaurante',
                         config: menu.config,
                         updated_at: new Date().toISOString()
                     };
@@ -371,9 +378,9 @@
 
                 // 4. Persist to Supabase
                 const payload = {
-                    user_id: user.id,
-                    domain: user.domain || 'tragalero',
-                    slug: menu.slug || (user.name ? user.name.toLowerCase().replace(/\s+/g, '-') : 'restaurante'),
+                    user_id: targetUserId,
+                    domain: menu.domain || 'tragalero',
+                    slug: menu.slug || 'restaurante',
                     config: menu.config,
                     updated_at: new Date().toISOString()
                 };
@@ -401,9 +408,9 @@
                 const title = msg.length > 50 ? msg.substring(0, 47) + '...' : msg;
 
                 await sb.from('tragalero_tasks').insert({
-                    user_id: user.id,
-                    client_name: user.name || 'Cliente',
-                    client_domain: user.domain || 'tragalero',
+                    user_id: targetUserId,
+                    client_name: currentUser?.name || 'Cliente',
+                    client_domain: currentUser?.domain || 'tragalero',
                     title: title || 'Solicitud de Post en Redes Sociales',
                     description: msg,
                     image_url: imageUrl || null,
