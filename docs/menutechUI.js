@@ -1708,6 +1708,21 @@ class MenutechPlatformOrders extends HTMLElement {
             }
         }
 
+        // Fetch online payment configuration for restaurant
+        this.paymentConfig = null;
+        if (this.menuData.user_id && this.supabase) {
+            try {
+                const { data: pConfig } = await this.supabase
+                    .from('tragalero_payment_config')
+                    .select('*')
+                    .eq('user_id', this.menuData.user_id)
+                    .maybeSingle();
+                if (pConfig) this.paymentConfig = pConfig;
+            } catch (e) {
+                console.log("Sin pasarela de pago configurada:", e);
+            }
+        }
+
         this.renderMenu();
     }
 
@@ -2635,6 +2650,24 @@ class MenutechPlatformOrders extends HTMLElement {
                                     </div>
                                     <div class="option-check">✓</div>
                                 </div>
+                                ${this.paymentConfig?.stripe_enabled ? `
+                                    <div class="payment-option" data-pay="stripe">
+                                        <div style="display:flex; align-items:center; gap:12px;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px; color:#635bff;"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                                            TARJETA EN LÍNEA (STRIPE)
+                                        </div>
+                                        <div class="option-check">✓</div>
+                                    </div>
+                                ` : ''}
+                                ${this.paymentConfig?.mercadopago_enabled ? `
+                                    <div class="payment-option" data-pay="mercadopago">
+                                        <div style="display:flex; align-items:center; gap:12px;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px; color:#009ee3;"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                                            MERCADO PAGO
+                                        </div>
+                                        <div class="option-check">✓</div>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -2883,6 +2916,33 @@ class MenutechPlatformOrders extends HTMLElement {
 
             if (data && data.id) {
                 localStorage.setItem('mt_last_order_id', String(data.id));
+            }
+
+            // If online payment (Stripe / Mercado Pago) is selected, redirect to checkout
+            if ((payment === 'stripe' || payment === 'mercadopago') && data && data.id) {
+                try {
+                    const currentUrl = window.location.href.split('#')[0];
+                    const joinChar = currentUrl.includes('?') ? '&' : '?';
+                    const { data: payRes, error: payErr } = await this.supabase.functions.invoke('payment-service', {
+                        body: {
+                            action: 'create_checkout_session',
+                            user_id: this.menuData.user_id,
+                            order_id: data.id,
+                            provider: payment,
+                            items: this.cart,
+                            total: total,
+                            success_url: currentUrl + joinChar + 'payment_status=approved&order_id=' + data.id,
+                            cancel_url: currentUrl + joinChar + 'payment_status=cancelled&order_id=' + data.id
+                        }
+                    });
+
+                    if (payRes && payRes.success && payRes.checkout_url) {
+                        window.location.href = payRes.checkout_url;
+                        return;
+                    }
+                } catch (payEx) {
+                    console.warn('Invocación de pago en línea falló, orden guardada:', payEx);
+                }
             }
 
             this.showSuccessAnimation(data ? data.id : null);
