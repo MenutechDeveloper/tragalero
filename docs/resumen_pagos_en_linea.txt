@@ -1,36 +1,47 @@
 ================================================================================
-RESUMEN EJECUTIVO: INTEGRACIÓN DE PAGOS EN LÍNEA (STRIPE Y MERCADO PAGO)
+RESUMEN DE INTEGRACIÓN DE PAGOS EN LÍNEA EN TRAGALERO
 ================================================================================
 
-1. ¿CÓMO FUNCIONA LA INTEGRACIÓN EN EL PROYECTO?
+¿CÓMO FUNCIONA PARA TIS CLIENTES / RESTAURANTES?
 --------------------------------------------------------------------------------
-- Cada cliente/restaurante registra sus propias credenciales o claves API de Stripe
-  o Mercado Pago desde la nueva pantalla "Pagos en Línea" (onlinePayment.html).
-- El dinero cobrado en los pedidos del menú digital llega DIRECTAMENTE a la cuenta
-  de Stripe o Mercado Pago del cliente, no a la cuenta de Tragalero.
-- El menú digital (menutechUI.js) detecta automáticamente si el restaurante activó
-  Stripe o Mercado Pago y muestra las opciones de pago con tarjeta en el checkout.
+1. Cada restaurante o cliente entra a su panel administrativo en:
+   ./onlinePayment.html (o desde la tarjeta "Pagos en Línea" en admin.html).
+
+2. En lugar de pedirles claves secretas (SK) o tokens manuales, los clientes ven
+   dos botones de vinculación oficial por protocolo OAuth / Connect:
+   - "Conectar con Stripe": Redirige al flujo oficial de Stripe Connect.
+   - "Conectar Mercado Pago": Redirige a la autorización de Mercado Pago.
+
+3. Al vincular su cuenta, Supabase guarda de forma segura su ID de cuenta
+   (stripe_account_id / mercadopago_user_id) en public.tragalero_payment_config.
+
+4. El dinero pagado por los comensales en el menú digital (menu.html) viaja
+   DIRECTAMENTE a las cuentas bancarias de tus clientes, NUNCA a la tuya.
 
 
-2. ARCHIVOS CREADOS Y MODIFICADOS
+¿CÓMO FUNCIONA EL COBRO EN EL MENÚ DIGITAL (menu.html / menutechUI.js)?
 --------------------------------------------------------------------------------
-- onlinePayment.html: Panel donde cada restaurante o administrador guarda sus
-  credenciales (Account ID, Secret Key, Access Token) y activa/desactiva Stripe y Mercado Pago.
-- admin.html: Nuevo botón/slot "Pagos en Línea" en el Bento Grid principal.
-- menutechUI.js: Inyecta las opciones de pago en línea en el formulario de la orden
-  y redirige al checkout de Stripe/Mercado Pago al confirmar el pedido.
-- setup_payment_tables.sql: Script SQL para crear la tabla 'tragalero_payment_config'
-  y agregar campos de estado de pago en 'tragalero_orders'.
-- supabase/functions/payment-service/index.ts: Edge Function que crea las
-  sesiones de cobro seguras y procesa webhooks para actualizar el estado del pago.
+1. Cuando un comensal abre el carrito y selecciona "TARJETA EN LÍNEA (STRIPE)" o
+   "MERCADO PAGO", el sistema inserta la orden en `tragalero_orders`.
+2. Luego invoca la Supabase Edge Function `payment-service` enviando la orden y
+   el ID del negocio.
+3. La Edge Function genera la sesión de cobro oficial (Checkout Session de Stripe o
+   Preference de Mercado Pago) vinculada a la cuenta del restaurante y redirige al
+   comensal a pagar.
+4. Un Webhook o callback actualiza el estado de la orden en Supabase
+   (payment_status = 'APROBADO').
 
 
-3. PASOS QUE DEBES EJECUTAR TÚ EN SUPABASE (SOLO 1 PASO)
+CONFIGURACIÓN ÚNICA QUE DEBES HACER TÚ EN SUPABASE:
 --------------------------------------------------------------------------------
-1. Entra a tu panel de Supabase -> SQL Editor.
-2. Abre el archivo 'docs/setup_payment_tables.sql', copia su contenido, pégalo
-   en Supabase y presiona "Run".
-3. ¡Listo! Ya podrás entrar a "Pagos en Línea" en tu panel de Tragalero y configurar
-   las cuentas de tus clientes.
+1. SQL: Ejecuta el script de base de datos en Supabase SQL Editor:
+   Archivo: docs/setup_payment_tables.sql
 
-================================================================================
+2. EDGE FUNCTION: Crea y despliega la función de backend en Supabase:
+   Código e instrucciones guardadas en: docs/EDGE_FUNCTION_PAYMENTS.txt
+
+3. SECRETS DE TU PLATAFORMA (En Supabase Dashboard -> Settings -> Secrets):
+   - STRIPE_CLIENT_ID
+   - STRIPE_SECRET_KEY
+   - MERCADOPAGO_CLIENT_ID
+   - MERCADOPAGO_CLIENT_SECRET

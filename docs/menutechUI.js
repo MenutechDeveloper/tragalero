@@ -2922,22 +2922,21 @@ class MenutechPlatformOrders extends HTMLElement {
             if ((payment === 'stripe' || payment === 'mercadopago') && data && data.id) {
                 try {
                     const currentUrl = window.location.href.split('#')[0];
-                    const joinChar = currentUrl.includes('?') ? '&' : '?';
                     const { data: payRes, error: payErr } = await this.supabase.functions.invoke('payment-service', {
                         body: {
                             action: 'create_checkout_session',
                             user_id: this.menuData.user_id,
                             order_id: data.id,
                             provider: payment,
-                            items: this.cart,
-                            total: total,
-                            success_url: currentUrl + joinChar + 'payment_status=approved&order_id=' + data.id,
-                            cancel_url: currentUrl + joinChar + 'payment_status=cancelled&order_id=' + data.id
+                            amount: total,
+                            currency: 'MXN',
+                            redirect_uri: currentUrl
                         }
                     });
 
-                    if (payRes && payRes.success && payRes.checkout_url) {
-                        window.location.href = payRes.checkout_url;
+                    const checkoutUrl = payRes?.checkout_url || payRes?.url;
+                    if (checkoutUrl) {
+                        window.location.href = checkoutUrl;
                         return;
                     }
                 } catch (payEx) {
