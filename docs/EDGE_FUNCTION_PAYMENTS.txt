@@ -1,0 +1,213 @@
+================================================================================
+CÓDIGO DE LA SUPABASE EDGE FUNCTION DE PAGOS EN LÍNEA (payment-service)
+================================================================================
+Ubicación recomendada en Supabase CLI: supabase/functions/payment-service/index.ts
+
+Instrucciones para desplegar en Supabase Edge Functions:
+1. Instala Supabase CLI en tu equipo local si no lo tienes:
+   npm install -g supabase
+2. En la terminal de tu proyecto, crea la función:
+   supabase functions new payment-service
+3. Copia el siguiente código TypeScript dentro de supabase/functions/payment-service/index.ts
+4. Configura tus variables de entorno secretas de la plataforma en Supabase Dashboard (Settings > Secrets):
+   - STRIPE_CLIENT_ID (Client ID de tu Stripe Connect App)
+   - STRIPE_SECRET_KEY (Secret Key de la plataforma Tragalero)
+   - MERCADOPAGO_CLIENT_ID (Client ID de tu App en Mercado Pago Developers)
+   - MERCADOPAGO_CLIENT_SECRET (Client Secret de tu App en Mercado Pago Developers)
+   - SUPABASE_URL (URL de tu proyecto Supabase)
+   - SUPABASE_SERVICE_ROLE_KEY (Service Role Key para actualizar estado de pagos)
+5. Despliega la función:
+   supabase functions deploy payment-service --no-verify-jwt
+
+================================================================================
+CÓDIGO TYPESCRIPT (index.ts)
+================================================================================
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const body = await req.json();
+    const { action, user_id, order_id, redirect_uri, amount, currency, provider } = body;
+
+    // 1. OAUTH LINKS GENERATION (Para conectar cuentas de clientes)
+    if (action === "get_stripe_oauth_url") {
+      const stripeClientId = Deno.env.get("STRIPE_CLIENT_ID");
+      if (!stripeClientId) {
+        return new Response(JSON.stringify({ error: "STRIPE_CLIENT_ID no configurado en servidor" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      const state = btoa(JSON.stringify({ user_id }));
+      const url = `https://connect.stripe.com/oauth/authorize?response_type=code&client_id=${stripeClientId}&scope=read_write&state=${state}&redirect_uri=${encodeURIComponent(redirect_uri)}`;
+      return new Response(JSON.stringify({ url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (action === "get_mp_oauth_url") {
+      const mpClientId = Deno.env.get("MERCADOPAGO_CLIENT_ID");
+      if (!mpClientId) {
+        return new Response(JSON.stringify({ error: "MERCADOPAGO_CLIENT_ID no configurado en servidor" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      const state = btoa(JSON.stringify({ user_id }));
+      const url = `https://auth.mercadopago.com.mx/authorization?client_id=${mpClientId}&response_type=code&platform_id=mp&state=${state}&redirect_uri=${encodeURIComponent(redirect_uri)}`;
+      return new Response(JSON.stringify({ url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // 2. CREACIÓN DE SESIÓN DE PAGO (Checkout Diner)
+    if (action === "create_checkout_session") {
+      // Obtener configuración de pagos del cliente/restaurante
+      const { data: payConfig, error: configError } = await supabase
+        .from("tragalero_payment_config")
+        .select("*")
+        .eq("user_id", user_id)
+        .single();
+
+      if (configError || !payConfig) {
+        return new Response(JSON.stringify({ error: "El restaurante no tiene pagos configurados." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      // STRIPE CHECKOUT
+      if (provider === "stripe") {
+        if (!payConfig.stripe_account_id) {
+          return new Response(JSON.stringify({ error: "Cuenta de Stripe del restaurante no vinculada." }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
+        const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+        const checkoutParams = new URLSearchParams({
+          "payment_method_types[]": "card",
+          "line_items[0][price_data][currency]": (currency || "mxn").toLowerCase(),
+          "line_items[0][price_data][product_data][name]": `Pedido #${order_id}`,
+          "line_items[0][price_data][unit_amount]": Math.round(amount * 100).toString(),
+          "line_items[0][quantity]": "1",
+          "mode": "payment",
+          "success_url": `${redirect_uri}?payment=success&order_id=${order_id}`,
+          "cancel_url": `${redirect_uri}?payment=cancel&order_id=${order_id}`,
+          "client_reference_id": order_id.toString()
+        });
+
+        const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${stripeSecretKey}`,
+            "Stripe-Account": payConfig.stripe_account_id,
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: checkoutParams
+        });
+
+        const stripeData = await stripeRes.json();
+        return new Response(JSON.stringify({ checkout_url: stripeData.url, session_id: stripeData.id }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      // MERCADO PAGO CHECKOUT
+      if (provider === "mercadopago") {
+        const accessToken = payConfig.mercadopago_access_token;
+        if (!accessToken) {
+          return new Response(JSON.stringify({ error: "Token de Mercado Pago no configurado en el restaurante." }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
+        const preferenceBody = {
+          items: [
+            {
+              title: `Pedido Tragalero #${order_id}`,
+              unit_price: Number(amount),
+              quantity: 1,
+              currency_id: (currency || "MXN").toUpperCase()
+            }
+          ],
+          external_reference: order_id.toString(),
+          back_urls: {
+            success: `${redirect_uri}?payment=success&order_id=${order_id}`,
+            failure: `${redirect_uri}?payment=failure&order_id=${order_id}`,
+            pending: `${redirect_uri}?payment=pending&order_id=${order_id}`
+          },
+          auto_return: "approved"
+        };
+
+        const mpRes = await fetch("https://api.mercadopago.com/checkout/preferences", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(preferenceBody)
+        });
+
+        const mpData = await mpRes.json();
+        return new Response(JSON.stringify({ checkout_url: mpData.init_point || mpData.sandbox_init_point }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+    }
+
+    // 3. WEBHOOKS DE PAGO (Actualizar orden en Supabase)
+    if (action === "webhook_stripe") {
+      const event = body;
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object;
+        const orderId = session.client_reference_id;
+        await supabase
+          .from("tragalero_orders")
+          .update({ payment_status: "APROBADO", payment_id: session.id, payment_provider: "stripe" })
+          .eq("id", orderId);
+      }
+      return new Response(JSON.stringify({ received: true }), { headers: corsHeaders });
+    }
+
+    if (action === "webhook_mercadopago") {
+      const { type, data } = body;
+      if (type === "payment") {
+        const paymentId = data.id;
+        // Consultar estado de pago en Mercado Pago
+        const orderId = body.external_reference;
+        if (orderId) {
+          await supabase
+            .from("tragalero_orders")
+            .update({ payment_status: "APROBADO", payment_id: paymentId.toString(), payment_provider: "mercadopago" })
+            .eq("id", orderId);
+        }
+      }
+      return new Response(JSON.stringify({ received: true }), { headers: corsHeaders });
+    }
+
+    return new Response(JSON.stringify({ error: "Acción no válida" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+});
