@@ -1,0 +1,20 @@
+============================================================
+EXPLICACIÓN DE NAVEGACIÓN Y BOTONES DE PAGOS EN LÍNEA
+============================================================
+
+1. ¿POR QUÉ SE ACTUALIZÓ LA INTERFAZ?
+- Se adaptó la página `docs/onlinePayment.html` para compartir exactamente el mismo diseño, tipografía (Plus Jakarta Sans & Outfit), paleta pastel de colores, barra superior `#top-nav`, pill de usuario `#user-display-pill` y barra lateral deslizante de clientes (`.sidebar-container` / `.sidebar-tab`) que utiliza `docs/admindelivery.html` y `docs/adminMenus.html`.
+- El botón de la esquina superior izquierda "PANEL" redirige de manera estándar a `admin.html`.
+
+2. CÓMO FUNCIONAN LOS BOTONES DE REDIRECCIÓN A STRIPE Y MERCADO PAGO:
+- Al hacer clic en "CONECTAR STRIPE":
+  * Intenta llamar a la Edge Function `payment-service` con la acción `get_stripe_oauth_url`.
+  * Si la Edge Function aún no está desplegada en el entorno local, redirige automáticamente a la URL oficial de autorización OAuth de Stripe Connect:
+    `https://connect.stripe.com/oauth/authorize?response_type=code&client_id=ca_default_tragalero&scope=read_write&state=USER_ID&redirect_uri=...`
+- Al hacer clic en "CONECTAR MERCADO PAGO":
+  * Intenta llamar a la Edge Function `payment-service` con la acción `get_mp_oauth_url`.
+  * Si la Edge Function aún no está desplegada, redirige automáticamente a la URL oficial de autorización OAuth de Mercado Pago:
+    `https://auth.mercadopago.com.mx/authorization?client_id=default_tragalero_app&response_type=code&platform_id=mp&state=USER_ID&redirect_uri=...`
+
+3. CÓMO CAMBIAR CLIENTE (DRAWER DE CLIENTES):
+- Para usuarios con roles de administración (Admin, Developer, CS, Ventas), la pestaña "Clientes" a la izquierda despliega la lista para cambiar la cuenta activa en tiempo real sin salir de la página.

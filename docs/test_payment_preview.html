@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pagos en Línea Preview</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+    :root {
+      --orange: #ff9533;
+      --bg: #fffcf0;
+      --card: #ffffff;
+      --input: #fffef5;
+      --text: #1a1c1e;
+      --text-dim: #4a5568;
+      --border: #f8e8d8;
+      --success: #10b981;
+      --error: #dc2626;
+      --stripe-blue: #635bff;
+      --mp-blue: #009ee3;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
+    #top-nav { position: fixed; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5000; }
+    .btn-panel-top { background: var(--orange); color: #fff; border: none; padding: 12px 28px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; letter-spacing: 1.5px; text-transform: uppercase; text-decoration: none; }
+    #user-display-pill { background: var(--card); padding: 8px 24px; border-radius: 40px; border: 1.5px solid var(--border); display: flex; align-items: center; gap: 15px; }
+    .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 100px 24px 60px 24px; }
+    header { text-align: center; margin-bottom: 40px; }
+    .logo-main { max-width: 180px; height: auto; margin: 0 auto 15px auto; display: block; }
+    .page-title { font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 800; margin-bottom: 8px; }
+    .page-subtitle { color: var(--text-dim); font-size: 0.95rem; font-weight: 500; }
+    .account-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,149,51,0.1); border: 1px solid var(--orange); color: var(--orange); padding: 8px 18px; border-radius: 30px; font-weight: 700; font-size: 0.85rem; margin-top: 15px; }
+    .payment-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; margin-top: 30px; }
+    .payment-card { background: var(--card); border: 1px solid var(--border); border-radius: 28px; padding: 32px; box-shadow: 0 15px 40px rgba(0,0,0,0.04); display: flex; flex-direction: column; justify-content: space-between; gap: 24px; }
+    .card-header-bar { display: flex; align-items: center; justify-content: space-between; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+    .brand-title { display: flex; align-items: center; gap: 12px; font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 800; }
+    .brand-icon-stripe { width: 44px; height: 44px; border-radius: 14px; background: var(--stripe-blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+    .brand-icon-mp { width: 44px; height: 44px; border-radius: 14px; background: var(--mp-blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+    .badge-status { padding: 6px 14px; border-radius: 30px; font-weight: 800; font-size: 0.72rem; text-transform: uppercase; }
+    .badge-disconnected { background: rgba(220, 38, 38, 0.12); color: var(--error); border: 1px solid rgba(220, 38, 38, 0.3); }
+    .switch-row { display: flex; align-items: center; justify-content: space-between; background: var(--input); padding: 14px 18px; border-radius: 16px; border: 1px solid var(--border); }
+    .switch-label { font-size: 0.85rem; font-weight: 700; }
+    .btn-connect { width: 100%; padding: 16px; border-radius: 18px; border: none; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; }
+    .btn-stripe { background: var(--stripe-blue); color: #fff; }
+    .btn-mp { background: var(--mp-blue); color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="bg-mesh"></div>
+  <div id="top-nav">
+    <div><a href="admin.html" class="btn-panel-top">PANEL</a></div>
+    <div id="user-display-pill">
+      <i class="bi bi-person-circle" style="font-size:1.2rem;"></i>
+      <div style="display:flex; flex-direction:column; line-height:1.2;">
+        <span style="font-weight:800; font-size:0.85rem;">La Salsita</span>
+        <span style="font-size:0.65rem; font-weight:700; text-transform:uppercase;">PROPIETARIO</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <header>
+      <img src="assets/img/tragalero_negro.png" class="logo-main" alt="Tragalero">
+      <h1 class="page-title">Pagos en Línea</h1>
+      <p class="page-subtitle">Conecta las pasarelas oficiales para recibir dinero directamente en tu cuenta de banco</p>
+      <div class="account-badge">
+        <i class="bi bi-shop"></i> <span>La Salsita</span>
+      </div>
+    </header>
+
+    <div class="payment-grid">
+      <div class="payment-card">
+        <div>
+          <div class="card-header-bar">
+            <div class="brand-title">
+              <div class="brand-icon-stripe"><i class="fa-brands fa-stripe-s"></i></div>
+              Stripe
+            </div>
+            <span class="badge-status badge-disconnected">Sin conectar</span>
+          </div>
+          <div class="switch-row" style="margin-top:20px;">
+            <span class="switch-label">Habilitar pagos con Stripe</span>
+            <input type="checkbox" disabled>
+          </div>
+        </div>
+        <a href="#" class="btn-connect btn-stripe"><i class="fa-brands fa-stripe me-1 fs-5"></i> Conectar Stripe</a>
+      </div>
+
+      <div class="payment-card">
+        <div>
+          <div class="card-header-bar">
+            <div class="brand-title">
+              <div class="brand-icon-mp"><i class="bi bi-wallet2"></i></div>
+              Mercado Pago
+            </div>
+            <span class="badge-status badge-disconnected">Sin conectar</span>
+          </div>
+          <div class="switch-row" style="margin-top:20px;">
+            <span class="switch-label">Habilitar pagos con Mercado Pago</span>
+            <input type="checkbox" disabled>
+          </div>
+        </div>
+        <a href="#" class="btn-connect btn-mp"><i class="bi bi-shield-check me-1"></i> Conectar Mercado Pago</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
