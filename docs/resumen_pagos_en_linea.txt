@@ -1,47 +1,21 @@
-================================================================================
-RESUMEN DE INTEGRACIÓN DE PAGOS EN LÍNEA EN TRAGALERO
-================================================================================
+============================================================
+RESUMEN DE INTEGRACIÓN DE PAGOS EN LÍNEA (STRIPE & MERCADO PAGO)
+============================================================
 
-¿CÓMO FUNCIONA PARA TIS CLIENTES / RESTAURANTES?
---------------------------------------------------------------------------------
-1. Cada restaurante o cliente entra a su panel administrativo en:
-   ./onlinePayment.html (o desde la tarjeta "Pagos en Línea" en admin.html).
+1. ¿CÓMO FUNCIONA?
+- Cada cliente (restaurante) conecta su propia cuenta mediante OAuth con un clic ("Conectar Stripe" / "Conectar Mercado Pago") desde `onlinePayment.html`.
+- NUNCA se piden API Keys ni secretos en los formularios del frontend. Todo el dinero va directo a las cuentas de cada restaurante.
+- En el menú digital (`menu.html` / `menutechUI.js`), al momento de pagar, la Edge Function redirige al comensal a la pasarela de Stripe o Mercado Pago del restaurante correspondiente.
+- Una vez pagado, los webhooks actualizan el estado del pedido en `tragalero_orders` a 'Aprobado'.
 
-2. En lugar de pedirles claves secretas (SK) o tokens manuales, los clientes ven
-   dos botones de vinculación oficial por protocolo OAuth / Connect:
-   - "Conectar con Stripe": Redirige al flujo oficial de Stripe Connect.
-   - "Conectar Mercado Pago": Redirige a la autorización de Mercado Pago.
+2. LO ÚNICO QUE TIENES QUE HACER TÚ (SQL SETUP):
+- Ejecuta el script SQL en el Editor SQL de Supabase: `docs/setup_payment_tables.sql`.
+- Configura la Edge Function de Supabase `payment-service` siguiendo la guía en `docs/EDGE_FUNCTION_PAYMENTS.txt`.
 
-3. Al vincular su cuenta, Supabase guarda de forma segura su ID de cuenta
-   (stripe_account_id / mercadopago_user_id) en public.tragalero_payment_config.
-
-4. El dinero pagado por los comensales en el menú digital (menu.html) viaja
-   DIRECTAMENTE a las cuentas bancarias de tus clientes, NUNCA a la tuya.
-
-
-¿CÓMO FUNCIONA EL COBRO EN EL MENÚ DIGITAL (menu.html / menutechUI.js)?
---------------------------------------------------------------------------------
-1. Cuando un comensal abre el carrito y selecciona "TARJETA EN LÍNEA (STRIPE)" o
-   "MERCADO PAGO", el sistema inserta la orden en `tragalero_orders`.
-2. Luego invoca la Supabase Edge Function `payment-service` enviando la orden y
-   el ID del negocio.
-3. La Edge Function genera la sesión de cobro oficial (Checkout Session de Stripe o
-   Preference de Mercado Pago) vinculada a la cuenta del restaurante y redirige al
-   comensal a pagar.
-4. Un Webhook o callback actualiza el estado de la orden en Supabase
-   (payment_status = 'APROBADO').
-
-
-CONFIGURACIÓN ÚNICA QUE DEBES HACER TÚ EN SUPABASE:
---------------------------------------------------------------------------------
-1. SQL: Ejecuta el script de base de datos en Supabase SQL Editor:
-   Archivo: docs/setup_payment_tables.sql
-
-2. EDGE FUNCTION: Crea y despliega la función de backend en Supabase:
-   Código e instrucciones guardadas en: docs/EDGE_FUNCTION_PAYMENTS.txt
-
-3. SECRETS DE TU PLATAFORMA (En Supabase Dashboard -> Settings -> Secrets):
-   - STRIPE_CLIENT_ID
-   - STRIPE_SECRET_KEY
-   - MERCADOPAGO_CLIENT_ID
-   - MERCADOPAGO_CLIENT_SECRET
+============================================================
+ARCHIVOS CREADOS / MODIFICADOS:
+- `docs/onlinePayment.html` -> Módulo de configuración de pasarelas de pago.
+- `docs/setup_payment_tables.sql` -> Tablas y columnas de pagos.
+- `docs/EDGE_FUNCTION_PAYMENTS.txt` -> Código backend de la Edge Function para OAuth, checkout y webhooks.
+- `docs/menutechUI.js` -> Flujo de checkout de pago en línea para el comensal.
+============================================================
