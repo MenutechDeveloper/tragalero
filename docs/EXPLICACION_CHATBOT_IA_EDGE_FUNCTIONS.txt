@@ -3,81 +3,37 @@
   PARA TRAGALERO
 ================================================================================
 
-¡Hola! Esta guía está explicada paso a paso de forma súper sencilla (sin rodeos
-técnicos ni complicaciones) para que entiendas exactamente cómo funciona tu
-nuevo Chatbot con Inteligencia Artificial, cómo cambia precios automáticamente
-y cómo genera tareas para el equipo de Atención a Clientes (CS).
+¡Hola! Esta guía está explicada paso a paso para que entiendas exactamente cómo
+funciona tu Chatbot con Inteligencia Artificial, cómo modifica menús directamente
+en la base de datos (agregar categorías, agregar platillos, modificar precios,
+eliminar platillos) y cómo asigna solicitudes externas (banners, posts, diseños)
+al equipo de Atención a Clientes (CS) en `tragalero_tasks`.
 
 --------------------------------------------------------------------------------
 1. ¿CÓMO FUNCIONA EL CHATBOT CON IA EN TU PLATAFORMA?
 --------------------------------------------------------------------------------
-1. **Atención Inteligente**: Cuando un cliente (tipo Owner/Dueño) inicia sesión en
-   Tragalero, verá un botón circular flotante en la esquina inferior derecha.
-   Al darle clic o usar el micrófono (voz), puede pedirle cosas al chatbot en
-   lenguaje natural (ej. "Cámbiame el precio de las Enchiladas a $50 pesos").
+1. **Atención Inteligente**: Cuando un usuario (Cliente o Administrador) escribe
+   o habla por el micrófono, el asistente entiende el contexto:
+   - Si eres **Admin** y pides: *"Entra al menú de Antonio y agrega una categoría Tacos con tacos de asada $20, tripa $35 y pastor $40"*, la IA busca el cliente Antonio, entra a su menú y realiza las modificaciones directamente en la base de datos.
+   - Si eres un **Cliente regular**, modifica directamente el menú de tu cuenta.
+   - Si la solicitud es un **servicio externo** (banners, diseño, redes sociales, soporte web): la IA crea una tarea en `tragalero_tasks` con fecha límite de 5 días y confirma al usuario en lenguaje natural.
 
-2. **Acción Directa en el Menú**:
-   - El chatbot reconoce qué usuario y negocio está solicitando la orden.
-   - Entra directamente a la base de datos de su menú (`tragalero_menus`) y
-     actualiza el precio del platillo en tiempo real sin que tengas que hacerlo a mano.
-
-3. **Solicitudes Externas (ej. Publicación de Facebook con Imagen)**:
-   - Si el cliente te pide algo que no es directo en la app (como "Publica este arte en Facebook"):
-   - El chatbot le pide la imagen al usuario, la sube a Cloudinary y crea automáticamente
-     una tarea en el sistema asignando una fecha límite con **5 días de anticipación**.
-   - Al cliente le confirma: "Tu publicación quedó agendada para el día [Fecha]".
-   - Al equipo de CS le aparece la tarea en la pantalla de **adminTask.html** para realizarla
-     en esos 5 días.
+2. **Acción Directa en la Base de Datos**:
+   - Agrega categorías nuevas.
+   - Agrega platillos con sus precios.
+   - Actualiza precios o nombres de platillos existentes.
+   - Elimina platillos o categorías solicitadas.
 
 
 --------------------------------------------------------------------------------
-2. ¿DÓNDE VA LA API DE GOOGLE GEMINI Y QUÉ ES LA EDGE FUNCTION? (EXPLICACIÓN SENCILLA)
---------------------------------------------------------------------------------
-- **¿Por qué la API Key NO va en la página web (frontend)?**
-  Imagínate que tu API Key de Gemini es la clave secreta de tu tarjeta de crédito.
-  Si la pones en la página web, cualquiera podría presionar F12 en su navegador y
-  ver tu clave secreta.
-
-- **¿Qué es la Edge Function?**
-  Es como un "Mesero Seguro" en la nube.
-  - Tu página web le envía el mensaje del cliente a la Edge Function.
-  - La Edge Function (que vive segura en Supabase) toma tu API Key secreta guardada
-    en un cajón fuerte (Secrets con el nombre `OPENAI_API_KEY`), consulta la API de Gemini
-    a través de su endpoint compatible con OpenAI (`https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`)
-    y realiza los cambios en la base de datos.
-  - Finalmente le devuelve la respuesta bonita al cliente en la pantalla.
-
-
---------------------------------------------------------------------------------
-3. PASO A PASO: LO QUE DEBES HACER EN TU PANEL DE SUPABASE
+2. CÓDIGO TYPESCRIPT COMPLETO PARA SUPABASE EDGE FUNCTION (`ai-assistant`)
 --------------------------------------------------------------------------------
 
-### PASO A: Crear la Tabla de Tareas en Supabase (SQL Editor)
-1. Entra a tu panel de Supabase (https://app.supabase.com).
-2. En el menú de la izquierda, entra a **SQL Editor**.
-3. Haz clic en **New Query**.
-4. Abre y copia el contenido del archivo `docs/setup_chatbot_tasks_tables.sql`
-   que ya está listo en tu proyecto y pégalo ahí.
-5. Haz clic en el botón verde **Run**. ¡Listo!
-
-
-### PASO B: Guardar tu API Key de Gemini de Forma Segura
-1. Entra a tu panel de Supabase.
-2. En el menú de la izquierda ve a **Project Settings** (el ícono de engrane) -> **Secrets** (o en la sección **Edge Functions** -> **Secrets**).
-3. Haz clic en **Add new secret**.
-4. En Nombre (Name) pon: `OPENAI_API_KEY` (se mantiene esta clave para no romper variables).
-5. En Valor (Value) pega tu API Key de Google Gemini obtenida en Google AI Studio (`AIzaSy...`).
-6. Guarda los cambios.
-
-
-### PASO C: Crear o Actualizar la Edge Function llamada `ai-assistant` con Google Gemini
-1. En tu panel de Supabase, ve al menú lateral izquierdo a la sección **Edge Functions**.
-2. Abre la función existente o crea una nueva con el nombre: `ai-assistant`
-3. Copia y pega el código TypeScript ajustado para Google Gemini (`gemini-1.5-flash`):
+Copia y pega este código en tu Edge Function `ai-assistant` en Supabase:
 
 ```typescript
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.8";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -99,103 +55,280 @@ serve(async (req) => {
       );
     }
 
-    const geminiApiKey = Deno.env.get("OPENAI_API_KEY"); // Contiene la API Key de Gemini
+    const geminiApiKey = (Deno.env.get("OPENAI_API_KEY") || "").trim();
+    if (!geminiApiKey) {
+      return new Response(JSON.stringify({ reply: "Error: No se encontró la API Key (OPENAI_API_KEY) en los Secrets de Supabase." }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Obtener datos del usuario
+    // Obtener datos del usuario activo
     const { data: profile } = await supabase.from("usuarios").select("*").eq("id", user_id).single();
-    const clientName = profile?.name || "Cliente";
-    const clientDomain = profile?.domain || "tragalero";
+    const currentUserRole = profile?.role || "Owner";
+    let targetUserId = user_id;
+    let clientName = profile?.name || "Cliente";
+    let clientDomain = profile?.domain || "tragalero";
 
-    // 1. Obtener el menú del usuario
-    let { data: menu } = await supabase.from("tragalero_menus").select("*").eq("user_id", user_id).maybeSingle();
+    // Si es admin, permite buscar otros clientes si lo especifica en el mensaje
+    let menuUser = profile;
+    if (currentUserRole.toLowerCase().includes("admin") || currentUserRole.toLowerCase().includes("developer")) {
+      const match = message.match(/(?:menu|menú|cuenta|cliente)\s+(?:de\s+)?([a-z0-9áéíóúñ\s]+?)(?=\s+y|\s+agrega|\s+pon|\s+cambia|\s+modifica|\s+$)/i);
+      if (match && match[1]) {
+        const searchName = match[1].trim();
+        const { data: found } = await supabase.from("usuarios").select("*").ilike("name", `%${searchName}%`).limit(1).maybeSingle();
+        if (found) {
+          targetUserId = found.id;
+          clientName = found.name;
+          clientDomain = found.domain;
+          menuUser = found;
+        }
+      }
+    }
+
+    // Cargar menú del usuario destino
+    let { data: menu } = await supabase.from("tragalero_menus").select("*").eq("user_id", targetUserId).maybeSingle();
     if (!menu) {
-      const fallback = await supabase.from("menutech_menus").select("*").eq("user_id", user_id).maybeSingle();
+      const fallback = await supabase.from("menutech_menus").select("*").eq("user_id", targetUserId).maybeSingle();
       menu = fallback ? fallback.data : null;
     }
 
-    const systemPrompt = `Eres el asistente inteligente de administración de Tragalero. Ayudas a los dueños de restaurantes a gestionar su menú y coordinar servicios con atención a clientes (CS).
-Nombre del cliente: ${clientName}
-Dominio: ${clientDomain}
-Menú actual: ${JSON.stringify(menu?.config || {})}
+    if (!menu) {
+      menu = {
+        user_id: targetUserId,
+        domain: clientDomain,
+        slug: "restaurante",
+        config: { categories: [{ name: "General", dishes: [] }] }
+      };
+    }
+    if (!menu.config) menu.config = { categories: [] };
+    if (!menu.config.categories) menu.config.categories = [];
 
-Si el usuario te pide cambiar el precio de un platillo, usa la herramienta 'update_dish_price'.
-Si el usuario te pide un servicio externo (como publicar en Facebook, diseño, o cualquier tarea asistida), usa la herramienta 'create_task'.`;
+    const systemPrompt = `Eres el asistente inteligente de administración de Tragalero.
+REGLA OBLIGATORIA: RESPONDE SIEMPRE DIRECTAMENTE AL USUARIO EN ESPAÑOL. NUNCA INCLUYAS TUS PENSAMIENTOS INTERNOS, PLANES, PASOS DE RAZONAMIENTO NI "The user said..." EN LA RESPUESTA.
+Usuario actual: ${profile?.name || "Usuario"} (Rol: ${currentUserRole}).
+Cliente gestionado actualmente: ${clientName} (ID: ${targetUserId}).
+Menú actual de ${clientName}: ${JSON.stringify(menu.config)}
 
-    // Endpoint de Google Gemini compatible con la API de OpenAI Chat Completions
-    const geminiRes = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+Instrucciones:
+1. Si el usuario pide agregar una categoría nueva o platillos al menú, usa 'add_menu_item' o 'add_category'.
+2. Si pide cambiar precios o datos de platillos existentes, usa 'update_dish_price'.
+3. Si pide eliminar un platillo o categoría, usa 'delete_menu_item'.
+4. Si pide algo externo (diseños, banners, publicaciones de Facebook, cambios web complejos que requieren trabajo manual del equipo de CS), usa 'create_cs_task'.`;
+
+    // 1. Obtener lista de modelos de Google ignorando modelos no disponibles
+    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${geminiApiKey}`);
+    const listData = await listRes.json();
+
+    if (!listRes.ok || listData.error) {
+      const gError = listData?.error?.message || "Error al autenticar con Google Gemini.";
+      return new Response(JSON.stringify({ reply: `Error de Google Gemini: ${gError}` }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    const availableModels = listData.models || [];
+    const targetModelObj = availableModels.find((m: any) =>
+      m.supportedGenerationMethods?.includes("generateContent") &&
+      !m.name.includes("2.5") && !m.name.includes("deprecated") &&
+      (m.name.includes("flash") || m.name.includes("gemini"))
+    ) || availableModels.find((m: any) => m.supportedGenerationMethods?.includes("generateContent") && !m.name.includes("2.5"));
+
+    if (!targetModelObj || !targetModelObj.name) {
+      return new Response(JSON.stringify({ reply: "Error: No se encontró ningún modelo de Gemini válido habilitado para tu API key." }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    const modelName = targetModelObj.name;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${geminiApiKey}`;
+
+    const geminiRes = await fetch(geminiUrl, {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${geminiApiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gemini-1.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: message }
-        ],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ role: "user", parts: [{ text: message }] }],
         tools: [
           {
-            type: "function",
-            function: {
-              name: "update_dish_price",
-              description: "Cambia el precio de un platillo específico en el menú del restaurante.",
-              parameters: {
-                type: "object",
-                properties: {
-                  dish_name: { type: "string", description: "Nombre exacto o aproximado del platillo" },
-                  new_price: { type: "number", description: "Nuevo precio en pesos MXN" }
-                },
-                required: ["dish_name", "new_price"]
+            functionDeclarations: [
+              {
+                name: "add_category",
+                description: "Agrega una nueva categoría al menú del restaurante.",
+                parameters: {
+                  type: "OBJECT",
+                  properties: {
+                    category_name: { type: "STRING", description: "Nombre de la categoría" }
+                  },
+                  required: ["category_name"]
+                }
+              },
+              {
+                name: "add_menu_item",
+                description: "Agrega platillos (uno o varios) a una categoría del menú.",
+                parameters: {
+                  type: "OBJECT",
+                  properties: {
+                    category_name: { type: "STRING", description: "Nombre de la categoría donde colocar los platillos" },
+                    dishes: {
+                      type: "ARRAY",
+                      description: "Lista de platillos a agregar",
+                      items: {
+                        type: "OBJECT",
+                        properties: {
+                          name: { type: "STRING", description: "Nombre del platillo" },
+                          price: { type: "NUMBER", description: "Precio en pesos MXN" },
+                          description: { type: "STRING", description: "Descripción opcional" }
+                        },
+                        required: ["name", "price"]
+                      }
+                    }
+                  },
+                  required: ["category_name", "dishes"]
+                }
+              },
+              {
+                name: "update_dish_price",
+                description: "Cambia el precio de un platillo existente en el menú.",
+                parameters: {
+                  type: "OBJECT",
+                  properties: {
+                    dish_name: { type: "STRING", description: "Nombre exacto o aproximado del platillo" },
+                    new_price: { type: "NUMBER", description: "Nuevo precio en pesos MXN" }
+                  },
+                  required: ["dish_name", "new_price"]
+                }
+              },
+              {
+                name: "delete_menu_item",
+                description: "Elimina un platillo o una categoría del menú.",
+                parameters: {
+                  type: "OBJECT",
+                  properties: {
+                    item_name: { type: "STRING", description: "Nombre del platillo o categoría a eliminar" },
+                    type: { type: "STRING", description: "'dish' o 'category'" }
+                  },
+                  required: ["item_name", "type"]
+                }
+              },
+              {
+                name: "create_cs_task",
+                description: "Crea una tarea para el equipo de CS cuando se solicita algo externo (banner, diseño, publicación, soporte web).",
+                parameters: {
+                  type: "OBJECT",
+                  properties: {
+                    title: { type: "STRING", description: "Título breve de la tarea" },
+                    description: { type: "STRING", description: "Detalles completos de la solicitud" }
+                  },
+                  required: ["title", "description"]
+                }
               }
-            }
-          },
-          {
-            type: "function",
-            function: {
-              name: "create_task",
-              description: "Crea una tarea para el equipo de CS cuando el cliente pide un servicio externo como post de Facebook.",
-              parameters: {
-                type: "object",
-                properties: {
-                  title: { type: "string", description: "Título descriptivo de la tarea" },
-                  description: { type: "string", description: "Detalles completos de lo solicitado" }
-                },
-                required: ["title", "description"]
-              }
-            }
+            ]
           }
-        ],
-        tool_choice: "auto"
+        ]
       })
     });
 
     const aiData = await geminiRes.json();
 
     if (!geminiRes.ok) {
-      return new Response(JSON.stringify({ error: aiData.error?.message || "Error al comunicarse con Gemini API" }), {
-        status: 400,
+      const errorMsg = aiData?.error?.message || JSON.stringify(aiData?.error) || "Error al generar contenido.";
+      return new Response(JSON.stringify({ reply: `Error en Gemini API (${modelName}): ${errorMsg}` }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    const choice = aiData.choices?.[0]?.message;
+    const candidate = aiData.candidates?.[0];
+    const parts = candidate?.content?.parts || [];
 
-    if (choice?.tool_calls?.length > 0) {
-      const toolCall = choice.tool_calls[0];
-      const fnName = toolCall.function.name;
-      const args = typeof toolCall.function.arguments === 'string' ? JSON.parse(toolCall.function.arguments) : toolCall.function.arguments;
+    let functionCall = null;
+    let textReply = "";
 
-      if (fnName === "update_dish_price") {
-        if (!menu || !menu.config || !menu.config.categories) {
-          return new Response(JSON.stringify({
-            reply: `No encontré un menú activo para cambiar el precio de ${args.dish_name}. Por favor crea tu menú en la sección de Menús.`
-          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    for (const part of parts) {
+      if (part.functionCall) {
+        functionCall = part.functionCall;
+      }
+      if (part.text) {
+        textReply += part.text;
+      }
+    }
+
+    // Limpiar si vino pensamiento interno
+    if (textReply.includes("Plan:") || textReply.includes("The user said")) {
+      textReply = textReply.split(/¡|Hola|¿|Entendido/i).slice(1).join("¡");
+      if (textReply) textReply = "¡" + textReply;
+    }
+
+    if (functionCall) {
+      const fnName = functionCall.name;
+      const args = functionCall.args || {};
+
+      // A) AGREGAR CATEGORÍA
+      if (fnName === "add_category") {
+        const catName = args.category_name.charAt(0).toUpperCase() + args.category_name.slice(1);
+        let existingCat = menu.config.categories.find((c: any) => c.name.toLowerCase() === catName.toLowerCase());
+        if (!existingCat) {
+          menu.config.categories.push({ name: catName, description: "", dishes: [] });
+          await supabase.from("tragalero_menus").upsert({
+            user_id: targetUserId,
+            domain: clientDomain,
+            slug: menu.slug || "restaurante",
+            config: menu.config,
+            updated_at: new Date()
+          }, { onConflict: "user_id" });
         }
+        return new Response(JSON.stringify({
+          reply: `¡Listo! He agregado la categoría "${catName}" al menú de ${clientName}.`
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
 
+      // B) AGREGAR PLATILLOS
+      if (fnName === "add_menu_item") {
+        const catNameInput = args.category_name || "General";
+        let targetCat = menu.config.categories.find((c: any) => c.name.toLowerCase().includes(catNameInput.toLowerCase()));
+
+        if (!targetCat) {
+          const formattedCatName = catNameInput.charAt(0).toUpperCase() + catNameInput.slice(1);
+          targetCat = { name: formattedCatName, description: "", dishes: [] };
+          menu.config.categories.push(targetCat);
+        }
+        if (!targetCat.dishes) targetCat.dishes = [];
+
+        const addedNames: string[] = [];
+        (args.dishes || []).forEach((d: any) => {
+          const dName = d.name.charAt(0).toUpperCase() + d.name.slice(1);
+          targetCat.dishes.push({
+            name: dName,
+            description: d.description || "",
+            price: d.price || 0,
+            image: "",
+            sizes: []
+          });
+          addedNames.push(`${dName} ($${d.price})`);
+        });
+
+        await supabase.from("tragalero_menus").upsert({
+          user_id: targetUserId,
+          domain: clientDomain,
+          slug: menu.slug || "restaurante",
+          config: menu.config,
+          updated_at: new Date()
+        }, { onConflict: "user_id" });
+
+        return new Response(JSON.stringify({
+          reply: `¡Listo! He agregado a la categoría "${targetCat.name}" los platillos: ${addedNames.join(", ")} en el menú de ${clientName}.`
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // C) ACTUALIZAR PRECIO
+      if (fnName === "update_dish_price") {
         let updated = false;
         let foundDishName = args.dish_name;
         menu.config.categories.forEach((cat: any) => {
@@ -210,27 +343,68 @@ Si el usuario te pide un servicio externo (como publicar en Facebook, diseño, o
 
         if (updated) {
           await supabase.from("tragalero_menus").upsert({
-            user_id: user_id,
+            user_id: targetUserId,
+            domain: clientDomain,
+            slug: menu.slug || "restaurante",
             config: menu.config,
             updated_at: new Date()
           }, { onConflict: "user_id" });
 
           return new Response(JSON.stringify({
-            reply: `¡Listo! He actualizado el precio del platillo "${foundDishName}" a $${args.new_price} MXN en tu menú.`
+            reply: `¡Listo! He actualizado el precio del platillo "${foundDishName}" a $${args.new_price} MXN en el menú de ${clientName}.`
           }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         } else {
           return new Response(JSON.stringify({
-            reply: `No pude encontrar el platillo "${args.dish_name}" en tu menú actual. Por favor verifica el nombre.`
+            reply: `No pude encontrar el platillo "${args.dish_name}" en el menú de ${clientName}.`
           }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
       }
 
-      if (fnName === "create_task") {
+      // D) ELIMINAR PLATILLO O CATEGORÍA
+      if (fnName === "delete_menu_item") {
+        const itemName = args.item_name.toLowerCase();
+        let deleted = false;
+
+        if (args.type === "category") {
+          const initialLen = menu.config.categories.length;
+          menu.config.categories = menu.config.categories.filter((c: any) => !c.name.toLowerCase().includes(itemName));
+          if (menu.config.categories.length < initialLen) deleted = true;
+        } else {
+          menu.config.categories.forEach((cat: any) => {
+            if (cat.dishes) {
+              const initDLen = cat.dishes.length;
+              cat.dishes = cat.dishes.filter((d: any) => !d.name.toLowerCase().includes(itemName));
+              if (cat.dishes.length < initDLen) deleted = true;
+            }
+          });
+        }
+
+        if (deleted) {
+          await supabase.from("tragalero_menus").upsert({
+            user_id: targetUserId,
+            domain: clientDomain,
+            slug: menu.slug || "restaurante",
+            config: menu.config,
+            updated_at: new Date()
+          }, { onConflict: "user_id" });
+
+          return new Response(JSON.stringify({
+            reply: `¡Listo! He eliminado "${args.item_name}" del menú de ${clientName}.`
+          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        } else {
+          return new Response(JSON.stringify({
+            reply: `No encontré "${args.item_name}" para eliminar en el menú de ${clientName}.`
+          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
+
+      // E) CREAR TAREA PARA ATENCIÓN A CLIENTES (CS)
+      if (fnName === "create_cs_task") {
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 5);
 
         await supabase.from("tragalero_tasks").insert({
-          user_id: user_id,
+          user_id: targetUserId,
           client_name: clientName,
           client_domain: clientDomain,
           title: args.title,
@@ -242,18 +416,18 @@ Si el usuario te pide un servicio externo (como publicar en Facebook, diseño, o
 
         const formattedDate = dueDate.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
         return new Response(JSON.stringify({
-          reply: `¡Listo! Tu post quedará listo el día ${formattedDate}.`
+          reply: `¡Listo! He registrado la solicitud "${args.title}" para ${clientName}. El equipo de atención a clientes la resolverá antes del ${formattedDate}.`
         }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }
 
     return new Response(JSON.stringify({
-      reply: choice?.content || "Entendido. ¿En qué más te puedo colaborar hoy?"
+      reply: textReply || "Entendido. ¿En qué más te puedo colaborar hoy?"
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
+    return new Response(JSON.stringify({ reply: "Error interno en Edge Function: " + err.message }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
@@ -261,11 +435,10 @@ Si el usuario te pide un servicio externo (como publicar en Facebook, diseño, o
 ```
 
 --------------------------------------------------------------------------------
-4. ¡LISTO!
+3. ¡LISTO!
 --------------------------------------------------------------------------------
 Tu sistema ya cuenta con:
-1. El archivo `adminTask.html` en el Panel de Control.
-2. El Widget del Chatbot con Voz en la esquina inferior derecha.
-3. La capacidad de cambiar precios de platillos por voz/chat e ingresar solicitudes
-   de redes sociales con 5 días de anticipación.
+1. Soporte para modificar menús de cualquier cliente siendo usuario Admin o del cliente propio.
+2. Agrega categorías y platillos directamente a la base de datos `tragalero_menus`.
+3. Crea tareas asistidas sólo cuando la orden es un servicio externo (diseños, banners, redes).
 ================================================================================

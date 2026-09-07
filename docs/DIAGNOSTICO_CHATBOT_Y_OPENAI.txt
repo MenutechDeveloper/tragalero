@@ -11,7 +11,7 @@
   * Permite adjuntar imágenes subiéndolas automáticamente a Cloudinary.
   * Respeta la cuenta seleccionada por el Admin (`activeOwnerId` del drawer de clientes). Si eres Admin y cambias de cliente en la barra lateral de la plataforma, el chatbot automáticamente trabajará sobre el menú y tareas de la cuenta del cliente activo.
 - **Edge Function (`ai-assistant`) & Tablas SQL**: ¡Correctos!
-  * La función en TypeScript utiliza la API de Google Gemini (`gemini-1.5-flash`) mediante su endpoint compatible con OpenAI (`https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`) con Function Calling (herramientas `update_dish_price` y `create_task`).
+  * La función en TypeScript utiliza la API de Google Gemini (`gemini-1.5-flash`) mediante su endpoint nativo REST con Function Calling (`add_category`, `add_menu_item`, `update_dish_price`, `delete_menu_item`, `create_cs_task`).
   * Conecta de forma segura con las tablas `tragalero_menus` y `tragalero_tasks`.
   * Lee la clave secreta `OPENAI_API_KEY` guardada en Supabase Secrets (donde debes colocar tu API Key de Gemini).
 
@@ -21,9 +21,9 @@
 Para utilizar Google Gemini con su plan gratuito o de pago:
 
 1. Ingresa a **Google AI Studio**: https://aistudio.google.com/
-2. Crea una API Key para Gemini (empieza con `AIzaSy...`).
+2. Crea una API Key para Gemini.
 3. En tu panel de Supabase -> **Project Settings** -> **Secrets**, asegúrate de asignar esa clave a la variable `OPENAI_API_KEY`.
-4. En Supabase Edge Function `ai-assistant`, actualiza el código TypeScript utilizando el endpoint OpenAI-compatible de Gemini: `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions` y modelo `gemini-1.5-flash`.
+4. En Supabase Edge Function `ai-assistant`, copia y pega el código TypeScript documentado en `docs/EXPLICACION_CHATBOT_IA_EDGE_FUNCTIONS.txt`.
 
 --------------------------------------------------------------------------------
 3. ¿CÓMO FUNCIONA LA SELECCIÓN DE CUENTA PARA USUARIOS ADMIN?
@@ -31,8 +31,6 @@ Para utilizar Google Gemini con su plan gratuito o de pago:
 - **Para usuarios regulares (Owner / Dueño de restaurante)**:
   El chatbot opera automáticamente sobre su propia cuenta (`currentUser.id`).
 - **Para usuarios Administradores**:
-  En pantallas como `adminMenus.html`, `adminTemplate.html`, `adminOrders.html`, etc., existe un panel lateral desplegable (Drawer de Clientes).
-  * Cuando seleccionas un cliente en ese panel, la variable global `activeOwnerId` se actualiza con el ID de ese cliente.
-  * El chatbot detecta automáticamente `activeOwnerId`. Por lo tanto, cualquier instrucción que le des al chatbot ("cambia el precio del taco a $45") afectará directamente a la cuenta del cliente que tienes activo en pantalla.
+  En pantallas como `adminMenus.html`, `adminTemplate.html`, `adminOrders.html`, etc., o pidiéndole al chatbot *"Entra al menú de Antonio..."*, el sistema resuelve el cliente activo y modifica directamente las tablas de la base de datos de dicho cliente.
 
 ================================================================================
