@@ -1,5 +1,5 @@
 ================================================================================
-  GUÍA SENCILLA: INTEGRACIÓN DEL CHATBOT DE IA CON OPENAI Y TAREAS (CS)
+  GUÍA SENCILLA: INTEGRACIÓN DEL CHATBOT DE IA CON GOOGLE GEMINI Y TAREAS (CS)
   PARA TRAGALERO
 ================================================================================
 
@@ -31,18 +31,20 @@ y cómo genera tareas para el equipo de Atención a Clientes (CS).
 
 
 --------------------------------------------------------------------------------
-2. ¿DÓNDE VA LA API DE OPENAI Y QUÉ ES LA EDGE FUNCTION? (EXPLICACIÓN SENCILLA)
+2. ¿DÓNDE VA LA API DE GOOGLE GEMINI Y QUÉ ES LA EDGE FUNCTION? (EXPLICACIÓN SENCILLA)
 --------------------------------------------------------------------------------
 - **¿Por qué la API Key NO va en la página web (frontend)?**
-  Imagínate que tu API Key de OpenAI es la clave secreta de tu tarjeta de crédito.
-  Si la pones en la página web, cualquiera podría presionar F12 en su navegador,
-  ver tu clave secreta y gastar tu saldo de OpenAI.
+  Imagínate que tu API Key de Gemini es la clave secreta de tu tarjeta de crédito.
+  Si la pones en la página web, cualquiera podría presionar F12 en su navegador y
+  ver tu clave secreta.
 
 - **¿Qué es la Edge Function?**
   Es como un "Mesero Seguro" en la nube.
   - Tu página web le envía el mensaje del cliente a la Edge Function.
   - La Edge Function (que vive segura en Supabase) toma tu API Key secreta guardada
-    en un cajón fuerte (Secrets), consulta a OpenAI y realiza los cambios en la base de datos.
+    en un cajón fuerte (Secrets con el nombre `OPENAI_API_KEY`), consulta la API de Gemini
+    a través de su endpoint compatible con OpenAI (`https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`)
+    y realiza los cambios en la base de datos.
   - Finalmente le devuelve la respuesta bonita al cliente en la pantalla.
 
 
@@ -59,19 +61,19 @@ y cómo genera tareas para el equipo de Atención a Clientes (CS).
 5. Haz clic en el botón verde **Run**. ¡Listo!
 
 
-### PASO B: Guardar tu API Key de OpenAI de Forma Segura
+### PASO B: Guardar tu API Key de Gemini de Forma Segura
 1. Entra a tu panel de Supabase.
 2. En el menú de la izquierda ve a **Project Settings** (el ícono de engrane) -> **Secrets** (o en la sección **Edge Functions** -> **Secrets**).
 3. Haz clic en **Add new secret**.
-4. En Nombre (Name) pon: `OPENAI_API_KEY`
-5. En Valor (Value) pega tu clave que empieza con `sk-...` de OpenAI.
+4. En Nombre (Name) pon: `OPENAI_API_KEY` (se mantiene esta clave para no romper variables).
+5. En Valor (Value) pega tu API Key de Google Gemini obtenida en Google AI Studio (`AIzaSy...`).
 6. Guarda los cambios.
 
 
-### PASO C: Crear la Edge Function llamada `ai-assistant`
+### PASO C: Crear o Actualizar la Edge Function llamada `ai-assistant` con Google Gemini
 1. En tu panel de Supabase, ve al menú lateral izquierdo a la sección **Edge Functions**.
-2. Haz clic en **Create a new Function** y nombrala: `ai-assistant`
-3. Copia y pega el código TypeScript que se muestra a continuación:
+2. Abre la función existente o crea una nueva con el nombre: `ai-assistant`
+3. Copia y pega el código TypeScript ajustado para Google Gemini (`gemini-1.5-flash`):
 
 ```typescript
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -97,7 +99,7 @@ serve(async (req) => {
       );
     }
 
-    const openAiApiKey = Deno.env.get("OPENAI_API_KEY");
+    const geminiApiKey = Deno.env.get("OPENAI_API_KEY"); // Contiene la API Key de Gemini
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -111,10 +113,9 @@ serve(async (req) => {
     let { data: menu } = await supabase.from("tragalero_menus").select("*").eq("user_id", user_id).maybeSingle();
     if (!menu) {
       const fallback = await supabase.from("menutech_menus").select("*").eq("user_id", user_id).maybeSingle();
-      menu = fallback.data;
+      menu = fallback ? fallback.data : null;
     }
 
-    // Solicitud a la API de OpenAI con Herramientas (Function Calling)
     const systemPrompt = `Eres el asistente inteligente de administración de Tragalero. Ayudas a los dueños de restaurantes a gestionar su menú y coordinar servicios con atención a clientes (CS).
 Nombre del cliente: ${clientName}
 Dominio: ${clientDomain}
@@ -123,14 +124,15 @@ Menú actual: ${JSON.stringify(menu?.config || {})}
 Si el usuario te pide cambiar el precio de un platillo, usa la herramienta 'update_dish_price'.
 Si el usuario te pide un servicio externo (como publicar en Facebook, diseño, o cualquier tarea asistida), usa la herramienta 'create_task'.`;
 
-    const openAiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    // Endpoint de Google Gemini compatible con la API de OpenAI Chat Completions
+    const geminiRes = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${openAiApiKey}`,
+        "Authorization": `Bearer ${geminiApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gemini-1.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message }
@@ -171,13 +173,21 @@ Si el usuario te pide un servicio externo (como publicar en Facebook, diseño, o
       })
     });
 
-    const aiData = await openAiRes.json();
+    const aiData = await geminiRes.json();
+
+    if (!geminiRes.ok) {
+      return new Response(JSON.stringify({ error: aiData.error?.message || "Error al comunicarse con Gemini API" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
     const choice = aiData.choices?.[0]?.message;
 
     if (choice?.tool_calls?.length > 0) {
       const toolCall = choice.tool_calls[0];
       const fnName = toolCall.function.name;
-      const args = JSON.parse(toolCall.function.arguments);
+      const args = typeof toolCall.function.arguments === 'string' ? JSON.parse(toolCall.function.arguments) : toolCall.function.arguments;
 
       if (fnName === "update_dish_price") {
         if (!menu || !menu.config || !menu.config.categories) {

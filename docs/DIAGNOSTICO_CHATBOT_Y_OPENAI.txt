@@ -1,36 +1,29 @@
 ================================================================================
-  DIAGNOSTICO DE FUNCIONAMIENTO DEL CHATBOT CON IA Y GUÍA DE OPENAI - TRAGALERO
+  DIAGNOSTICO DE FUNCIONAMIENTO DEL CHATBOT CON IA Y GUÍA DE GOOGLE GEMINI - TRAGALERO
 ================================================================================
 
 1. COMPROBACIÓN DEL PROYECTO Y ARCHIVOS
 --------------------------------------------------------------------------------
 - **Código Frontend (`docs/assets/js/tragaleroChatbot.js`)**: ¡Correcto!
   * Invoca adecuadamente la Supabase Edge Function llamada `ai-assistant`.
+  * Muestra directamente las respuestas de la IA o los detalles del error si la Edge Function falla (sin respuestas prefabricadas engañosas).
   * Soporta entrada por texto y voz (Web Speech API en español).
   * Permite adjuntar imágenes subiéndolas automáticamente a Cloudinary.
   * Respeta la cuenta seleccionada por el Admin (`activeOwnerId` del drawer de clientes). Si eres Admin y cambias de cliente en la barra lateral de la plataforma, el chatbot automáticamente trabajará sobre el menú y tareas de la cuenta del cliente activo.
 - **Edge Function (`ai-assistant`) & Tablas SQL**: ¡Correctos!
-  * La función en TypeScript utiliza el modelo `gpt-4o-mini` con Function Calling (herramientas `update_dish_price` y `create_task`).
+  * La función en TypeScript utiliza la API de Google Gemini (`gemini-1.5-flash`) mediante su endpoint compatible con OpenAI (`https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`) con Function Calling (herramientas `update_dish_price` y `create_task`).
   * Conecta de forma segura con las tablas `tragalero_menus` y `tragalero_tasks`.
-  * Lee la clave secreta `OPENAI_API_KEY` guardada en Supabase Secrets.
+  * Lee la clave secreta `OPENAI_API_KEY` guardada en Supabase Secrets (donde debes colocar tu API Key de Gemini).
 
 --------------------------------------------------------------------------------
-2. ACLARACIÓN SOBRE PLANES Y SALDO DE OPENAI
+2. CONFIGURACIÓN DE GOOGLE GEMINI API
 --------------------------------------------------------------------------------
-¿A qué le debo meter dinero: GPT 5.6 SOL, GPT 5.6 TERRA o GPT 5.6 LUNA?
+Para utilizar Google Gemini con su plan gratuito o de pago:
 
-Respuesta corta: **Ninguno de esos tres.**
-Esos nombres ("GPT 5.6 SOL", "GPT 5.6 TERRA", "GPT 5.6 LUNA") **NO son planes ni modelos oficiales de OpenAI**. Suelen ser revendedores, plataformas externas de terceros o chatbots ajenos a la API oficial de OpenAI.
-
-Para que tu Edge Function de Supabase funcione correctamente, debes cargar crédito directamente en la plataforma oficial de desarrolladores de OpenAI:
-
-### Paso a Paso para recargar saldo oficial de OpenAI API:
-1. Ingresa a la página oficial de desarrolladores: **https://platform.openai.com/** (o https://platform.openai.com/settings/organization/billing/overview).
-2. Inicia sesión con la misma cuenta donde creaste tu clave `sk-...` (API Key).
-3. En el menú lateral izquierdo ve a **Settings** -> **Billing** (Facturación).
-4. Haz clic en **Add funds** / **Add prepaid credit** (Agregar crédito prepagado).
-5. Ingresa los datos de tu tarjeta y recarga un monto mínimo de **$5 USD a $10 USD**.
-6. ¡Listo! El modelo `gpt-4o-mini` consumirá centavos por cada interacción, por lo que $5 USD rinden miles de mensajes para tu chatbot.
+1. Ingresa a **Google AI Studio**: https://aistudio.google.com/
+2. Crea una API Key para Gemini (empieza con `AIzaSy...`).
+3. En tu panel de Supabase -> **Project Settings** -> **Secrets**, asegúrate de asignar esa clave a la variable `OPENAI_API_KEY`.
+4. En Supabase Edge Function `ai-assistant`, actualiza el código TypeScript utilizando el endpoint OpenAI-compatible de Gemini: `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions` y modelo `gemini-1.5-flash`.
 
 --------------------------------------------------------------------------------
 3. ¿CÓMO FUNCIONA LA SELECCIÓN DE CUENTA PARA USUARIOS ADMIN?
