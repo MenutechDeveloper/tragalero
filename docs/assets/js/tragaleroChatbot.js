@@ -204,7 +204,7 @@
         // Determine target user ID (Check if admin is switching context on adminMenus.html)
         const targetUserId = (typeof activeOwnerId !== 'undefined' && activeOwnerId) ? activeOwnerId : currentUser.id;
 
-        // 1. Call Edge Function 'ai-assistant' (OpenAI)
+        // 1. Call Edge Function 'ai-assistant' (Google Gemini / OpenAI compatible)
         try {
             if (window.supabaseClient) {
                 const { data, error } = await window.supabaseClient.functions.invoke('ai-assistant', {
@@ -225,19 +225,23 @@
                 }
 
                 if (error) {
-                    console.error("Error devuelto por la Edge Function de OpenAI:", error);
+                    console.error("Error devuelto por la Edge Function de la IA:", error);
+                    let errDetail = error.message || "Error al procesar la solicitud con la IA.";
+                    if (data && data.error) errDetail = data.error;
+                    removeTypingIndicator(typingId);
+                    addBotMessage("Ocurrió un error al consultar a la IA: " + errDetail);
+                    return;
                 }
             }
         } catch (e) {
             console.error("Error al conectar con la Edge Function:", e);
+            removeTypingIndicator(typingId);
+            addBotMessage("Error de conexión con el servicio de IA: " + e.message);
+            return;
         }
 
-        // 2. Client-side processing logic
-        setTimeout(async () => {
-            removeTypingIndicator(typingId);
-            const reply = await processClientSideAI(userMsg, imageForMsg, targetUserId);
-            addBotMessage(reply);
-        }, 500);
+        removeTypingIndicator(typingId);
+        addBotMessage("No se pudo recibir respuesta del asistente de IA. Verifica la configuración de Supabase Edge Function.");
     }
 
     async function processClientSideAI(msg, imageUrl, userIdArg) {
