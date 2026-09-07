@@ -206,8 +206,9 @@
 
         // 1. Call Edge Function 'ai-assistant' (Google Gemini / OpenAI compatible)
         try {
-            if (window.supabaseClient) {
-                const { data, error } = await window.supabaseClient.functions.invoke('ai-assistant', {
+            const sbClient = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+            if (sbClient) {
+                const { data, error } = await sbClient.functions.invoke('ai-assistant', {
                     body: {
                         user_id: targetUserId,
                         message: userMsg,
@@ -224,10 +225,15 @@
                     return;
                 }
 
+                if (data && data.error) {
+                    removeTypingIndicator(typingId);
+                    addBotMessage("Ocurrió un error en la IA: " + data.error);
+                    return;
+                }
+
                 if (error) {
                     console.error("Error devuelto por la Edge Function de la IA:", error);
                     let errDetail = error.message || "Error al procesar la solicitud con la IA.";
-                    if (data && data.error) errDetail = data.error;
                     removeTypingIndicator(typingId);
                     addBotMessage("Ocurrió un error al consultar a la IA: " + errDetail);
                     return;
@@ -246,7 +252,7 @@
 
     async function processClientSideAI(msg, imageUrl, userIdArg) {
         const lowerMsg = msg.toLowerCase();
-        const sb = window.supabaseClient;
+        const sb = window.supabaseClient || (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
         const targetUserId = (typeof userIdArg === 'string') ? userIdArg : (userIdArg ? userIdArg.id : currentUser?.id);
 
         if (sb && targetUserId) {
