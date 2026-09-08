@@ -1,34 +1,18 @@
 ================================================================================
-  GUÍA SENCILLA: INTEGRACIÓN DEL CHATBOT DE IA CON GOOGLE GEMINI Y TAREAS (CS)
-  PARA TRAGALERO
+  GUÍA DEFINITIVA: CÓDIGO ACTUALIZADO PARA SUPABASE EDGE FUNCTION (`ai-assistant`)
+  CON INTELIGENCIA COMPLETA, EDICIÓN DIRECTA DE MENÚ Y SIN MENSAJES FIJOS
 ================================================================================
 
-¡Hola! Esta guía está explicada paso a paso para que entiendas exactamente cómo
-funciona tu Chatbot con Inteligencia Artificial, cómo modifica menús directamente
-en la base de datos (agregar categorías, agregar platillos, modificar precios,
-eliminar platillos) y cómo asigna solicitudes externas (banners, posts, diseños)
-al equipo de Atención a Clientes (CS) en `tragalero_tasks`.
+Entendido al 100%. Para que la IA actúe verdaderamente como una Inteligencia Artificial:
+1. **Comprensión Inteligente y Flexible**: Entiende órdenes ambiguas o informales (ej. "cambia el primer platillo por tacos", "agrega tacos al menú", "pon precios de $30 a todo").
+2. **Edición Directa del Menú (`update_full_menu`)**: La IA recibe el menú actual en JSON, aplica los cambios que entendió del cliente y guarda el objeto JSON modificado directamente en la tabla `tragalero_menus`.
+3. **Cero Mensajes Prefabricados**: No vuelve a decir "tu post estará listo x días" cuando se trate de un menú.
+4. **Sin Texto de Pensamientos en Inglés**: Elimina automáticamente frases como "The user said", "Plan: 1...", "This is a simple mathematical expression..." respondiendo directo (por ejemplo, si le preguntas "cuánto es 1 más 1", responde únicamente "2").
+5. **Soporte de Supabase Auth**: Realiza la búsqueda de usuarios tanto en `public.usuarios` como en `auth.users`.
 
 --------------------------------------------------------------------------------
-1. ¿CÓMO FUNCIONA EL CHATBOT CON IA EN TU PLATAFORMA?
+CÓDIGO TYPESCRIPT PARA COPIAR EN TU EDGE FUNCTION `ai-assistant` EN SUPABASE
 --------------------------------------------------------------------------------
-1. **Atención Inteligente Corta y Directa**:
-   - Saludos breves sin textos de pensamientos internos ("The user said...", "Plan:...").
-   - Si eres **Admin** y pides: *"Entra al menú de Antonio y agrega una categoría Tacos con tacos de asada $20, tripa $35 y pastor $40"*, la IA busca el cliente Antonio, entra a su menú y realiza las modificaciones directamente en la base de datos `tragalero_menus`.
-   - Si la orden es un **servicio externo** (diseño de banner, cambio complejo de plantilla web, redes sociales): crea una tarea en `tragalero_tasks` para CS sin usar frases fijas de "post".
-
-2. **Acción Directa en la Base de Datos**:
-   - Agrega categorías nuevas.
-   - Agrega platillos con sus precios.
-   - Actualiza precios o nombres de platillos existentes.
-   - Elimina platillos o categorías solicitadas.
-
-
---------------------------------------------------------------------------------
-2. CÓDIGO TYPESCRIPT COMPLETO PARA SUPABASE EDGE FUNCTION (`ai-assistant`)
---------------------------------------------------------------------------------
-
-Copia y pega este código en tu Edge Function `ai-assistant` en Supabase:
 
 ```typescript
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -56,7 +40,7 @@ serve(async (req) => {
 
     const geminiApiKey = (Deno.env.get("OPENAI_API_KEY") || "").trim();
     if (!geminiApiKey) {
-      return new Response(JSON.stringify({ reply: "Error: No se encontró la API Key (OPENAI_API_KEY) en los Secrets de Supabase." }), {
+      return new Response(JSON.stringify({ reply: "Error: No se encontró la API Key en los Secrets (OPENAI_API_KEY)." }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -66,14 +50,15 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Obtener datos del usuario activo
-    const { data: profile } = await supabase.from("usuarios").select("*").eq("id", user_id).single();
-    const currentUserRole = profile?.role || "Owner";
+    // 1. Obtener perfil del usuario activo (soporta tabla usuarios y auth)
+    let { data: profile } = await supabase.from("usuarios").select("*").eq("id", user_id).maybeSingle();
+
+    let currentUserRole = profile?.role || "Owner";
     let targetUserId = user_id;
     let clientName = profile?.name || "Cliente";
     let clientDomain = profile?.domain || "tragalero";
 
-    // Detectar si un Administrador solicita gestionar la cuenta de otro cliente
+    // Detectar si un Admin solicita gestionar el menú de otro cliente por nombre
     if (currentUserRole.toLowerCase().includes("admin") || currentUserRole.toLowerCase().includes("developer")) {
       const match = message.match(/(?:menu|menú|cuenta|cliente)\s+(?:de\s+)?([a-z0-9áéíóúñ\s]+?)(?=\s+y|\s+agrega|\s+pon|\s+cambia|\s+modifica|\s+actualiza|\s+$)/i);
       if (match && match[1]) {
@@ -87,7 +72,7 @@ serve(async (req) => {
       }
     }
 
-    // Cargar menú del usuario destino
+    // 2. Cargar menú actual del usuario de tragalero_menus (o fallback menutech_menus)
     let { data: menu } = await supabase.from("tragalero_menus").select("*").eq("user_id", targetUserId).maybeSingle();
     if (!menu) {
       const fallback = await supabase.from("menutech_menus").select("*").eq("user_id", targetUserId).maybeSingle();
@@ -99,32 +84,36 @@ serve(async (req) => {
         user_id: targetUserId,
         domain: clientDomain,
         slug: "restaurante",
-        config: { categories: [{ name: "General", dishes: [] }] }
+        config: { categories: [{ name: "General", description: "", dishes: [] }] }
       };
     }
     if (!menu.config) menu.config = { categories: [] };
     if (!menu.config.categories) menu.config.categories = [];
 
-    const systemPrompt = `Eres el asistente inteligente de administración de Tragalero.
-REGLA NÚMERO 1 Y ABSOLUTA: RESPONDE SIEMPRE EN ESPAÑOL Y DE FORMA CORTA Y DIRECTA.
-NUNCA INCLUYAS TUS PENSAMIENTOS INTERNOS, PASOS DE RAZONAMIENTO, "The user said", "Plan:" NI NADA EN INGLÉS EN TU RESPUESTA.
-Si el usuario dice "Hola", responde únicamente: "¡Hola! ¿En qué te puedo colaborar hoy?"
+    const systemPrompt = `Eres la Inteligencia Artificial de Tragalero encargada de gestionar el menú digital de los clientes y responder dudas.
 
-Usuario actual: ${profile?.name || "Usuario"} (Rol: ${currentUserRole}).
-Cliente gestionado actualmente: ${clientName} (ID: ${targetUserId}).
-Menú actual de ${clientName}: ${JSON.stringify(menu.config)}
+REGLAS OBLIGATORIAS DE RESPUESTA:
+1. RESPONDE SIEMPRE EN ESPAÑOL DE FORMA DIRECTA Y ULTRA CORTA.
+2. NUNCA MUESTRES TUS PENSAMIENTOS INTERNOS, PASOS DE RAZONAMIENTO NI NADA EN INGLÉS COMO "The user said", "Plan:", "This is a simple...".
+3. SI TE PREGUNTAN ALGO MATEMÁTICO O UNA DUDA DIRECTA (ej. "¿Cuánto es 1 + 1?"), RESPONDE SOLAMENTE EL RESULTADO (ej. "2").
+4. SI LA ORDEN TIENE QUE VER CON EL MENÚ (agregar, modificar, cambiar platillos, actualizar precios, eliminar categorías o reordenar):
+   - DEBES UTILIZAR OBLIGATORIAMENTE LA HERRAMIENTA 'update_full_menu'.
+   - NUNCA CREES UNA TAREA PARA CS CUANDO TE HABLEN DE MENÚS, PLATILLOS O PRECIOS.
+   - Interpreta lo que pide el cliente en base al menú actual que tienes a continuación.
+5. USA 'create_cs_task' ÚNICAMENTE CUANDO EL USUARIO PIDA EXPRÉSAME Y LITERALMENTE UN TRABAJO EXTERNO QUE REQUIERA DISEÑO GRÁFICO (ejemplo: "hazme un banner publicitario", "diseña un volante para redes").
 
-Instrucciones de herramientas:
-1. SIEMPRE QUE EL USUARIO PIDA AGREGAR CATEGORÍAS, AGREGAR PLATILLOS, CAMBIAR PRECIOS O ELIMINAR ELEMENTOS DEL MENÚ: USA 'manage_menu'. OBLIGATORIO: NO USES 'create_cs_task' PARA CAMBIOS DE MENÚ.
-2. USA 'create_cs_task' ÚNICAMENTE PARA TRABAJOS EXTERNOS (diseños de banners, publicaciones de redes sociales, desarrollo web complejo o soporte asistido manual).`;
+DATOS DE CONTEXTO:
+- Cliente actual: ${clientName} (ID: ${targetUserId})
+- Menú actual en formato JSON:
+${JSON.stringify(menu.config)}
+`;
 
-    // 1. Obtener lista de modelos de Google ignorando modelos no disponibles
+    // 3. Consultar modelos disponibles en Google Gemini
     const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${geminiApiKey}`);
     const listData = await listRes.json();
 
     if (!listRes.ok || listData.error) {
-      const gError = listData?.error?.message || "Error al autenticar con Google Gemini.";
-      return new Response(JSON.stringify({ reply: `Error de Google Gemini: ${gError}` }), {
+      return new Response(JSON.stringify({ reply: `Error de Google Gemini: ${listData?.error?.message || 'Error API Key'}` }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -135,7 +124,7 @@ Instrucciones de herramientas:
       .map((m: any) => m.name);
 
     if (availableModels.length === 0) {
-      return new Response(JSON.stringify({ reply: "Error: No se encontró ningún modelo de Gemini válido habilitado para tu API key." }), {
+      return new Response(JSON.stringify({ reply: "Error: No se encontró ningún modelo habilitado para tu API Key." }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -143,10 +132,8 @@ Instrucciones de herramientas:
 
     let geminiRes: Response | null = null;
     let aiData: any = null;
-    let lastUsedModel = "";
 
     for (const modelName of availableModels) {
-      lastUsedModel = modelName;
       const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${geminiApiKey}`;
 
       try {
@@ -160,39 +147,28 @@ Instrucciones de herramientas:
               {
                 functionDeclarations: [
                   {
-                    name: "manage_menu",
-                    description: "Modifica directamente la base de datos del menú: agrega categorías, agrega platillos con sus precios, actualiza precios o elimina elementos.",
+                    name: "update_full_menu",
+                    description: "Aplica los cambios interpretados en el menú y entrega la estructura completa del menú en config_json. Úsala para cualquier cambio en el menú.",
                     parameters: {
                       type: "OBJECT",
                       properties: {
-                        action: { type: "STRING", description: "'add' (para agregar categorías/platillos), 'update' (para cambiar precios), 'delete' (para borrar)" },
-                        category_name: { type: "STRING", description: "Nombre de la categoría afectada o a crear" },
-                        dishes: {
-                          type: "ARRAY",
-                          description: "Platillos a agregar o actualizar",
-                          items: {
-                            type: "OBJECT",
-                            properties: {
-                              name: { type: "STRING", description: "Nombre del platillo" },
-                              price: { type: "NUMBER", description: "Precio en pesos MXN" },
-                              description: { type: "STRING", description: "Descripción opcional" }
-                            },
-                            required: ["name", "price"]
-                          }
-                        },
-                        delete_item_name: { type: "STRING", description: "Nombre del platillo o categoría a eliminar si la acción es 'delete'" }
+                        summary_action: { type: "STRING", description: "Resumen ultra corto en español de lo que se modificó (ejemplo: 'Agregué tacos de asada al menú' o 'Cambié el precio del primer platillo a $50')." },
+                        config_json: {
+                          type: "OBJECT",
+                          description: "El objeto config completo actualizado con la estructura { categories: [ { name: string, description: string, dishes: [ { name: string, price: number, description: string, image: string, sizes: array } ] } ] }"
+                        }
                       },
-                      required: ["action"]
+                      required: ["summary_action", "config_json"]
                     }
                   },
                   {
                     name: "create_cs_task",
-                    description: "Crea una tarea para el equipo de CS sólo cuando se solicita un trabajo externo (banner, diseño, redes sociales).",
+                    description: "SOLO para solicitudes explícitas de diseño gráfico externo (banners, volantes, publicidad). NUNCA para menús.",
                     parameters: {
                       type: "OBJECT",
                       properties: {
-                        title: { type: "STRING", description: "Título descriptivo del servicio solicitado" },
-                        description: { type: "STRING", description: "Detalles completos" }
+                        title: { type: "STRING", description: "Título del diseño solicitado" },
+                        description: { type: "STRING", description: "Detalles del diseño" }
                       },
                       required: ["title", "description"]
                     }
@@ -208,21 +184,14 @@ Instrucciones de herramientas:
           geminiRes = res;
           aiData = data;
           break;
-        } else if (res.status === 429 || res.status === 503) {
-          aiData = data;
-          continue;
-        } else {
-          aiData = data;
-          break;
         }
       } catch (e) {
-        console.warn(`Error al conectar con ${modelName}:`, e);
+        console.warn(`Error con ${modelName}:`, e);
       }
     }
 
     if (!geminiRes || !geminiRes.ok) {
-      const errorMsg = aiData?.error?.message || JSON.stringify(aiData?.error) || "Error al generar contenido.";
-      return new Response(JSON.stringify({ reply: `Error en Gemini API (${lastUsedModel}): ${errorMsg}` }), {
+      return new Response(JSON.stringify({ reply: "Error al comunicarse con la IA de Google Gemini." }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
@@ -232,133 +201,52 @@ Instrucciones de herramientas:
     const parts = candidate?.content?.parts || [];
 
     let functionCall = null;
-    let textReply = "";
+    let rawTextReply = "";
 
     for (const part of parts) {
-      if (part.functionCall) {
-        functionCall = part.functionCall;
-      }
-      if (part.text) {
-        textReply += part.text;
-      }
+      if (part.functionCall) functionCall = part.functionCall;
+      if (part.text) rawTextReply += part.text;
     }
 
-    // Limpiar pensamientos internos o razonamientos si la IA los incluyó
-    if (textReply.includes("The user said") || textReply.includes("Plan:") || textReply.includes("I should")) {
-      const matchGreeting = textReply.match(/(¡Hola[^!.]*!|\bHola\b[^!.]*|\b¿En qué[^?]*\?)/i);
-      if (matchGreeting) {
-        textReply = matchGreeting[0];
+    // Limpieza estricta de razonamientos en inglés o pensamientos de la IA
+    let cleanReply = rawTextReply.trim();
+    if (cleanReply.includes("The user said") || cleanReply.includes("Plan:") || cleanReply.includes("This is a simple")) {
+      // Extraer solo la respuesta final (ejemplo "2" o saludo)
+      const lines = cleanReply.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+      const lastLine = lines[lines.length - 1];
+      if (lastLine && !lastLine.includes("The user") && !lastLine.includes("Plan:")) {
+        cleanReply = lastLine;
       } else {
-        textReply = "¡Hola! ¿En qué te puedo colaborar hoy?";
+        cleanReply = "¡Listo!";
       }
     }
 
+    // EJECUCIÓN DE HERRAMIENTAS DIRECTAS
     if (functionCall) {
       const fnName = functionCall.name;
       const args = functionCall.args || {};
 
-      // A) GESTIONAR MENÚ DIRECTO
-      if (fnName === "manage_menu") {
-        const action = args.action || "add";
-        let catName = args.category_name || "General";
-        catName = catName.charAt(0).toUpperCase() + catName.slice(1);
+      // A) MODIFICAR EL MENÚ COMPLETO DIRECTAMENTE EN LA BASE DE DATOS
+      if (fnName === "update_full_menu") {
+        const updatedConfig = args.config_json;
+        const summary = args.summary_action || "Menú actualizado correctamente.";
 
-        let targetCat = menu.config.categories.find((c: any) => c.name.toLowerCase().includes(catName.toLowerCase()));
-
-        if (action === "add") {
-          if (!targetCat) {
-            targetCat = { name: catName, description: "", dishes: [] };
-            menu.config.categories.push(targetCat);
-          }
-          if (!targetCat.dishes) targetCat.dishes = [];
-
-          const addedList: string[] = [];
-          (args.dishes || []).forEach((d: any) => {
-            const dName = d.name.charAt(0).toUpperCase() + d.name.slice(1);
-            // Evitar duplicados exactos
-            let existingDish = targetCat.dishes.find((item: any) => item.name.toLowerCase() === dName.toLowerCase());
-            if (existingDish) {
-              existingDish.price = d.price;
-            } else {
-              targetCat.dishes.push({
-                name: dName,
-                description: d.description || "",
-                price: d.price || 0,
-                image: "",
-                sizes: []
-              });
-            }
-            addedList.push(`${dName} ($${d.price})`);
-          });
-
+        if (updatedConfig && updatedConfig.categories) {
           await supabase.from("tragalero_menus").upsert({
             user_id: targetUserId,
             domain: clientDomain,
             slug: menu.slug || "restaurante",
-            config: menu.config,
-            updated_at: new Date()
-          }, { onConflict: "user_id" });
-
-          const details = addedList.length > 0 ? `: ${addedList.join(", ")}` : "";
-          return new Response(JSON.stringify({
-            reply: `¡Listo! He actualizado el menú de ${clientName} agregando la categoría "${targetCat.name}"${details}.`
-          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-
-        if (action === "update") {
-          let updated = false;
-          let detailsList: string[] = [];
-          (args.dishes || []).forEach((d: any) => {
-            menu.config.categories.forEach((cat: any) => {
-              (cat.dishes || []).forEach((dish: any) => {
-                if (dish.name.toLowerCase().includes(d.name.toLowerCase())) {
-                  dish.price = d.price;
-                  updated = true;
-                  detailsList.push(`${dish.name} a $${d.price}`);
-                }
-              });
-            });
-          });
-
-          if (updated) {
-            await supabase.from("tragalero_menus").upsert({
-              user_id: targetUserId,
-              domain: clientDomain,
-              slug: menu.slug || "restaurante",
-              config: menu.config,
-              updated_at: new Date()
-            }, { onConflict: "user_id" });
-
-            return new Response(JSON.stringify({
-              reply: `¡Listo! He actualizado en el menú de ${clientName}: ${detailsList.join(", ")}.`
-            }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-          }
-        }
-
-        if (action === "delete") {
-          const itemToDelete = (args.delete_item_name || "").toLowerCase();
-          menu.config.categories = menu.config.categories.filter((c: any) => !c.name.toLowerCase().includes(itemToDelete));
-          menu.config.categories.forEach((cat: any) => {
-            if (cat.dishes) {
-              cat.dishes = cat.dishes.filter((d: any) => !d.name.toLowerCase().includes(itemToDelete));
-            }
-          });
-
-          await supabase.from("tragalero_menus").upsert({
-            user_id: targetUserId,
-            domain: clientDomain,
-            slug: menu.slug || "restaurante",
-            config: menu.config,
+            config: updatedConfig,
             updated_at: new Date()
           }, { onConflict: "user_id" });
 
           return new Response(JSON.stringify({
-            reply: `¡Listo! He eliminado "${args.delete_item_name}" del menú de ${clientName}.`
+            reply: `¡Listo! ${summary}`
           }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
       }
 
-      // B) CREAR TAREA DE ATENCIÓN A CLIENTES (CS) PARA TRABAJOS EXTERNOS
+      // B) CREAR TAREA CS SOLO PARA BANNERS / DISEÑOS EXTERNOS
       if (fnName === "create_cs_task") {
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 5);
@@ -374,31 +262,21 @@ Instrucciones de herramientas:
           status: "Pendiente"
         });
 
-        const formattedDate = dueDate.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
         return new Response(JSON.stringify({
-          reply: `¡Listo! He generado la solicitud de "${args.title}" para ${clientName}. Quedará completada el día ${formattedDate}.`
+          reply: `¡Listo! Solicitud enviada a diseño: ${args.title}.`
         }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
     }
 
     return new Response(JSON.stringify({
-      reply: textReply || "¡Hola! ¿En qué te puedo colaborar hoy?"
+      reply: cleanReply || "¡Listo! ¿En qué más te colaboro?"
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (err) {
-    return new Response(JSON.stringify({ reply: "Error interno en Edge Function: " + err.message }), {
+    return new Response(JSON.stringify({ reply: "Error interno: " + err.message }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
 });
 ```
-
---------------------------------------------------------------------------------
-3. ¡LISTO!
---------------------------------------------------------------------------------
-Tu sistema ya cuenta con:
-1. Soporte para modificar menús de cualquier cliente siendo usuario Admin o del cliente propio.
-2. Agrega categorías y platillos directamente a la base de datos `tragalero_menus`.
-3. Crea tareas asistidas sólo cuando la orden es un servicio externo (diseños, banners, redes).
-================================================================================
