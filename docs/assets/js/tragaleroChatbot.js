@@ -20,13 +20,19 @@
     let currentUser = null;
 
     // 2. Build DOM elements
-    document.addEventListener('DOMContentLoaded', async () => {
+    async function startChatbot() {
         initChatbotUI();
         initSpeechRecognition();
         if (typeof getLoggedInUser === 'function') {
             currentUser = await getLoggedInUser();
         }
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startChatbot);
+    } else {
+        startChatbot();
+    }
 
     function initChatbotUI() {
         if (document.getElementById('tragalero-chatbot-container')) return;
@@ -36,7 +42,7 @@
         container.innerHTML = `
             <!-- Floating Action Button -->
             <button class="tragalero-chatbot-fab" id="chatbot-fab-btn" title="Asistente IA Tragalero">
-                <i class="bi bi-robot" id="fab-icon"></i>
+                <img src="./assets/img/tragalero.png" alt="Tragalero" class="chatbot-fab-logo">
             </button>
 
             <!-- Chatbot Window Drawer -->
