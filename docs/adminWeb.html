@@ -706,5 +706,6 @@ ${tags || '<!-- No active promotions selected -->'} `;
         window.visitSite = () => { if (!activeDomain) return; window.open(activeDomain.startsWith('http') ? activeDomain : `https://${activeDomain}`, '_blank'); };
         window.logout = async () => { await sb.auth.signOut(); location.href = "index.html"; };
     </script>
+    <script src="./assets/js/tragaleroChatbot.js"></script>
 </body>
 </html>

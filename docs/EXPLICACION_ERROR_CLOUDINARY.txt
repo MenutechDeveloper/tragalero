@@ -1,0 +1,44 @@
+================================================================================
+EXPLICACIÓN Y SOLUCIÓN AL ERROR: "Error al subir imagen: cloud_name is disabled"
+================================================================================
+
+¿POR QUÉ OCURRE ESTE ERROR?
+--------------------------------------------------------------------------------
+El error "cloud_name is disabled" proviene directamente de la API de Cloudinary.
+Significa que el nombre de cuenta de Cloudinary (cloudName: "dbbjxhvz5") actualmente
+configurado en la aplicación ha sido desactivado, suspendido o deshabilitado en
+los servidores de Cloudinary (por ejemplo, por inactividad o límite de uso de esa cuenta).
+
+¿CÓMO SOLUCIONARLO PASO A PASO?
+--------------------------------------------------------------------------------
+
+1. CREAR / INGRESAR A UNA CUENTA EN CLOUDINARY
+   - Ve a https://cloudinary.com y crea una cuenta gratuita (o inicia sesión en tu
+     cuenta existente).
+   - En el Dashboard principal, copia tu "Cloud name" (por ejemplo: `mi_restaurante_cloud`).
+
+2. CREAR UN UPLOAD PRESET (SUBIDA NO FIRMADA)
+   - Dentro de tu panel de Cloudinary, ve a la sección Settings (⚙️ Configuración) -> Settings.
+   - Selecciona la pestaña "Upload".
+   - Desplázate hacia abajo hasta la sección "Upload presets" y haz clic en "Add upload preset".
+   - Configura lo siguiente:
+     * Name: `Tragalero` (o el nombre que prefieras).
+     * Signing Mode: Selecciona `Unsigned` (No firmado).
+   - Haz clic en "Save" (Guardar).
+
+3. ACTUALIZAR LAS CREDENCIALES EN EL PROYECTO
+   - Abre el archivo `docs/assets/js/supabase_logic.js` en tu editor de código.
+   - Ve a la función `uploadToCloudinary(file)` al final del archivo (alrededor de la línea 211).
+   - Reemplaza el `cloudName` y `uploadPreset` con los datos de tu propia cuenta:
+
+     ```javascript
+     async function uploadToCloudinary(file) {
+         const cloudName = "TU_NUEVO_CLOUD_NAME"; // Reemplaza "dbbjxhvz5" por tu cloud_name
+         const uploadPreset = "Tragalero";         // Tu preset Unsigned
+         ...
+     ```
+
+4. PROBAR LA SUBIDA
+   - Guarda los cambios y recarga la página.
+   - Abre el Asistente IA de Tragalero, adjunta una imagen usando el icono del clip y listo.
+================================================================================
