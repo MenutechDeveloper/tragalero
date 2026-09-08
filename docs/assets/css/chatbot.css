@@ -3,9 +3,9 @@
     position: fixed;
     bottom: 25px;
     right: 25px;
-    width: 62px;
-    height: 62px;
-    border-radius: 50%;
+    height: 52px;
+    padding: 0 24px;
+    border-radius: 50px;
     background: linear-gradient(135deg, #ff9533 0%, #e67e22 100%);
     color: #ffffff;
     border: none;
@@ -15,13 +15,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
     animation: chatbotPulse 2.5s infinite;
 }
 
+.chatbot-fab-logo {
+    height: 26px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+    pointer-events: none;
+}
+
 .tragalero-chatbot-fab:hover {
-    transform: scale(1.08) translateY(-3px);
+    transform: scale(1.06) translateY(-3px);
     box-shadow: 0 12px 30px rgba(255, 149, 51, 0.6);
 }
 
