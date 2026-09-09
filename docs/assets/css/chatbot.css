@@ -233,3 +233,25 @@
 .preview-attachment.hidden {
     display: none !important;
 }
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+    .tragalero-chatbot-fab {
+        bottom: 20px;
+        right: 15px;
+        height: 46px;
+        padding: 0 18px;
+    }
+    .chatbot-fab-logo {
+        height: 22px;
+    }
+    .tragalero-chatbot-window {
+        right: 12px;
+        left: 12px;
+        width: auto;
+        max-width: calc(100vw - 24px);
+        bottom: 80px;
+        height: calc(100vh - 100px);
+        max-height: 550px;
+    }
+}
