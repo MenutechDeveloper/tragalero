@@ -18,19 +18,46 @@
     <style>
         body {
             background-color: var(--bs-body-bg);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
+            padding: 20px 15px;
+            box-sizing: border-box;
+            margin: 0;
+        }
+        .theme-switcher-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        @media (max-width: 991.98px) {
+            .theme-switcher-container {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-top: 10px;
+                margin-bottom: 25px;
+                align-self: center;
+            }
         }
         .login-card {
             max-width: 400px;
-            width: 90%;
+            width: 100%;
             border-radius: 30px;
             border: none;
             box-shadow: 0 10px 30px rgba(0,0,0,0.05);
             background-color: var(--bs-tertiary-bg);
             padding: 40px;
+            box-sizing: border-box;
+        }
+        @media (max-width: 576px) {
+            .login-card {
+                padding: 30px 20px;
+                border-radius: 24px;
+            }
         }
         .login-logo {
             width: 80px;
@@ -202,16 +229,12 @@
                 if (error) throw error;
 
                 if (data.user) {
-                    // Check if email confirmation is required (identities will be empty if not confirmed yet in some cases,
-                    // or user.identities[0].identity_data.email_verified will be false)
                     const confirmed = data.user.identities && data.user.identities.length > 0;
 
                     if (data.session) {
-                        // User is already logged in (confirmation was likely disabled)
                         showMessage('¡Cuenta creada con éxito! Redirigiendo...', 'success');
                         setTimeout(() => window.location.href = './admin.html', 2000);
                     } else {
-                        // Confirmation is required
                         showMessage('¡Registro casi completo! Por favor, revisa tu correo electrónico para confirmar tu cuenta antes de iniciar sesión.', 'info');
                         forms.register.reset();
                         setTimeout(() => showForm('login'), 5000);
