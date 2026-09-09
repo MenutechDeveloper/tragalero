@@ -9,12 +9,16 @@ A continuación explico detalladamente el funcionamiento del chatbot y cómo se 
 1. ESTRUCTURA Y CÓDIGO DEL CHATBOT EN `admin.html`:
    - El chatbot que está integrado en `admin.html` funciona mediante la inclusión del script:
      `<script src="./assets/js/tragaleroChatbot.js"></script>`
-   - Este script es el encargado de inyectar dinámicamente todo el diseño visual, el contenedor flotante (`#tragalero-chatbot-container`), la hoja de estilos (`./assets/css/chatbot.css`), la imagen del logo oficial de Tragalero (`./assets/img/tragalero.png`), el botón de envío (`#chatbot-send-btn` con el icono de enviar), el botón de micrófono/voz, el botón de adjuntar imagen/adjunto y la conexión a Supabase Edge Function (`ai-assistant`).
+   - Este script es el encargado de inyectar dinámicamente todo el diseño visual, el contenedor flotante (`#tragalero-chatbot-container`), la hoja de estilos (`./assets/css/chatbot.css`), la imagen del logo oficial de Tragalero (`./assets/img/tragalero.png`), el botón de envío (`#chatbot-send-btn` con el icono de enviar `<i class="bi bi-send-fill"></i>`), el botón de micrófono/voz, el botón de adjuntar imagen/adjunto y la conexión a Supabase Edge Function (`ai-assistant`).
 
-2. QUÉ SE HIZO EN EL PROYECTO:
-   - Se mantuvo totalmente INTACTO y SIN NINGUNA MODIFICACIÓN el archivo `admin.html` y su chatbot.
-   - Se eliminaron los scripts o implementaciones de chatbot en los archivos `.html` que NO forman parte de los slots principales de `admin.html` (como `adminQR.html`, `physicalMenu.html`, `tickets.html`, `directorioLead.html`, `cards.html`, `<extractor.html>`, `adminCustomerWebsite.html`, `lectorQR.html`).
-   - Se copió y pegó EXACTAMENTE la misma línea de script de `admin.html`:
+2. CORRECCIÓN DE ICONOS Y ESTILOS EN TODAS LAS PÁGINAS:
+   - Se aseguró que la librería de Bootstrap Icons (`bootstrap-icons.min.css`) se cargue automáticamente en la cabecera de todas las páginas a través de `tragaleroChatbot.js` y en la cabecera de `adminMenus.html`, `adminOrders.html` y `adminTemplate.html`.
+   - Con esto, los iconos del botón de enviar, adjuntar imagen, micrófono y cerrar ventana del chatbot se renderizan correctamente con la paleta de colores oficial de Tragalero en el 100% de las páginas.
+
+3. QUÉ SE HIZO EN EL PROYECTO:
+   - Se mantuvo totalmente INTACTO y SIN NINGUNA MODIFICACIÓN el archivo `admin.html` y su chatbot original.
+   - Se eliminaron los scripts o referencias de chatbot en los archivos `.html` que NO forman parte de los slots principales de `admin.html` (`adminQR.html`, `physicalMenu.html`, `tickets.html`, `directorioLead.html`, `cards.html`, `extractor.html`, `adminCustomerWebsite.html`, `lectorQR.html`).
+   - Se copió y pegó EXACTAMENTE el mismo chatbot de `admin.html`:
      `<script src="./assets/js/tragaleroChatbot.js"></script>`
      en los 12 archivos `.html` a los que redireccionan los slots del panel de control de `admin.html`:
      1. `restaurantapp.html` (Directorio)
@@ -30,9 +34,9 @@ A continuación explico detalladamente el funcionamiento del chatbot y cómo se 
      11. `adminTask.html` (Tareas CS)
      12. `laboratorio.html` (Laboratorio)
 
-3. CARACTERÍSTICAS DEL CHATBOT INTEGRADO:
+4. CARACTERÍSTICAS DEL CHATBOT INTEGRADO:
    - Botón Flotante (FAB) con el logo de Tragalero.
-   - Botón de Enviar (Icono de avión/send).
+   - Botón de Enviar (Icono de enviar).
    - Estilos y paleta de colores oficial Tragalero.
    - Entrada de voz y adjunto de archivos.
    - Integración directa con las tablas de Supabase y contexto del cliente activo.

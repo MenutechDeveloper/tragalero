@@ -6,6 +6,14 @@
 
 (function () {
     // 1. Inject CSS if not present
+    if (!document.getElementById('tragalero-bootstrap-icons-css') && !document.querySelector('link[href*="bootstrap-icons"]')) {
+        const biLink = document.createElement('link');
+        biLink.id = 'tragalero-bootstrap-icons-css';
+        biLink.rel = 'stylesheet';
+        biLink.href = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css';
+        document.head.appendChild(biLink);
+    }
+
     if (!document.getElementById('tragalero-chatbot-css')) {
         const link = document.createElement('link');
         link.id = 'tragalero-chatbot-css';
