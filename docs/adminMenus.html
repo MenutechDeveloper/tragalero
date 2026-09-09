@@ -37,7 +37,7 @@
 
         .bg-mesh { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 0% 0%, rgba(255, 149, 51, 0.12) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(255, 149, 51, 0.08) 0%, transparent 40%); }
 
-        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 80px 24px; animation: fadeIn 1s ease-out; }
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 80px 24px 140px 24px; animation: fadeIn 1s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         header { text-align: center; margin-bottom: 72px; }
@@ -193,6 +193,7 @@
             padding: 16px 32px; border-radius: 30px; border: 1.5px solid var(--border);
             display: flex; gap: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
             z-index: 7000; animation: footerSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: calc(100vw - 32px);
         }
         body.dark-mode #floating-footer { background: rgba(28, 31, 38, 0.8); }
         @keyframes footerSlideUp { from { bottom: -100px; opacity: 0; } to { bottom: 30px; opacity: 1; } }
@@ -286,6 +287,40 @@
         }
         @keyframes modalSlideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .modal-close { position: absolute; top: 25px; right: 25px; cursor: pointer; color: var(--text-dim); border: none; background: none; }
+
+        /* Responsive Mobile Adjustments */
+        @media (max-width: 768px) {
+            .container { padding: 80px 12px 160px 12px; }
+            #top-nav { top: 12px; left: 12px; right: 12px; }
+            .btn-panel-top { padding: 10px 16px; font-size: 0.75rem; }
+            #user-display-pill { min-width: auto; padding: 6px 14px; gap: 8px; }
+            #user-name { font-size: 0.75rem; }
+            #user-role-label { font-size: 0.55rem; }
+
+            .dashboard-layout { flex-direction: column; gap: 20px; }
+            .sidebar-container { top: 70px; }
+            .sidebar { width: 280px; }
+            .sidebar-container.collapsed { transform: translateX(-280px) !important; }
+
+            .category-card { padding: 16px; }
+            .category-header { flex-wrap: wrap; gap: 12px; }
+            .dishes-container { padding-left: 0; }
+            .dish-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .dish-card .category-actions { align-self: flex-end; }
+
+            #floating-footer {
+                bottom: 15px;
+                padding: 10px 16px;
+                gap: 10px;
+                width: calc(100% - 24px);
+                justify-content: center;
+            }
+            .btn-footer { padding: 10px 16px; font-size: 0.75rem; width: 100%; text-align: center; }
+
+            .modal-card { padding: 24px 16px; border-radius: 24px; }
+            #toast-container { top: 12px; right: 12px; left: 12px; }
+            .toast { min-width: auto; width: 100%; max-width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -326,7 +361,7 @@
             <div style="margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
                 <label id="header-domain-label" style="font-size: 0.9rem; font-weight: 800; color: var(--orange); text-transform: lowercase;"></label>
                 <label style="font-size: 0.6rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-top: 10px;">Menu Link</label>
-                <div style="display: flex; align-items: center; background: var(--input); padding: 12px 24px; border-radius: 16px; border: 1px solid var(--border); min-width: 400px; justify-content: center; margin-top: 5px; gap: 10px;">
+                <div style="display: flex; align-items: center; background: var(--input); padding: 12px 24px; border-radius: 16px; border: 1px solid var(--border); width: 100%; max-width: 400px; justify-content: center; margin-top: 5px; gap: 10px;">
                     <div style="display: flex; align-items: center;">
                         <span style="font-size: 0.95rem; color: var(--orange); font-weight: 900;">tragalero.com/menu.html?n=</span>
                         <input type="text" id="slug-input" style="background:transparent; border:none; color:var(--orange); font-weight:900; font-size:0.95rem; padding:0; outline:none; width: auto; min-width: 50px;" oninput="updateSlug(this.value)">
