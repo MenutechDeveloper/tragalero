@@ -33,8 +33,8 @@
 
         .theme-switcher-container {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 15px;
+            right: 15px;
             z-index: 1000;
         }
 
@@ -43,8 +43,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 40px 20px;
+            padding: 70px 20px 40px 20px;
             box-sizing: border-box;
+            position: relative;
         }
 
         .preview-panel {
@@ -138,17 +139,8 @@
 
         /* --- RESPONSIVE MOBILE ADJUSTMENTS --- */
         @media (max-width: 991.98px) {
-            .theme-switcher-container {
-                position: relative;
-                top: auto;
-                right: auto;
-                margin: 0 auto 20px auto;
-                width: fit-content;
-                max-width: 100%;
-                justify-content: center;
-            }
             .admin-layout {
-                padding: 20px 15px;
+                padding: 70px 15px 30px 15px;
             }
         }
 
