@@ -240,7 +240,7 @@ body.dark-mode .chatbot-input-container {
 /* Mobile Responsive Adjustments */
 @media (max-width: 768px) {
     .tragalero-chatbot-fab {
-        bottom: 85px;
+        bottom: 15px;
         right: 15px;
         height: 44px;
         padding: 0 16px;
@@ -253,8 +253,8 @@ body.dark-mode .chatbot-input-container {
         left: 10px;
         width: auto;
         max-width: calc(100vw - 20px);
-        bottom: 140px;
-        height: calc(100vh - 160px);
+        bottom: 70px;
+        height: calc(100vh - 90px);
         max-height: 500px;
     }
 }
