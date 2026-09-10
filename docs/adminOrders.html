@@ -273,6 +273,21 @@
             .sidebar { width: 280px; }
             .sidebar-container.collapsed { transform: translateX(-280px) !important; }
 
+            .tabs-container {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+                padding: 8px;
+                border-radius: 20px;
+            }
+            .tab-btn {
+                padding: 10px 12px;
+                font-size: 0.8rem;
+                justify-content: center;
+                text-align: center;
+                width: 100%;
+            }
+
             .order-details-pane {
                 position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 7000;
                 border-radius: 0; transform: translateY(100%); transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
