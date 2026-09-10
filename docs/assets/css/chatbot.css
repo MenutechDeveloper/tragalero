@@ -237,21 +237,21 @@
 /* Mobile Responsive Adjustments */
 @media (max-width: 768px) {
     .tragalero-chatbot-fab {
-        bottom: 20px;
+        bottom: 15px;
         right: 15px;
-        height: 46px;
-        padding: 0 18px;
+        height: 44px;
+        padding: 0 16px;
     }
     .chatbot-fab-logo {
-        height: 22px;
+        height: 20px;
     }
     .tragalero-chatbot-window {
-        right: 12px;
-        left: 12px;
+        right: 10px;
+        left: 10px;
         width: auto;
-        max-width: calc(100vw - 24px);
-        bottom: 80px;
-        height: calc(100vh - 100px);
+        max-width: calc(100vw - 20px);
+        bottom: 70px;
+        height: calc(100vh - 90px);
         max-height: 550px;
     }
 }

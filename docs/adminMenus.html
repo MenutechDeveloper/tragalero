@@ -305,7 +305,7 @@
             .category-card { padding: 16px; }
             .category-header { flex-wrap: wrap; gap: 12px; }
             .dishes-container { padding-left: 0; }
-            .dish-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .dish-card { flex-direction: column; align-items: stretch; gap: 12px; }
             .dish-card .category-actions { align-self: flex-end; }
 
             #floating-footer {
@@ -361,12 +361,12 @@
             <div style="margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
                 <label id="header-domain-label" style="font-size: 0.9rem; font-weight: 800; color: var(--orange); text-transform: lowercase;"></label>
                 <label style="font-size: 0.6rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-top: 10px;">Menu Link</label>
-                <div style="display: flex; align-items: center; background: var(--input); padding: 12px 24px; border-radius: 16px; border: 1px solid var(--border); width: 100%; max-width: 400px; justify-content: center; margin-top: 5px; gap: 10px;">
-                    <div style="display: flex; align-items: center;">
-                        <span style="font-size: 0.95rem; color: var(--orange); font-weight: 900;">tragalero.com/menu.html?n=</span>
-                        <input type="text" id="slug-input" style="background:transparent; border:none; color:var(--orange); font-weight:900; font-size:0.95rem; padding:0; outline:none; width: auto; min-width: 50px;" oninput="updateSlug(this.value)">
+                <div class="menu-link-box" style="display: flex; align-items: center; background: var(--input); padding: 12px 24px; border-radius: 16px; border: 1px solid var(--border); width: 100%; max-width: 450px; justify-content: space-between; margin-top: 5px; gap: 10px;">
+                    <div style="display: flex; align-items: center; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden;">
+                        <span style="font-size: 0.95rem; color: var(--orange); font-weight: 900; white-space: nowrap; flex-shrink: 0;">tragalero.com/menu.html?n=</span>
+                        <input type="text" id="slug-input" style="background:transparent; border:none; color:var(--orange); font-weight:900; font-size:0.95rem; padding:0; outline:none; flex: 1; min-width: 30px; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" oninput="updateSlug(this.value)">
                     </div>
-                    <button class="copy-icon-btn" onclick="copySubdomain()" title="Copy Link">
+                    <button class="copy-icon-btn" onclick="copySubdomain()" title="Copy Link" style="flex-shrink: 0;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                     </button>
                 </div>
