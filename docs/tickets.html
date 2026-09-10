@@ -515,15 +515,10 @@
             const placeholder = document.getElementById('logo-placeholder');
             placeholder.innerHTML = '<div class="loader"></div>';
 
-            const fd = new FormData();
-            fd.append('file', file);
-            fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
-
             try {
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
-                const d = await res.json();
+                const uploadRes = await uploadToCloudinary(file);
                 const img = document.getElementById('logo-preview-img');
-                img.src = d.secure_url;
+                img.src = uploadRes.url;
                 img.classList.remove('hidden');
                 placeholder.classList.add('hidden');
                 updatePreview();
