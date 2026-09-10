@@ -236,9 +236,13 @@
     </div>
 </div>
 
+<!-- SUPABASE & AUTH INTEGRATION -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./assets/js/supabase_logic.js"></script>
+
 <!-- LOGICA DEL COMPONENTE Y SINCRONIZACION -->
 <script>
-    (function() {
+    (async function() {
         // Componente Tragalero (Mejorado para detectar clics con GloriaFood)
         if (!customElements.get('tragalero-button')) {
             class TragaleroButton extends HTMLElement {
@@ -357,6 +361,48 @@
             copyBtn.textContent = '¡Copiado!';
             setTimeout(() => copyBtn.textContent = 'Copiar Código', 2000);
         };
+
+        // Auto-populate from Supabase businesses table for logged-in user
+        if (typeof supabaseClient !== 'undefined') {
+            try {
+                const user = await getLoggedInUser();
+                if (user) {
+                    const { data: biz } = await supabaseClient
+                        .from('businesses')
+                        .select('*')
+                        .eq('owner_id', user.id)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (biz) {
+                        if (biz.cuid) inputs.cuid.value = biz.cuid;
+                        if (biz.ruid) inputs.ruid.value = biz.ruid;
+                        if (biz.order_bg_color) {
+                            inputs.o_bg.value = biz.order_bg_color;
+                            inputs.o_bg_t.value = biz.order_bg_color;
+                        }
+                        if (biz.order_text_color) {
+                            inputs.o_tx.value = biz.order_text_color;
+                            inputs.o_tx_t.value = biz.order_text_color;
+                        }
+                        if (biz.res_bg_color) {
+                            inputs.r_bg.value = biz.res_bg_color;
+                            inputs.r_bg_t.value = biz.res_bg_color;
+                        }
+                        if (biz.res_text_color) {
+                            inputs.r_tx.value = biz.res_text_color;
+                            inputs.r_tx_t.value = biz.res_text_color;
+                        }
+                        if (biz.has_reservation !== undefined && biz.has_reservation !== null) {
+                            inputs.has_res.checked = biz.has_reservation;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("Could not load business config in boton.html:", e);
+            }
+        }
 
         // Inicializar
         update();

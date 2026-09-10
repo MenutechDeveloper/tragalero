@@ -998,11 +998,20 @@
         };
 
         async function loadData() {
-            const [res, men] = await Promise.all([
+            const [res, men, biz] = await Promise.all([
                 supabase.from('menutech_restaurants').select('*').eq('user_id', activeId).maybeSingle(),
-                supabase.from('menutech_menus').select('*').eq('user_id', activeId).maybeSingle()
+                supabase.from('menutech_menus').select('*').eq('user_id', activeId).maybeSingle(),
+                supabase.from('businesses').select('*').eq('owner_id', activeId).order('created_at', { ascending: false }).limit(1).maybeSingle()
             ]);
-            window.restaurantData = res.data;
+
+            window.restaurantData = res.data || {};
+            if (biz.data) {
+                if (!window.restaurantData.name && biz.data.name) window.restaurantData.name = biz.data.name;
+                if (!window.restaurantData.logo_url && biz.data.logo_url) window.restaurantData.logo_url = biz.data.logo_url;
+                if (!window.restaurantData.address && biz.data.address_detail) window.restaurantData.address = biz.data.address_detail;
+                if (!window.restaurantData.phone && biz.data.social_media && biz.data.social_media.whatsapp) window.restaurantData.phone = biz.data.social_media.whatsapp;
+            }
+
             window.menuData = men.data;
 
             renderToolbox();
