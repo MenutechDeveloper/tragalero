@@ -209,7 +209,7 @@ async function renderUserMenu(containerId = 'authButtons') {
  * Supports images and videos
  */
 async function uploadToCloudinary(file) {
-    const cloudName = "dbbjxhvz5";
+    const cloudName = "lhqfovx5";
     const uploadPreset = "Tragalero";
     // Using 'auto' instead of 'image' to support video/image automatically
     const url = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;

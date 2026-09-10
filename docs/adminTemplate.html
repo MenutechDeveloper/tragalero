@@ -1664,20 +1664,16 @@
             if (!files.length) return;
 
             for (const file of files) {
-                const fd = new FormData();
-                fd.append('file', file);
-                fd.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
-
                 try {
-                    const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
-                    const d = await res.json();
+                    const uploadRes = await uploadToCloudinary(file);
+                    const secure_url = uploadRes.url;
 
-                    if (d.secure_url) {
+                    if (secure_url) {
                         if (type === 'gallery') {
-                            pageData.gallery.push(d.secure_url);
+                            pageData.gallery.push(secure_url);
                             renderGallery();
                         } else {
-                            pageData[type] = d.secure_url;
+                            pageData[type] = secure_url;
                             // Map type back to ID for preview update
                             const idMap = {
                                 logoImg: 'logo',
@@ -1693,7 +1689,7 @@
                             const preview = document.getElementById(`${id}-preview`);
                             const placeholder = document.getElementById(`${id}-placeholder`);
                             if (preview) {
-                                preview.src = window.optimizeCloudinaryUrl(d.secure_url, { width: 400 });
+                                preview.src = window.optimizeCloudinaryUrl(secure_url, { width: 400 });
                                 preview.classList.remove('hidden');
                                 if (placeholder) placeholder.classList.add('hidden');
                             }

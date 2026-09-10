@@ -5,7 +5,7 @@ EXPLICACIÓN Y SOLUCIÓN AL ERROR: "Error al subir imagen: cloud_name is disable
 ¿POR QUÉ OCURRE ESTE ERROR?
 --------------------------------------------------------------------------------
 El error "cloud_name is disabled" proviene directamente de la API de Cloudinary.
-Significa que el nombre de cuenta de Cloudinary (cloudName: "dbbjxhvz5") actualmente
+Significa que el nombre de cuenta de Cloudinary (cloudName: "lhqfovx5") actualmente
 configurado en la aplicación ha sido desactivado, suspendido o deshabilitado en
 los servidores de Cloudinary (por ejemplo, por inactividad o límite de uso de esa cuenta).
 
@@ -33,7 +33,7 @@ los servidores de Cloudinary (por ejemplo, por inactividad o límite de uso de e
 
      ```javascript
      async function uploadToCloudinary(file) {
-         const cloudName = "TU_NUEVO_CLOUD_NAME"; // Reemplaza "dbbjxhvz5" por tu cloud_name
+         const cloudName = "TU_NUEVO_CLOUD_NAME"; // Reemplaza "lhqfovx5" por tu cloud_name
          const uploadPreset = "Tragalero";         // Tu preset Unsigned
          ...
      ```

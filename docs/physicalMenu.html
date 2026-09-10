@@ -805,9 +805,11 @@
         }
 
         async function uploadAssetToCloudinary(file) {
+            const cloudName = "lhqfovx5";
+            const uploadPreset = "Tragalero";
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('upload_preset', MT_CONFIG.CLOUDINARY.UPLOAD_PRESET);
+            formData.append('upload_preset', uploadPreset);
 
             // Apply 500x500 transformation for textures as requested
             // Backgrounds might need more but user explicitly asked for 500x500 to save bandwidth
@@ -816,7 +818,7 @@
                 formData.append('transformation', 'w_500,h_500,c_limit');
             }
 
-            const res = await fetch(`https://api.cloudinary.com/v1_1/${MT_CONFIG.CLOUDINARY.CLOUD_NAME}/image/upload`, {
+            const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
                 method: 'POST',
                 body: formData
             });
