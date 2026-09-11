@@ -1,10 +1,10 @@
 /* Tragalero Chatbot CSS */
 .tragalero-chatbot-fab {
     position: fixed;
-    bottom: 15px;
-    right: 15px;
-    width: 110px;
-    height: 110px;
+    bottom: 25px;
+    right: 25px;
+    width: 130px;
+    height: 130px;
     background: transparent;
     border: none;
     box-shadow: none;
@@ -29,7 +29,7 @@
 
 .tragalero-chatbot-window {
     position: fixed;
-    bottom: 125px;
+    bottom: 150px;
     right: 25px;
     width: 380px;
     max-width: calc(100vw - 30px);
@@ -229,18 +229,18 @@ body.dark-mode .chatbot-input-container {
 /* Mobile Responsive Adjustments */
 @media (max-width: 768px) {
     .tragalero-chatbot-fab {
-        bottom: 10px;
-        right: 10px;
-        width: 90px;
-        height: 90px;
+        bottom: 15px;
+        right: 15px;
+        width: 105px;
+        height: 105px;
     }
     .tragalero-chatbot-window {
         right: 10px;
         left: 10px;
         width: auto;
         max-width: calc(100vw - 20px);
-        bottom: 105px;
-        height: calc(100vh - 120px);
+        bottom: 125px;
+        height: calc(100vh - 140px);
         max-height: 500px;
     }
 }
