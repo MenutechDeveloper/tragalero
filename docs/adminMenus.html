@@ -622,6 +622,20 @@
             document.getElementById('menu-editor').classList.add('hidden');
             document.getElementById('no-menu-container').classList.add('hidden');
 
+            // Query business details from businesses table for activeOwnerId
+            let bizData = null;
+            try {
+                const { data: biz } = await sb.from('businesses')
+                    .select('*')
+                    .eq('owner_id', activeOwnerId)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+                if (biz) bizData = biz;
+            } catch (err) {
+                console.warn("Could not query businesses for menu:", err);
+            }
+
             // Query tragalero_menus first, fallback to menutech_menus
             let { data } = await sb.from('tragalero_menus').select('*').eq('user_id', activeOwnerId).maybeSingle();
             if (!data) {
@@ -639,10 +653,30 @@
                 (menuData.config.toppings || []).forEach(tg => {
                     if (!tg.id) tg.id = 'tg-' + Math.random().toString(36).substr(2, 9);
                 });
+
+                // Attach business data if available
+                if (bizData) {
+                    if (bizData.name) menuData.restaurant_name = bizData.name;
+                    if (bizData.logo_url) menuData.logo_url = bizData.logo_url;
+                    if (bizData.cuid) menuData.cuid = bizData.cuid;
+                    if (bizData.ruid) menuData.ruid = bizData.ruid;
+                    if (bizData.address_detail) menuData.address = bizData.address_detail;
+                }
+
                 document.getElementById('menu-editor').classList.remove('hidden');
                 renderMenuEditor();
                 if (owner) updateSubdomainLink(owner);
             } else {
+                if (bizData) {
+                    if (bizData.name && !menuData.slug) {
+                        menuData.slug = bizData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                    }
+                    if (bizData.name) menuData.restaurant_name = bizData.name;
+                    if (bizData.logo_url) menuData.logo_url = bizData.logo_url;
+                    if (bizData.cuid) menuData.cuid = bizData.cuid;
+                    if (bizData.ruid) menuData.ruid = bizData.ruid;
+                    if (bizData.address_detail) menuData.address = bizData.address_detail;
+                }
                 document.getElementById('no-menu-container').classList.remove('hidden');
             }
         }
