@@ -22,6 +22,13 @@
         document.head.appendChild(link);
     }
 
+    if (!document.querySelector('script[src*="model-viewer"]')) {
+        const mvScript = document.createElement('script');
+        mvScript.type = 'module';
+        mvScript.src = 'https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js';
+        document.head.appendChild(mvScript);
+    }
+
     let attachedImageUrl = null;
     let isListening = false;
     let recognition = null;
@@ -48,10 +55,23 @@
         const container = document.createElement('div');
         container.id = 'tragalero-chatbot-container';
         container.innerHTML = `
-            <!-- Floating Action Button -->
-            <button class="tragalero-chatbot-fab" id="chatbot-fab-btn" title="Asistente IA Tragalero">
-                <img src="./assets/img/tragalero.png" alt="Tragalero" class="chatbot-fab-logo">
-            </button>
+            <!-- Floating Action Button with 3D GLTF Model -->
+            <div class="tragalero-chatbot-fab" id="chatbot-fab-btn" title="Asistente IA Tragalero">
+                <model-viewer
+                    src="./assets/cs.gltf"
+                    alt="Asistente IA Tragalero 3D"
+                    camera-controls
+                    disable-zoom
+                    disable-pan
+                    interaction-prompt="none"
+                    shadow-intensity="1"
+                    exposure="1"
+                    camera-orbit="0deg 75deg 105%"
+                    field-of-view="30deg"
+                    loading="eager"
+                    style="width: 100%; height: 100%; background: transparent; --poster-color: transparent; outline: none; cursor: grab;">
+                </model-viewer>
+            </div>
 
             <!-- Chatbot Window Drawer -->
             <div class="tragalero-chatbot-window" id="chatbot-window">
@@ -111,7 +131,20 @@
         const micBtn = document.getElementById('chatbot-mic-btn');
         const removeAttachBtn = document.getElementById('remove-attachment-btn');
 
-        fab.onclick = () => win.classList.toggle('open');
+        let pointerDownX = 0;
+        let pointerDownY = 0;
+
+        fab.addEventListener('pointerdown', (e) => {
+            pointerDownX = e.clientX;
+            pointerDownY = e.clientY;
+        });
+
+        fab.addEventListener('click', (e) => {
+            const dist = Math.hypot(e.clientX - pointerDownX, e.clientY - pointerDownY);
+            if (dist < 8) {
+                win.classList.toggle('open');
+            }
+        });
         closeBtn.onclick = () => win.classList.remove('open');
 
         sendBtn.onclick = () => handleSendMessage();

@@ -1,46 +1,35 @@
 /* Tragalero Chatbot CSS */
 .tragalero-chatbot-fab {
     position: fixed;
-    bottom: 25px;
-    right: 25px;
-    height: 52px;
-    padding: 0 24px;
-    border-radius: 50px;
-    background: linear-gradient(135deg, #ff9533 0%, #e67e22 100%);
-    color: #ffffff;
+    bottom: 15px;
+    right: 15px;
+    width: 110px;
+    height: 110px;
+    background: transparent;
     border: none;
-    box-shadow: 0 8px 25px rgba(255, 149, 51, 0.4);
-    cursor: pointer;
+    box-shadow: none;
+    cursor: grab;
     z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
-    animation: chatbotPulse 2.5s infinite;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
 }
 
-.chatbot-fab-logo {
-    height: 26px;
-    width: auto;
-    object-fit: contain;
-    display: block;
-    pointer-events: none;
+.tragalero-chatbot-fab:active {
+    cursor: grabbing;
 }
 
 .tragalero-chatbot-fab:hover {
-    transform: scale(1.06) translateY(-3px);
-    box-shadow: 0 12px 30px rgba(255, 149, 51, 0.6);
-}
-
-@keyframes chatbotPulse {
-    0% { box-shadow: 0 0 0 0 rgba(255, 149, 51, 0.6); }
-    70% { box-shadow: 0 0 0 15px rgba(255, 149, 51, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 149, 51, 0); }
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 .tragalero-chatbot-window {
     position: fixed;
-    bottom: 98px;
+    bottom: 125px;
     right: 25px;
     width: 380px;
     max-width: calc(100vw - 30px);
@@ -240,21 +229,18 @@ body.dark-mode .chatbot-input-container {
 /* Mobile Responsive Adjustments */
 @media (max-width: 768px) {
     .tragalero-chatbot-fab {
-        bottom: 15px;
-        right: 15px;
-        height: 44px;
-        padding: 0 16px;
-    }
-    .chatbot-fab-logo {
-        height: 20px;
+        bottom: 10px;
+        right: 10px;
+        width: 90px;
+        height: 90px;
     }
     .tragalero-chatbot-window {
         right: 10px;
         left: 10px;
         width: auto;
         max-width: calc(100vw - 20px);
-        bottom: 70px;
-        height: calc(100vh - 90px);
+        bottom: 105px;
+        height: calc(100vh - 120px);
         max-height: 500px;
     }
 }
