@@ -107,7 +107,7 @@
             box-shadow: 0 12px 30px rgba(255, 149, 51, 0.3);
             border: 2px solid #ff9533;
             z-index: 10;
-            max-width: 260px;
+            max-width: 280px;
             text-align: center;
             animation: floatBubble 3.5s ease-in-out infinite;
         }
@@ -152,13 +152,73 @@
 
         /* Form & List Columns */
         .side-panel-left {
-            width: 320px;
-            min-width: 280px;
+            width: 360px;
+            min-width: 320px;
         }
 
         .side-panel-right {
             width: 380px;
-            min-width: 300px;
+            min-width: 320px;
+        }
+
+        .method-tabs {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 149, 51, 0.2);
+        }
+
+        .method-tabs::-webkit-scrollbar {
+            height: 3px;
+        }
+
+        .method-tabs::-webkit-scrollbar-thumb {
+            background: rgba(255, 149, 51, 0.4);
+            border-radius: 10px;
+        }
+
+        .method-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: inherit;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.76rem;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .method-btn:hover {
+            border-color: #ff9533;
+            background: rgba(255, 149, 51, 0.15);
+        }
+
+        .method-btn.active {
+            background: #ff9533;
+            color: #ffffff;
+            border-color: #ff9533;
+            font-weight: 600;
+        }
+
+        .file-drop-zone {
+            border: 2px dashed rgba(255, 149, 51, 0.4);
+            border-radius: 16px;
+            padding: 20px 10px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(255, 149, 51, 0.03);
+            transition: all 0.2s ease;
+        }
+
+        .file-drop-zone:hover {
+            border-color: #ff9533;
+            background: rgba(255, 149, 51, 0.1);
         }
 
         .knowledge-list {
@@ -193,13 +253,6 @@
         .knowledge-item:hover {
             border-color: #ff9533;
             transform: translateY(-2px);
-        }
-
-        .badge-cat {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            padding: 4px 8px;
-            border-radius: 8px;
         }
 
         /* Responsive adjustments for mobile without vertical scroll */
@@ -249,44 +302,90 @@
         </div>
     </div>
 
-    <!-- Main Workspace (Fit to screen) -->
+    <!-- Main Workspace (Fit to screen 100vh) -->
     <div class="learn-container">
-        <!-- Left Panel: Input Knowledge Form -->
+        <!-- Left Panel: Multi-Method Data Ingestion Form -->
         <div class="panel-card side-panel-left">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <h6 class="fw-bold mb-0 text-warning"><i class="bi bi-plus-circle me-1"></i> Añadir Conocimiento</h6>
-                <span class="badge bg-warning text-dark rounded-pill">Entrenamiento</span>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <h6 class="fw-bold mb-0 text-warning"><i class="bi bi-plus-circle me-1"></i> Enseñar a la IA</h6>
+                <span class="badge bg-warning text-dark rounded-pill">Métodos</span>
+            </div>
+
+            <!-- Method Selector Tabs -->
+            <div class="method-tabs">
+                <button class="method-btn active" onclick="switchMethod('text')" id="tab-text"><i class="bi bi-pencil-square"></i> Texto Libre</button>
+                <button class="method-btn" onclick="switchMethod('sheet')" id="tab-sheet"><i class="bi bi-file-earmark-spreadsheet"></i> Google Sheet</button>
+                <button class="method-btn" onclick="switchMethod('document')" id="tab-document"><i class="bi bi-file-earmark-arrow-up"></i> Archivo</button>
+                <button class="method-btn" onclick="switchMethod('url')" id="tab-url"><i class="bi bi-globe"></i> Web / URL</button>
+                <button class="method-btn" onclick="switchMethod('manual')" id="tab-manual"><i class="bi bi-journal-text"></i> Manual</button>
             </div>
 
             <form id="knowledgeForm" class="d-flex flex-column flex-grow-1 gap-2">
-                <input type="hidden" id="knowledgeId" value="">
+                <input type="hidden" id="sourceType" value="text">
 
-                <div>
-                    <label class="form-label small text-muted mb-1">Categoría / Tipo</label>
-                    <select id="knowledgeCategory" class="form-select form-select-sm rounded-3">
-                        <option value="faq">Pregunta Frecuente (FAQ)</option>
-                        <option value="business_info">Información de Negocio</option>
-                        <option value="service">Servicios u Ofrecimientos</option>
-                        <option value="policy">Políticas y Garantías</option>
-                    </select>
+                <!-- 1. TEXTO LIBRE / NOTA -->
+                <div id="method-text-section" class="method-section flex-grow-1 d-flex flex-column gap-2">
+                    <div>
+                        <label class="form-label small text-muted mb-1">Título o Tema</label>
+                        <input type="text" id="textTitle" class="form-control form-control-sm rounded-3" placeholder="Ej: Política de Envíos o Garantía de Satisfacción">
+                    </div>
+                    <div class="flex-grow-1 d-flex flex-column">
+                        <label class="form-label small text-muted mb-1">Información o Detalle para la IA</label>
+                        <textarea id="textContent" class="form-control form-control-sm rounded-3 flex-grow-1" placeholder="Escribe cualquier dato que quieras que la IA recuerde..." style="resize: none;"></textarea>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="form-label small text-muted mb-1">Pregunta / Título del Tema</label>
-                    <input type="text" id="knowledgeTitle" class="form-control form-control-sm rounded-3" placeholder="Ej: ¿Tienen servicio a domicilio?" required>
+                <!-- 2. GOOGLE SHEETS / CSV -->
+                <div id="method-sheet-section" class="method-section d-none flex-grow-1 d-flex flex-column gap-2">
+                    <div>
+                        <label class="form-label small text-muted mb-1">Nombre de la Hoja de Cálculo</label>
+                        <input type="text" id="sheetTitle" class="form-control form-control-sm rounded-3" placeholder="Ej: Inventario o Lista de Precios 2025">
+                    </div>
+                    <div>
+                        <label class="form-label small text-muted mb-1">URL Pública de Google Sheet (CSV)</label>
+                        <input type="url" id="sheetUrl" class="form-control form-control-sm rounded-3" placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv">
+                        <div class="form-text small opacity-75" style="font-size: 0.72rem;">Publica tu Google Sheet en la web en formato CSV para importar filas automáticamente.</div>
+                    </div>
                 </div>
 
-                <div class="flex-grow-1 d-flex flex-column">
-                    <label class="form-label small text-muted mb-1">Respuesta / Detalle para la IA</label>
-                    <textarea id="knowledgeContent" class="form-control form-control-sm rounded-3 flex-grow-1" placeholder="Ej: Sí, entregamos en un radio de 5km sin costo en compras mayores a $200." style="resize: none;" required></textarea>
+                <!-- 3. SUBIR ARCHIVO (TXT, CSV, MD, JSON) -->
+                <div id="method-document-section" class="method-section d-none flex-grow-1 d-flex flex-column gap-2">
+                    <div class="file-drop-zone" onclick="document.getElementById('fileInput').click()">
+                        <i class="bi bi-cloud-arrow-up fs-2 text-warning d-block mb-1"></i>
+                        <span class="small fw-bold">Selecciona o arrastra un archivo</span>
+                        <div class="small opacity-50" style="font-size: 0.72rem;">Soporta .txt, .csv, .md, .json, .pdf (texto)</div>
+                        <input type="file" id="fileInput" class="d-none" accept=".txt,.csv,.md,.json,.text">
+                    </div>
+                    <div id="filePreview" class="small text-warning fw-bold text-truncate d-none"></div>
+                </div>
+
+                <!-- 4. EXTRAER DESDE WEB / URL -->
+                <div id="method-url-section" class="method-section d-none flex-grow-1 d-flex flex-column gap-2">
+                    <div>
+                        <label class="form-label small text-muted mb-1">Título / Nombre del Sitio</label>
+                        <input type="text" id="urlTitle" class="form-control form-control-sm rounded-3" placeholder="Ej: Página de Términos o Catálogo Web">
+                    </div>
+                    <div>
+                        <label class="form-label small text-muted mb-1">Enlace / URL de la página web</label>
+                        <input type="url" id="webUrl" class="form-control form-control-sm rounded-3" placeholder="https://minegocio.com/nosotros">
+                    </div>
+                </div>
+
+                <!-- 5. MANUAL EXTENSO DE EMPRESA -->
+                <div id="method-manual-section" class="method-section d-none flex-grow-1 d-flex flex-column gap-2">
+                    <div>
+                        <label class="form-label small text-muted mb-1">Título del Manual</label>
+                        <input type="text" id="manualTitle" class="form-control form-control-sm rounded-3" placeholder="Ej: Manual de Operaciones y Atención al Cliente">
+                    </div>
+                    <div class="flex-grow-1 d-flex flex-column">
+                        <label class="form-label small text-muted mb-1">Texto Completo del Manual</label>
+                        <textarea id="manualContent" class="form-control form-control-sm rounded-3 flex-grow-1" placeholder="Pega el manual extenso o procedimientos aquí..." style="resize: none;"></textarea>
+                    </div>
                 </div>
 
                 <div class="d-flex gap-2 mt-2">
                     <button type="submit" id="saveKnowledgeBtn" class="btn btn-warning btn-sm w-100 fw-bold rounded-pill">
                         <i class="bi bi-lightbulb-fill me-1"></i> Enseñar a la IA
-                    </button>
-                    <button type="button" id="cancelKnowledgeBtn" class="btn btn-outline-secondary btn-sm d-none rounded-pill" onclick="resetForm()">
-                        Cancelar
                     </button>
                 </div>
             </form>
@@ -315,20 +414,20 @@
             </model-viewer>
         </div>
 
-        <!-- Right Panel: Knowledge Base List -->
+        <!-- Right Panel: Knowledge Memory List -->
         <div class="panel-card side-panel-right">
             <div class="d-flex align-items-center justify-content-between mb-2">
-                <h6 class="fw-bold mb-0 text-warning"><i class="bi bi-journal-check me-1"></i> Base de Conocimiento</h6>
+                <h6 class="fw-bold mb-0 text-warning"><i class="bi bi-journal-check me-1"></i> Memoria Aprendida</h6>
                 <span class="badge bg-secondary rounded-pill" id="knowledgeCount">0 datos</span>
             </div>
 
             <div class="mb-2">
-                <input type="text" id="searchKnowledge" class="form-control form-control-sm rounded-pill" placeholder="Filtrar temas..." onkeyup="filterKnowledge()">
+                <input type="text" id="searchKnowledge" class="form-control form-control-sm rounded-pill" placeholder="Filtrar datos aprendidos..." onkeyup="filterKnowledge()">
             </div>
 
             <div class="knowledge-list" id="knowledgeList">
                 <div class="text-center text-muted p-4">
-                    <i class="bi bi-arrow-repeat spin me-2"></i> Cargando conocimientos de la IA...
+                    <i class="bi bi-arrow-repeat spin me-2"></i> Cargando memoria de la IA...
                 </div>
             </div>
         </div>
@@ -344,6 +443,8 @@
         let currentUser = null;
         let activeUserId = null;
         let allKnowledge = [];
+        let currentFileText = "";
+        let currentFileName = "";
 
         document.addEventListener('DOMContentLoaded', async () => {
             await renderUserMenu('authButtons');
@@ -363,7 +464,35 @@
             loadKnowledge();
 
             document.getElementById('knowledgeForm').addEventListener('submit', handleSaveKnowledge);
+            setupFileHandler();
         });
+
+        function switchMethod(method) {
+            document.getElementById('sourceType').value = method;
+            document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${method}`).classList.add('active');
+
+            document.querySelectorAll('.method-section').forEach(s => s.classList.add('d-none'));
+            document.getElementById(`method-${method}-section`).classList.remove('d-none');
+        }
+
+        function setupFileHandler() {
+            const input = document.getElementById('fileInput');
+            input.onchange = (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    currentFileName = file.name;
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        currentFileText = evt.target.result;
+                        const prev = document.getElementById('filePreview');
+                        prev.textContent = `📄 Archivo cargado: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+                        prev.classList.remove('d-none');
+                    };
+                    reader.readAsText(file);
+                }
+            };
+        }
 
         async function loadKnowledge() {
             const listEl = document.getElementById('knowledgeList');
@@ -380,7 +509,7 @@
                 if (error) throw error;
 
                 allKnowledge = data || [];
-                countEl.textContent = `${allKnowledge.length} tema${allKnowledge.length === 1 ? '' : 's'}`;
+                countEl.textContent = `${allKnowledge.length} dato${allKnowledge.length === 1 ? '' : 's'}`;
                 renderKnowledgeList(allKnowledge);
             } catch (err) {
                 console.error("Error al cargar conocimiento:", err);
@@ -388,13 +517,23 @@
             }
         }
 
+        function getSourceIcon(type) {
+            switch(type) {
+                case 'sheet': return 'bi-file-earmark-spreadsheet text-success';
+                case 'document': return 'bi-file-earmark-arrow-up text-info';
+                case 'url': return 'bi-globe text-primary';
+                case 'manual': return 'bi-journal-text text-warning';
+                default: return 'bi-pencil-square text-warning';
+            }
+        }
+
         function renderKnowledgeList(items) {
             const listEl = document.getElementById('knowledgeList');
-            if (items.length === 0) {
+            if (!items || items.length === 0) {
                 listEl.innerHTML = `
                     <div class="text-center text-muted p-4">
                         <i class="bi bi-lightbulb fs-2 d-block mb-2 text-warning opacity-50"></i>
-                        Aún no le has enseñado datos específicos a tu IA.<br>¡Escribe tu primera FAQ a la izquierda!
+                        Aún no le has enseñado datos a tu IA.<br>¡Elige una opción a la izquierda para comenzar!
                     </div>
                 `;
                 return;
@@ -403,11 +542,10 @@
             listEl.innerHTML = items.map(item => `
                 <div class="knowledge-item">
                     <div class="d-flex align-items-center justify-content-between mb-1">
-                        <span class="badge bg-warning text-dark badge-cat">${escapeHtml(item.category || 'faq')}</span>
-                        <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-link text-warning p-0 me-2" onclick="editKnowledge(${item.id})" title="Editar"><i class="bi bi-pencil-square"></i></button>
-                            <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteKnowledge(${item.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
-                        </div>
+                        <span class="small fw-bold d-flex align-items-center gap-1">
+                            <i class="bi ${getSourceIcon(item.source_type)}"></i> ${escapeHtml(item.source_type || 'texto').toUpperCase()}
+                        </span>
+                        <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteKnowledge(${item.id})" title="Eliminar de memoria"><i class="bi bi-trash"></i></button>
                     </div>
                     <div class="fw-bold small text-truncate" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
                     <div class="small opacity-75 text-break mt-1" style="font-size: 0.8rem; max-height: 60px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">${escapeHtml(item.content)}</div>
@@ -423,8 +561,7 @@
             }
             const filtered = allKnowledge.filter(k =>
                 k.title.toLowerCase().includes(query) ||
-                k.content.toLowerCase().includes(query) ||
-                k.category.toLowerCase().includes(query)
+                k.content.toLowerCase().includes(query)
             );
             renderKnowledgeList(filtered);
         }
@@ -432,37 +569,58 @@
         async function handleSaveKnowledge(e) {
             e.preventDefault();
 
-            const id = document.getElementById('knowledgeId').value;
-            const category = document.getElementById('knowledgeCategory').value;
-            const title = document.getElementById('knowledgeTitle').value.trim();
-            const content = document.getElementById('knowledgeContent').value.trim();
+            const method = document.getElementById('sourceType').value;
+            let title = "";
+            let content = "";
 
-            if (!title || !content) return;
+            if (method === 'text') {
+                title = document.getElementById('textTitle').value.trim() || "Nota de Negocio";
+                content = document.getElementById('textContent').value.trim();
+            } else if (method === 'sheet') {
+                title = document.getElementById('sheetTitle').value.trim() || "Google Sheet";
+                const url = document.getElementById('sheetUrl').value.trim();
+                if (url) {
+                    try {
+                        const res = await fetch(url);
+                        content = await res.text();
+                    } catch (err) {
+                        content = `Hoja vinculada: ${url}`;
+                    }
+                }
+            } else if (method === 'document') {
+                title = currentFileName || "Documento Adjunto";
+                content = currentFileText;
+            } else if (method === 'url') {
+                title = document.getElementById('urlTitle').value.trim() || "Página Web";
+                const url = document.getElementById('webUrl').value.trim();
+                content = `Sitio web importado: ${url}`;
+            } else if (method === 'manual') {
+                title = document.getElementById('manualTitle').value.trim() || "Manual de Empresa";
+                content = document.getElementById('manualContent').value.trim();
+            }
+
+            if (!content) {
+                alert("Por favor ingresa o sube información válida para que la IA aprenda.");
+                return;
+            }
 
             const saveBtn = document.getElementById('saveKnowledgeBtn');
             saveBtn.disabled = true;
-            saveBtn.innerHTML = `<i class="bi bi-arrow-repeat spin me-1"></i> Guardando...`;
+            saveBtn.innerHTML = `<i class="bi bi-arrow-repeat spin me-1"></i> Aprendiendo...`;
 
             try {
                 const sb = window.supabaseClient || supabaseClient;
                 const payload = {
                     user_id: activeUserId,
-                    category,
-                    title,
-                    content,
+                    source_type: method,
+                    category: 'general',
+                    title: title,
+                    content: content,
                     updated_at: new Date().toISOString()
                 };
 
-                let err = null;
-                if (id) {
-                    const res = await sb.from('tragalero_knowledge').update(payload).eq('id', id);
-                    err = res.error;
-                } else {
-                    const res = await sb.from('tragalero_knowledge').insert(payload);
-                    err = res.error;
-                }
-
-                if (err) throw err;
+                const { error } = await sb.from('tragalero_knowledge').insert(payload);
+                if (error) throw error;
 
                 // Animate speech bubble confirmation
                 const bubble = document.getElementById('thoughtBubble');
@@ -481,21 +639,8 @@
             }
         }
 
-        function editKnowledge(id) {
-            const item = allKnowledge.find(k => k.id === id);
-            if (!item) return;
-
-            document.getElementById('knowledgeId').value = item.id;
-            document.getElementById('knowledgeCategory').value = item.category || 'faq';
-            document.getElementById('knowledgeTitle').value = item.title;
-            document.getElementById('knowledgeContent').value = item.content;
-
-            document.getElementById('saveKnowledgeBtn').innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Actualizar Conocimiento`;
-            document.getElementById('cancelKnowledgeBtn').classList.remove('d-none');
-        }
-
         async function deleteKnowledge(id) {
-            if (!confirm("¿Deseas eliminar este conocimiento de la memoria de la IA?")) return;
+            if (!confirm("¿Deseas eliminar este dato de la memoria de la IA?")) return;
 
             try {
                 const sb = window.supabaseClient || supabaseClient;
@@ -508,11 +653,18 @@
         }
 
         function resetForm() {
-            document.getElementById('knowledgeId').value = '';
-            document.getElementById('knowledgeTitle').value = '';
-            document.getElementById('knowledgeContent').value = '';
-            document.getElementById('saveKnowledgeBtn').innerHTML = `<i class="bi bi-lightbulb-fill me-1"></i> Enseñar a la IA`;
-            document.getElementById('cancelKnowledgeBtn').classList.add('d-none');
+            document.getElementById('textTitle').value = '';
+            document.getElementById('textContent').value = '';
+            document.getElementById('sheetTitle').value = '';
+            document.getElementById('sheetUrl').value = '';
+            document.getElementById('urlTitle').value = '';
+            document.getElementById('webUrl').value = '';
+            document.getElementById('manualTitle').value = '';
+            document.getElementById('manualContent').value = '';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('filePreview').classList.add('d-none');
+            currentFileText = '';
+            currentFileName = '';
         }
     </script>
 </body>
