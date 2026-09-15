@@ -17,17 +17,29 @@
                 0,
                 1,
                 2,
-                3
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
             ]
         }
     ],
     "nodes" : [
         {
             "mesh" : 0,
-            "name" : "Mesh_0"
+            "name" : "Mesh_0",
+            "translation" : [
+                -0.3153737783432007,
+                0,
+                0
+            ]
         },
         {
-            "name" : "Light",
+            "name" : "Light.001",
             "rotation" : [
                 0.16907575726509094,
                 0.7558803558349609,
@@ -41,7 +53,7 @@
             ]
         },
         {
-            "name" : "Camera",
+            "name" : "Camera.001",
             "rotation" : [
                 0.483536034822464,
                 0.33687159419059753,
@@ -72,6 +84,110 @@
                 -0.797881543636322,
                 0.24732576310634613
             ]
+        },
+        {
+            "name" : "Light.002",
+            "rotation" : [
+                0.16907575726509094,
+                0.7558803558349609,
+                -0.27217137813568115,
+                0.570947527885437
+            ],
+            "translation" : [
+                4.076245307922363,
+                5.903861999511719,
+                -1.0054539442062378
+            ]
+        },
+        {
+            "name" : "Camera.002",
+            "rotation" : [
+                0.483536034822464,
+                0.33687159419059753,
+                -0.20870360732078552,
+                0.7804827094078064
+            ],
+            "translation" : [
+                7.358891487121582,
+                4.958309173583984,
+                6.925790786743164
+            ]
+        },
+        {
+            "name" : "Light.003",
+            "rotation" : [
+                0.16907575726509094,
+                0.7558803558349609,
+                -0.27217137813568115,
+                0.570947527885437
+            ],
+            "translation" : [
+                4.076245307922363,
+                5.903861999511719,
+                -1.0054539442062378
+            ]
+        },
+        {
+            "name" : "Camera.003",
+            "rotation" : [
+                0.483536034822464,
+                0.33687159419059753,
+                -0.20870360732078552,
+                0.7804827094078064
+            ],
+            "translation" : [
+                7.358891487121582,
+                4.958309173583984,
+                6.925790786743164
+            ]
+        },
+        {
+            "name" : "Light",
+            "rotation" : [
+                0.16907575726509094,
+                0.7558803558349609,
+                -0.27217137813568115,
+                0.570947527885437
+            ],
+            "translation" : [
+                4.076245307922363,
+                5.903861999511719,
+                -1.0054539442062378
+            ]
+        },
+        {
+            "name" : "Camera",
+            "rotation" : [
+                0.483536034822464,
+                0.33687159419059753,
+                -0.20870360732078552,
+                0.7804827094078064
+            ],
+            "translation" : [
+                7.358891487121582,
+                4.958309173583984,
+                6.925790786743164
+            ]
+        },
+        {
+            "mesh" : 1,
+            "name" : "Plane",
+            "rotation" : [
+                0.6842755079269409,
+                0.17823320627212524,
+                -0.17823322117328644,
+                0.6842754483222961
+            ],
+            "scale" : [
+                0.07630150020122528,
+                0.041208378970623016,
+                0.04120837524533272
+            ],
+            "translation" : [
+                0.4859895408153534,
+                -0.7226914763450623,
+                0.20315878093242645
+            ]
         }
     ],
     "materials" : [
@@ -88,6 +204,17 @@
                 "metallicRoughnessTexture" : {
                     "index" : 2
                 }
+            }
+        },
+        {
+            "doubleSided" : true,
+            "name" : "Logo",
+            "pbrMetallicRoughness" : {
+                "baseColorTexture" : {
+                    "index" : 3
+                },
+                "metallicFactor" : 0,
+                "roughnessFactor" : 0.5
             }
         }
     ],
@@ -116,6 +243,31 @@
                     "mode" : 4
                 }
             ]
+        },
+        {
+            "name" : "Plane.001",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "POSITION" : 4,
+                        "NORMAL" : 5,
+                        "TEXCOORD_0" : 6
+                    },
+                    "extensions" : {
+                        "KHR_draco_mesh_compression" : {
+                            "bufferView" : 1,
+                            "attributes" : {
+                                "POSITION" : 0,
+                                "NORMAL" : 1,
+                                "TEXCOORD_0" : 2
+                            }
+                        }
+                    },
+                    "indices" : 7,
+                    "material" : 1,
+                    "mode" : 4
+                }
+            ]
         }
     ],
     "textures" : [
@@ -130,33 +282,42 @@
         {
             "sampler" : 0,
             "source" : 2
+        },
+        {
+            "sampler" : 0,
+            "source" : 3
         }
     ],
     "images" : [
         {
             "mimeType" : "image/jpeg",
-            "name" : "Image_2",
+            "name" : "cs2",
             "uri" : "cs2.jpg"
         },
         {
             "mimeType" : "image/jpeg",
-            "name" : "Image_0",
+            "name" : "cs0",
             "uri" : "cs0.jpg"
         },
         {
             "mimeType" : "image/jpeg",
-            "name" : "Image_1",
+            "name" : "cs1",
             "uri" : "cs1.jpg"
+        },
+        {
+            "mimeType" : "image/png",
+            "name" : "tragalero_amarillo",
+            "uri" : "tragalero_amarillo.png"
         }
     ],
     "accessors" : [
         {
             "componentType" : 5126,
-            "count" : 1006854,
+            "count" : 1026914,
             "max" : [
-                0.9507899880409241,
-                0.8630959987640381,
-                0.5289149880409241
+                0.9507899284362793,
+                0.8630464673042297,
+                0.5288885235786438
             ],
             "min" : [
                 -0.9513390064239502,
@@ -167,25 +328,60 @@
         },
         {
             "componentType" : 5126,
-            "count" : 1006854,
+            "count" : 1026914,
             "type" : "VEC3"
         },
         {
             "componentType" : 5126,
-            "count" : 1006854,
+            "count" : 1026914,
             "type" : "VEC2"
         },
         {
             "componentType" : 5125,
             "count" : 5835060,
             "type" : "SCALAR"
+        },
+        {
+            "componentType" : 5126,
+            "count" : 4,
+            "max" : [
+                1,
+                0,
+                1
+            ],
+            "min" : [
+                -1,
+                0,
+                -1
+            ],
+            "type" : "VEC3"
+        },
+        {
+            "componentType" : 5126,
+            "count" : 4,
+            "type" : "VEC3"
+        },
+        {
+            "componentType" : 5126,
+            "count" : 4,
+            "type" : "VEC2"
+        },
+        {
+            "componentType" : 5123,
+            "count" : 6,
+            "type" : "SCALAR"
         }
     ],
     "bufferViews" : [
         {
             "buffer" : 0,
-            "byteLength" : 4889456,
+            "byteLength" : 4997499,
             "byteOffset" : 0
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 166,
+            "byteOffset" : 4997500
         }
     ],
     "samplers" : [
@@ -196,7 +392,7 @@
     ],
     "buffers" : [
         {
-            "byteLength" : 4889456,
+            "byteLength" : 4997668,
             "uri" : "cs.bin"
         }
     ]
