@@ -1,7 +1,8 @@
 /**
  * Tragalero AI Chatbot Widget
- * Integrates OpenAI Assistant, Speech Recognition (Voice tool), Cloudinary image attachments,
- * dynamic dish price updates in tragalero_menus, and 5-day lead time task creation in tragalero_tasks.
+ * Integrates OpenAI Assistant / Gemini, Speech Recognition (Voice tool), Speech Synthesis (Voice output),
+ * Drag-and-Drop Cloudinary image attachments, prominent 3D GLTF character, dynamic dish price updates in tragalero_menus,
+ * business knowledge learning from tragalero_knowledge, and 5-day lead time task creation in tragalero_tasks.
  */
 
 (function () {
@@ -33,6 +34,7 @@
     let isListening = false;
     let recognition = null;
     let currentUser = null;
+    let isTtsEnabled = localStorage.getItem('tragalero_chatbot_tts') !== 'false';
 
     // 2. Build DOM elements
     async function startChatbot() {
@@ -86,13 +88,40 @@
                             <div class="small opacity-75" style="font-size: 0.72rem;"><i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i>En línea</div>
                         </div>
                     </div>
-                    <button class="chatbot-close-btn" id="chatbot-close-btn"><i class="bi bi-x-lg"></i></button>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="chatbot-icon-btn ${isTtsEnabled ? 'active' : ''}" id="chatbot-tts-btn" title="${isTtsEnabled ? 'Voz activada (Clic para desactivar)' : 'Voz desactivada (Clic para activar)'}">
+                            <i class="bi ${isTtsEnabled ? 'bi-volume-up-fill' : 'bi-volume-mute-fill'}"></i>
+                        </button>
+                        <button class="chatbot-close-btn" id="chatbot-close-btn"><i class="bi bi-x-lg"></i></button>
+                    </div>
+                </div>
+
+                <!-- Prominent Character 3D Hero Stage inside Chat -->
+                <div class="chatbot-hero-stage" id="chatbot-hero-stage">
+                    <model-viewer
+                        src="./assets/cs.gltf"
+                        alt="Asistente IA Avatar 3D"
+                        camera-controls
+                        auto-rotate
+                        disable-zoom
+                        disable-pan
+                        interaction-prompt="none"
+                        shadow-intensity="1"
+                        exposure="1"
+                        camera-orbit="0deg 75deg 105%"
+                        field-of-view="28deg"
+                        loading="eager"
+                        style="width: 100%; height: 100%; background: transparent; --poster-color: transparent; outline: none;">
+                    </model-viewer>
+                    <div class="speaking-badge">
+                        <i class="bi bi-soundwave animate-pulse"></i> Hablando...
+                    </div>
                 </div>
 
                 <!-- Messages -->
                 <div class="chatbot-messages" id="chatbot-messages">
                     <div class="chat-bubble bot">
-                        ¡Hola! Soy tu Asistente IA de Tragalero. ¿En qué te puedo colaborar hoy?
+                        ¡Hola! Soy tu Asistente IA de Tragalero. ¿En qué te puedo colaborar hoy? Puedes hablarme, escribirme o arrastrar imágenes.
                     </div>
                 </div>
 
@@ -108,7 +137,7 @@
                         <i class="bi bi-paperclip"></i>
                         <input type="file" id="chatbot-file-input" accept="image/*" class="hidden">
                     </label>
-                    <button class="chatbot-action-btn" id="chatbot-mic-btn" title="Usar Voz">
+                    <button class="chatbot-action-btn" id="chatbot-mic-btn" title="Usar Voz para Hablar">
                         <i class="bi bi-mic-fill"></i>
                     </button>
                     <input type="text" id="chatbot-text-input" class="chatbot-input" placeholder="Escribe o habla tu orden...">
@@ -129,6 +158,7 @@
         const textInput = document.getElementById('chatbot-text-input');
         const fileInput = document.getElementById('chatbot-file-input');
         const micBtn = document.getElementById('chatbot-mic-btn');
+        const ttsBtn = document.getElementById('chatbot-tts-btn');
         const removeAttachBtn = document.getElementById('remove-attachment-btn');
 
         let pointerDownX = 0;
@@ -147,6 +177,19 @@
         });
         closeBtn.onclick = () => win.classList.remove('open');
 
+        ttsBtn.onclick = () => {
+            isTtsEnabled = !isTtsEnabled;
+            localStorage.setItem('tragalero_chatbot_tts', isTtsEnabled ? 'true' : 'false');
+            ttsBtn.className = `chatbot-icon-btn ${isTtsEnabled ? 'active' : ''}`;
+            ttsBtn.title = isTtsEnabled ? 'Voz activada (Clic para desactivar)' : 'Voz desactivada (Clic para activar)';
+            ttsBtn.innerHTML = `<i class="bi ${isTtsEnabled ? 'bi-volume-up-fill' : 'bi-volume-mute-fill'}"></i>`;
+            if (!isTtsEnabled && window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+                const heroStage = document.getElementById('chatbot-hero-stage');
+                if (heroStage) heroStage.classList.remove('speaking');
+            }
+        };
+
         sendBtn.onclick = () => handleSendMessage();
         textInput.onkeypress = (e) => {
             if (e.key === 'Enter') handleSendMessage();
@@ -154,16 +197,7 @@
 
         fileInput.onchange = async (e) => {
             if (e.target.files && e.target.files[0]) {
-                const file = e.target.files[0];
-                try {
-                    addBotMessage("Subiendo imagen adjunta...");
-                    const upload = await uploadToCloudinary(file);
-                    attachedImageUrl = upload.url;
-                    document.getElementById('preview-attachment-bar').classList.remove('hidden');
-                    addBotMessage("¡Imagen adjuntada con éxito!");
-                } catch (err) {
-                    addBotMessage("Error al subir imagen: " + err.message);
-                }
+                await processImageFile(e.target.files[0]);
             }
         };
 
@@ -174,6 +208,46 @@
         };
 
         micBtn.onclick = () => toggleVoiceRecognition();
+
+        // Setup Drag & Drop for Image Files onto Chatbot Window
+        win.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            win.classList.add('drag-over');
+        });
+
+        win.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            win.classList.remove('drag-over');
+        });
+
+        win.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            win.classList.remove('drag-over');
+
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const droppedFile = e.dataTransfer.files[0];
+                if (droppedFile.type.startsWith('image/')) {
+                    await processImageFile(droppedFile);
+                } else {
+                    addBotMessage("Por favor arrastra un archivo de imagen válido (JPG, PNG, WEBP, etc).");
+                }
+            }
+        });
+    }
+
+    async function processImageFile(file) {
+        try {
+            addBotMessage("Subiendo imagen adjunta...");
+            const upload = await uploadToCloudinary(file);
+            attachedImageUrl = upload.url;
+            document.getElementById('preview-attachment-bar').classList.remove('hidden');
+            addBotMessage("¡Imagen adjuntada con éxito!");
+        } catch (err) {
+            addBotMessage("Error al subir imagen: " + err.message);
+        }
     }
 
     function initSpeechRecognition() {
@@ -220,6 +294,35 @@
         } else {
             recognition.start();
         }
+    }
+
+    function speakBotMessage(text) {
+        if (!isTtsEnabled || !('speechSynthesis' in window)) return;
+
+        window.speechSynthesis.cancel(); // Stop any ongoing speech
+
+        const cleanText = text.replace(/<[^>]*>/g, '').trim();
+        if (!cleanText) return;
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'es-MX';
+
+        const voices = window.speechSynthesis.getVoices();
+        const esVoice = voices.find(v => v.lang.includes('es-MX') || v.lang.includes('es-ES') || v.lang.includes('es'));
+        if (esVoice) utterance.voice = esVoice;
+
+        const heroStage = document.getElementById('chatbot-hero-stage');
+        if (heroStage) heroStage.classList.add('speaking');
+
+        utterance.onend = () => {
+            if (heroStage) heroStage.classList.remove('speaking');
+        };
+
+        utterance.onerror = () => {
+            if (heroStage) heroStage.classList.remove('speaking');
+        };
+
+        window.speechSynthesis.speak(utterance);
     }
 
     async function handleSendMessage() {
@@ -280,16 +383,18 @@
 
                 if (error) {
                     console.error("Error devuelto por la Edge Function de la IA:", error);
-                    let errDetail = error.message || "Error al procesar la solicitud con la IA.";
+                    // Attempt local client-side AI fallback if edge function unavailable
+                    const localReply = await processClientSideAI(userMsg, imageForMsg, targetUserId);
                     removeTypingIndicator(typingId);
-                    addBotMessage("Ocurrió un error al consultar a la IA: " + errDetail);
+                    addBotMessage(localReply);
                     return;
                 }
             }
         } catch (e) {
             console.error("Error al conectar con la Edge Function:", e);
+            const localReply = await processClientSideAI(userMsg, imageForMsg, targetUserId);
             removeTypingIndicator(typingId);
-            addBotMessage("Error de conexión con el servicio de IA: " + e.message);
+            addBotMessage(localReply);
             return;
         }
 
@@ -303,6 +408,18 @@
         const targetUserId = (typeof userIdArg === 'string') ? userIdArg : (userIdArg ? userIdArg.id : currentUser?.id);
 
         if (sb && targetUserId) {
+            // Check for learned business knowledge first
+            try {
+                const { data: knowledge } = await sb.from('tragalero_knowledge').select('*').eq('user_id', targetUserId);
+                if (knowledge && knowledge.length > 0) {
+                    for (const item of knowledge) {
+                        if (item.title && lowerMsg.includes(item.title.toLowerCase().trim())) {
+                            return item.content;
+                        }
+                    }
+                }
+            } catch (e) {}
+
             // Check for Menu Operations (Add dish, change price, add category, etc.)
             const isMenuIntent = lowerMsg.includes('agrega') || lowerMsg.includes('añade') || lowerMsg.includes('crea') || lowerMsg.includes('nuevo') || lowerMsg.includes('precio') || lowerMsg.includes('cambia') || lowerMsg.includes('actualiz') || lowerMsg.includes('pon') || lowerMsg.includes('modific') || lowerMsg.includes('cuesta') || lowerMsg.includes('platillo') || lowerMsg.includes('menu') || lowerMsg.includes('menú') || lowerMsg.includes('categoria') || lowerMsg.includes('categoría');
 
@@ -365,21 +482,18 @@
                 }
 
                 // Otherwise: ADD A NEW DISH / CATEGORY
-                // 1. Detect Category Name
                 let targetCategoryName = null;
                 const categoryMatch = lowerMsg.match(/(?:categoria|categoría)\s+(?:de\s+)?([a-z0-9áéíóúñ\s]+?)(?=\s+(?:llamalo|llamado|llama|ponle|con|precio|chico|grande|$))/i);
                 if (categoryMatch) {
                     targetCategoryName = categoryMatch[1].trim();
                 }
 
-                // Find or create category
                 let targetCat = null;
                 if (targetCategoryName) {
                     targetCat = menu.config.categories.find(c => (c.name || '').toLowerCase().includes(targetCategoryName.toLowerCase()));
                 }
                 if (!targetCat) {
                     if (targetCategoryName) {
-                        // Create specified category
                         const formattedCatName = targetCategoryName.charAt(0).toUpperCase() + targetCategoryName.slice(1);
                         targetCat = { name: formattedCatName, description: '', dishes: [] };
                         menu.config.categories.push(targetCat);
@@ -389,7 +503,6 @@
                 }
                 if (!targetCat.dishes) targetCat.dishes = [];
 
-                // 2. Extract Dish Name
                 let dishName = null;
                 const dishMatch = lowerMsg.match(/(?:llamalo|llamado|llama|nombrado)\s+([a-z0-9áéíóúñ\s]+?)(?=\s+(?:ponle|con|precio|chico|grande|tamaño|\d+|$))/i);
                 if (dishMatch) {
@@ -397,7 +510,6 @@
                 }
 
                 if (!dishName) {
-                    // Try removing generic words
                     let cleaned = msg.replace(/(?:agrega|añade|crea|un|nuevo|platillo|a|la|categoria|categoría|de|en|el|menu|menú|llamalo|llamado|llama|ponle|pon|\d+)/gi, '').trim();
                     if (cleaned.length > 1) {
                         dishName = cleaned.split(/\s+(?:chico|grande|precio|con|tamaño)/i)[0].trim();
@@ -409,7 +521,6 @@
                 }
                 dishName = dishName.charAt(0).toUpperCase() + dishName.slice(1);
 
-                // 3. Extract Sizes and Prices (e.g. "chico 120 grande 180")
                 const sizes = [];
                 const sizeMatches = [...msg.matchAll(/(chico|mediano|grande|familiar|personal|mini)\s+(\d+(?:\.\d+)?)/gi)];
 
@@ -437,7 +548,6 @@
                 };
                 targetCat.dishes.push(newDishObj);
 
-                // 4. Persist to Supabase
                 const payload = {
                     user_id: targetUserId,
                     domain: menu.domain || 'tragalero',
@@ -451,7 +561,6 @@
                     await sb.from('menutech_menus').upsert(payload, { onConflict: 'user_id' });
                 }
 
-                // Trigger UI reload if on adminMenus.html
                 if (typeof loadMenu === 'function') {
                     try { loadMenu(); } catch (e) {}
                 }
@@ -485,8 +594,7 @@
             }
         }
 
-        // Default response without emojis
-        return `¡Listo! Menú actualizado.`;
+        return `¡Listo! ¿En qué más te colaboro?`;
     }
 
     function addUserMessage(text, imgUrl) {
@@ -513,6 +621,9 @@
         div.innerHTML = text;
         msgs.appendChild(div);
         msgs.scrollTop = msgs.scrollHeight;
+
+        // Speak aloud if TTS enabled
+        speakBotMessage(text);
     }
 
     function addTypingIndicator() {
@@ -523,7 +634,7 @@
         const div = document.createElement('div');
         div.id = id;
         div.className = 'chat-bubble bot';
-        div.innerHTML = `<i class="bi bi-three-dots animate-pulse"></i> Procesando tu orden...`;
+        div.innerHTML = `<i class="bi bi-three-dots animate-pulse"></i> Procesando tu solicitud...`;
         msgs.appendChild(div);
         msgs.scrollTop = msgs.scrollHeight;
         return id;

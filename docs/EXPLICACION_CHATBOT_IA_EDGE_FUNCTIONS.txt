@@ -1,14 +1,16 @@
 ================================================================================
   GUÍA DEFINITIVA: CÓDIGO ACTUALIZADO PARA SUPABASE EDGE FUNCTION (`ai-assistant`)
-  CON INTELIGENCIA COMPLETA, EDICIÓN DIRECTA DE MENÚ Y SIN MENSAJES FIJOS
+  CON INTELIGENCIA COMPLETA, CONOCIMIENTO DE NEGOCIO (FAQS), EDICIÓN DIRECTA
+  DE MENÚ Y SIN MENSAJES FIJOS
 ================================================================================
 
 Entendido al 100%. Para que la IA actúe verdaderamente como una Inteligencia Artificial:
 1. **Comprensión Inteligente y Flexible**: Entiende órdenes ambiguas o informales (ej. "cambia el primer platillo por tacos", "agrega tacos al menú", "pon precios de $30 a todo").
-2. **Edición Directa del Menú (`update_full_menu`)**: La IA recibe el menú actual en JSON, aplica los cambios que entendió del cliente y guarda el objeto JSON modificado directamente en la tabla `tragalero_menus`.
-3. **Cero Mensajes Prefabricados**: No vuelve a decir "tu post estará listo x días" cuando se trate de un menú.
-4. **Sin Texto de Pensamientos en Inglés**: Elimina automáticamente frases como "The user said", "Plan: 1...", "This is a simple mathematical expression..." respondiendo directo (por ejemplo, si le preguntas "cuánto es 1 más 1", responde únicamente "2").
-5. **Soporte de Supabase Auth**: Realiza la búsqueda de usuarios tanto en `public.usuarios` como en `auth.users`.
+2. **Conocimiento del Negocio / FAQs (`tragalero_knowledge`)**: Carga automáticamente las respuestas aprendidas y datos de la empresa registrados en `learn.html` para responder preguntas frecuentes sobre el negocio.
+3. **Edición Directa del Menú (`update_full_menu`)**: La IA recibe el menú actual en JSON, aplica los cambios que entendió del cliente y guarda el objeto JSON modificado directamente en la tabla `tragalero_menus`.
+4. **Cero Mensajes Prefabricados**: No vuelve a decir "tu post estará listo x días" cuando se trate de un menú o una FAQ.
+5. **Sin Texto de Pensamientos en Inglés**: Elimina automáticamente frases como "The user said", "Plan: 1...", "This is a simple mathematical expression..." respondiendo directo.
+6. **Soporte de Supabase Auth**: Realiza la búsqueda de usuarios tanto en `public.usuarios` como en `auth.users`.
 
 --------------------------------------------------------------------------------
 CÓDIGO TYPESCRIPT PARA COPIAR EN TU EDGE FUNCTION `ai-assistant` EN SUPABASE
@@ -90,25 +92,32 @@ serve(async (req) => {
     if (!menu.config) menu.config = { categories: [] };
     if (!menu.config.categories) menu.config.categories = [];
 
-    const systemPrompt = `Eres la Inteligencia Artificial de Tragalero encargada de gestionar el menú digital de los clientes y responder dudas.
+    // 3. Cargar base de conocimiento del negocio / FAQs de tragalero_knowledge
+    let { data: knowledge } = await supabase.from("tragalero_knowledge").select("category, title, content").eq("user_id", targetUserId);
+    const knowledgeText = (knowledge || []).map(k => `[${k.category || 'FAQ'}] ${k.title}: ${k.content}`).join("\n");
+
+    const systemPrompt = `Eres la Inteligencia Artificial de Tragalero encargada de responder dudas sobre el negocio, gestionar el menú digital de los clientes y atender solicitudes.
 
 REGLAS OBLIGATORIAS DE RESPUESTA:
 1. RESPONDE SIEMPRE EN ESPAÑOL DE FORMA DIRECTA Y ULTRA CORTA.
-2. NUNCA MUESTRES TUS PENSAMIENTOS INTERNOS, PASOS DE RAZONAMIENTO NI NADA EN INGLÉS COMO "The user said", "Plan:", "This is a simple...".
-3. SI TE PREGUNTAN ALGO MATEMÁTICO O UNA DUDA DIRECTA (ej. "¿Cuánto es 1 + 1?"), RESPONDE SOLAMENTE EL RESULTADO (ej. "2").
-4. SI LA ORDEN TIENE QUE VER CON EL MENÚ (agregar, modificar, cambiar platillos, actualizar precios, eliminar categorías o reordenar):
+2. USA LA INFORMACIÓN DE CONOCIMIENTO Y FAQS DEL NEGOCIO PARA RESPONDER PREGUNTAS DEL CLIENTE SOBRE EL NEGOCIO, HORARIOS, POLÍTICAS, SERVICIOS, ETC.
+3. NUNCA MUESTRES TUS PENSAMIENTOS INTERNOS, PASOS DE RAZONAMIENTO NI NADA EN INGLÉS COMO "The user said", "Plan:", "This is a simple...".
+4. SI TE PREGUNTAN ALGO MATEMÁTICO O UNA DUDA DIRECTA (ej. "¿Cuánto es 1 + 1?"), RESPONDE SOLAMENTE EL RESULTADO (ej. "2").
+5. SI LA ORDEN TIENE QUE VER CON EL MENÚ (agregar, modificar, cambiar platillos, actualizar precios, eliminar categorías o reordenar):
    - DEBES UTILIZAR OBLIGATORIAMENTE LA HERRAMIENTA 'update_full_menu'.
    - NUNCA CREES UNA TAREA PARA CS CUANDO TE HABLEN DE MENÚS, PLATILLOS O PRECIOS.
    - Interpreta lo que pide el cliente en base al menú actual que tienes a continuación.
-5. USA 'create_cs_task' ÚNICAMENTE CUANDO EL USUARIO PIDA EXPRÉSAME Y LITERALMENTE UN TRABAJO EXTERNO QUE REQUIERA DISEÑO GRÁFICO (ejemplo: "hazme un banner publicitario", "diseña un volante para redes").
+6. USA 'create_cs_task' ÚNICAMENTE CUANDO EL USUARIO PIDA EXPRÉSAME Y LITERALMENTE UN TRABAJO EXTERNO QUE REQUIERA DISEÑO GRÁFICO (ejemplo: "hazme un banner publicitario", "diseña un volante para redes").
 
-DATOS DE CONTEXTO:
+DATOS DE CONTEXTO DEL NEGOCIO:
 - Cliente actual: ${clientName} (ID: ${targetUserId})
+- Base de Conocimiento y FAQs del negocio:
+${knowledgeText || "Sin datos de conocimiento adicionales registrados aún."}
 - Menú actual en formato JSON:
 ${JSON.stringify(menu.config)}
 `;
 
-    // 3. Consultar modelos disponibles en Google Gemini
+    // 4. Consultar modelos disponibles en Google Gemini
     const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${geminiApiKey}`);
     const listData = await listRes.json();
 
@@ -208,10 +217,8 @@ ${JSON.stringify(menu.config)}
       if (part.text) rawTextReply += part.text;
     }
 
-    // Limpieza estricta de razonamientos en inglés o pensamientos de la IA
     let cleanReply = rawTextReply.trim();
     if (cleanReply.includes("The user said") || cleanReply.includes("Plan:") || cleanReply.includes("This is a simple")) {
-      // Extraer solo la respuesta final (ejemplo "2" o saludo)
       const lines = cleanReply.split("\n").map(l => l.trim()).filter(l => l.length > 0);
       const lastLine = lines[lines.length - 1];
       if (lastLine && !lastLine.includes("The user") && !lastLine.includes("Plan:")) {

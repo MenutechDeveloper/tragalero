@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark" lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Entrenar IA - Tragalero</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Model Viewer -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+
+    <link rel="stylesheet" href="./assets/css/pastel-theme.css">
+    <script src="./assets/js/theme.js"></script>
+
+    <style>
+        html, body {
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+
+        .theme-switcher-container {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            z-index: 1000;
+        }
+
+        .learn-navbar {
+            height: 60px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-bs-theme="light"] .learn-navbar {
+            background: #ffffff;
+            border-bottom-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .learn-container {
+            height: calc(100vh - 60px);
+            display: flex;
+            padding: 15px;
+            gap: 15px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .panel-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 149, 51, 0.2);
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        [data-bs-theme="light"] .panel-card {
+            background: #ffffff;
+            border-color: rgba(255, 149, 51, 0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        /* Center Column: 3D Model & Speech Bubble */
+        .model-stage {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, rgba(255, 149, 51, 0.12) 0%, transparent 70%);
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        .thought-bubble {
+            position: absolute;
+            top: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ffffff 0%, #fff7ed 100%);
+            color: #1e293b;
+            border-radius: 24px;
+            padding: 12px 20px;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 12px 30px rgba(255, 149, 51, 0.3);
+            border: 2px solid #ff9533;
+            z-index: 10;
+            max-width: 260px;
+            text-align: center;
+            animation: floatBubble 3.5s ease-in-out infinite;
+        }
+
+        [data-bs-theme="dark"] .thought-bubble {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #f8fafc;
+            border-color: #fbbf24;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .thought-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -16px;
+            left: 45%;
+            width: 14px;
+            height: 14px;
+            background: inherit;
+            border-right: 2px solid #ff9533;
+            border-bottom: 2px solid #ff9533;
+            border-radius: 50%;
+        }
+
+        .thought-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -26px;
+            left: 41%;
+            width: 8px;
+            height: 8px;
+            background: inherit;
+            border-right: 2px solid #ff9533;
+            border-bottom: 2px solid #ff9533;
+            border-radius: 50%;
+        }
+
+        @keyframes floatBubble {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-8px); }
+        }
+
+        /* Form & List Columns */
+        .side-panel-left {
+            width: 320px;
+            min-width: 280px;
+        }
+
+        .side-panel-right {
+            width: 380px;
+            min-width: 300px;
+        }
+
+        .knowledge-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .knowledge-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .knowledge-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 149, 51, 0.3);
+            border-radius: 10px;
+        }
+
+        .knowledge-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        }
+
+        [data-bs-theme="light"] .knowledge-item {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+        }
+
+        .knowledge-item:hover {
+            border-color: #ff9533;
+            transform: translateY(-2px);
+        }
+
+        .badge-cat {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            padding: 4px 8px;
+            border-radius: 8px;
+        }
+
+        /* Responsive adjustments for mobile without vertical scroll */
+        @media (max-width: 991.98px) {
+            .learn-container {
+                flex-direction: column;
+                padding: 10px;
+                gap: 10px;
+            }
+            .side-panel-left, .side-panel-right {
+                width: 100%;
+                min-width: auto;
+                height: 45%;
+            }
+            .model-stage {
+                height: 40%;
+                flex: none;
+            }
+            .thought-bubble {
+                font-size: 0.85rem;
+                padding: 8px 14px;
+                top: 4%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Bar -->
+    <div class="learn-navbar">
+        <div class="d-flex align-items-center gap-3">
+            <a href="./admin.html" class="btn btn-outline-warning btn-sm rounded-pill px-3">
+                <i class="bi bi-arrow-left me-1"></i> Panel
+            </a>
+            <div class="fw-bold fs-5 text-warning d-flex align-items-center gap-2">
+                <i class="bi bi-brain"></i> Centro de Aprendizaje IA
+            </div>
+        </div>
+
+        <div class="theme-switcher-container d-flex align-items-center bg-white bg-opacity-10 p-2 rounded-pill shadow-sm">
+            <div id="authButtons" class="me-3 ps-2"></div>
+            <div class="theme-switcher-bar d-flex">
+                <button class="theme-btn" data-theme-value="light" title="Modo Amarillo"><i class="bi bi-sun-fill"></i></button>
+                <button class="theme-btn" data-theme-value="dark" title="Modo Oscuro"><i class="bi bi-moon-stars-fill"></i></button>
+                <button class="theme-btn" data-theme-value="medio" title="Modo Suave"><i class="bi bi-palette-fill"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace (Fit to screen) -->
+    <div class="learn-container">
+        <!-- Left Panel: Input Knowledge Form -->
+        <div class="panel-card side-panel-left">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h6 class="fw-bold mb-0 text-warning"><i class="bi bi-plus-circle me-1"></i> Añadir Conocimiento</h6>
+                <span class="badge bg-warning text-dark rounded-pill">Entrenamiento</span>
+            </div>
+
+            <form id="knowledgeForm" class="d-flex flex-column flex-grow-1 gap-2">
+                <input type="hidden" id="knowledgeId" value="">
+
+                <div>
+                    <label class="form-label small text-muted mb-1">Categoría / Tipo</label>
+                    <select id="knowledgeCategory" class="form-select form-select-sm rounded-3">
+                        <option value="faq">Pregunta Frecuente (FAQ)</option>
+                        <option value="business_info">Información de Negocio</option>
+                        <option value="service">Servicios u Ofrecimientos</option>
+                        <option value="policy">Políticas y Garantías</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="form-label small text-muted mb-1">Pregunta / Título del Tema</label>
+                    <input type="text" id="knowledgeTitle" class="form-control form-control-sm rounded-3" placeholder="Ej: ¿Tienen servicio a domicilio?" required>
+                </div>
+
+                <div class="flex-grow-1 d-flex flex-column">
+                    <label class="form-label small text-muted mb-1">Respuesta / Detalle para la IA</label>
+                    <textarea id="knowledgeContent" class="form-control form-control-sm rounded-3 flex-grow-1" placeholder="Ej: Sí, entregamos en un radio de 5km sin costo en compras mayores a $200." style="resize: none;" required></textarea>
+                </div>
+
+                <div class="d-flex gap-2 mt-2">
+                    <button type="submit" id="saveKnowledgeBtn" class="btn btn-warning btn-sm w-100 fw-bold rounded-pill">
+                        <i class="bi bi-lightbulb-fill me-1"></i> Enseñar a la IA
+                    </button>
+                    <button type="button" id="cancelKnowledgeBtn" class="btn btn-outline-secondary btn-sm d-none rounded-pill" onclick="resetForm()">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Center Panel: 3D Character Stage -->
+        <div class="model-stage panel-card">
+            <div class="thought-bubble" id="thoughtBubble">
+                que voy a aprender hoy
+            </div>
+
+            <model-viewer
+                src="./assets/cs.gltf"
+                alt="Asistente IA Tragalero"
+                camera-controls
+                auto-rotate
+                disable-zoom
+                disable-pan
+                interaction-prompt="none"
+                shadow-intensity="1"
+                exposure="1"
+                camera-orbit="0deg 75deg 105%"
+                field-of-view="30deg"
+                loading="eager"
+                style="width: 100%; height: 100%; background: transparent; --poster-color: transparent; outline: none; cursor: grab;">
+            </model-viewer>
+        </div>
+
+        <!-- Right Panel: Knowledge Base List -->
+        <div class="panel-card side-panel-right">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <h6 class="fw-bold mb-0 text-warning"><i class="bi bi-journal-check me-1"></i> Base de Conocimiento</h6>
+                <span class="badge bg-secondary rounded-pill" id="knowledgeCount">0 datos</span>
+            </div>
+
+            <div class="mb-2">
+                <input type="text" id="searchKnowledge" class="form-control form-control-sm rounded-pill" placeholder="Filtrar temas..." onkeyup="filterKnowledge()">
+            </div>
+
+            <div class="knowledge-list" id="knowledgeList">
+                <div class="text-center text-muted p-4">
+                    <i class="bi bi-arrow-repeat spin me-2"></i> Cargando conocimientos de la IA...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./assets/js/supabase_logic.js"></script>
+    <script src="./assets/js/tragaleroChatbot.js"></script>
+
+    <script>
+        let currentUser = null;
+        let activeUserId = null;
+        let allKnowledge = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await renderUserMenu('authButtons');
+            currentUser = await getLoggedInUser();
+
+            if (!currentUser) {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('demo')) {
+                    currentUser = { id: '00000000-0000-0000-0000-000000000000', name: 'Restaurante Demo', role: 'Owner' };
+                } else {
+                    window.location.href = './login.html';
+                    return;
+                }
+            }
+
+            activeUserId = currentUser.id;
+            loadKnowledge();
+
+            document.getElementById('knowledgeForm').addEventListener('submit', handleSaveKnowledge);
+        });
+
+        async function loadKnowledge() {
+            const listEl = document.getElementById('knowledgeList');
+            const countEl = document.getElementById('knowledgeCount');
+
+            try {
+                const sb = window.supabaseClient || supabaseClient;
+                const { data, error } = await sb
+                    .from('tragalero_knowledge')
+                    .select('*')
+                    .eq('user_id', activeUserId)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allKnowledge = data || [];
+                countEl.textContent = `${allKnowledge.length} tema${allKnowledge.length === 1 ? '' : 's'}`;
+                renderKnowledgeList(allKnowledge);
+            } catch (err) {
+                console.error("Error al cargar conocimiento:", err);
+                listEl.innerHTML = `<div class="text-center text-danger p-3"><i class="bi bi-exclamation-triangle me-1"></i> Error al cargar datos: ${escapeHtml(err.message)}</div>`;
+            }
+        }
+
+        function renderKnowledgeList(items) {
+            const listEl = document.getElementById('knowledgeList');
+            if (items.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center text-muted p-4">
+                        <i class="bi bi-lightbulb fs-2 d-block mb-2 text-warning opacity-50"></i>
+                        Aún no le has enseñado datos específicos a tu IA.<br>¡Escribe tu primera FAQ a la izquierda!
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = items.map(item => `
+                <div class="knowledge-item">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="badge bg-warning text-dark badge-cat">${escapeHtml(item.category || 'faq')}</span>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-link text-warning p-0 me-2" onclick="editKnowledge(${item.id})" title="Editar"><i class="bi bi-pencil-square"></i></button>
+                            <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteKnowledge(${item.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="fw-bold small text-truncate" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
+                    <div class="small opacity-75 text-break mt-1" style="font-size: 0.8rem; max-height: 60px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">${escapeHtml(item.content)}</div>
+                </div>
+            `).join('');
+        }
+
+        function filterKnowledge() {
+            const query = document.getElementById('searchKnowledge').value.toLowerCase().trim();
+            if (!query) {
+                renderKnowledgeList(allKnowledge);
+                return;
+            }
+            const filtered = allKnowledge.filter(k =>
+                k.title.toLowerCase().includes(query) ||
+                k.content.toLowerCase().includes(query) ||
+                k.category.toLowerCase().includes(query)
+            );
+            renderKnowledgeList(filtered);
+        }
+
+        async function handleSaveKnowledge(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('knowledgeId').value;
+            const category = document.getElementById('knowledgeCategory').value;
+            const title = document.getElementById('knowledgeTitle').value.trim();
+            const content = document.getElementById('knowledgeContent').value.trim();
+
+            if (!title || !content) return;
+
+            const saveBtn = document.getElementById('saveKnowledgeBtn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = `<i class="bi bi-arrow-repeat spin me-1"></i> Guardando...`;
+
+            try {
+                const sb = window.supabaseClient || supabaseClient;
+                const payload = {
+                    user_id: activeUserId,
+                    category,
+                    title,
+                    content,
+                    updated_at: new Date().toISOString()
+                };
+
+                let err = null;
+                if (id) {
+                    const res = await sb.from('tragalero_knowledge').update(payload).eq('id', id);
+                    err = res.error;
+                } else {
+                    const res = await sb.from('tragalero_knowledge').insert(payload);
+                    err = res.error;
+                }
+
+                if (err) throw err;
+
+                // Animate speech bubble confirmation
+                const bubble = document.getElementById('thoughtBubble');
+                bubble.textContent = `¡Aprendí "${title}"! 🧠✨`;
+                setTimeout(() => {
+                    bubble.textContent = 'que voy a aprender hoy';
+                }, 4000);
+
+                resetForm();
+                await loadKnowledge();
+            } catch (err) {
+                alert("Error al guardar conocimiento: " + err.message);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = `<i class="bi bi-lightbulb-fill me-1"></i> Enseñar a la IA`;
+            }
+        }
+
+        function editKnowledge(id) {
+            const item = allKnowledge.find(k => k.id === id);
+            if (!item) return;
+
+            document.getElementById('knowledgeId').value = item.id;
+            document.getElementById('knowledgeCategory').value = item.category || 'faq';
+            document.getElementById('knowledgeTitle').value = item.title;
+            document.getElementById('knowledgeContent').value = item.content;
+
+            document.getElementById('saveKnowledgeBtn').innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Actualizar Conocimiento`;
+            document.getElementById('cancelKnowledgeBtn').classList.remove('d-none');
+        }
+
+        async function deleteKnowledge(id) {
+            if (!confirm("¿Deseas eliminar este conocimiento de la memoria de la IA?")) return;
+
+            try {
+                const sb = window.supabaseClient || supabaseClient;
+                const { error } = await sb.from('tragalero_knowledge').delete().eq('id', id);
+                if (error) throw error;
+                await loadKnowledge();
+            } catch (err) {
+                alert("Error al eliminar: " + err.message);
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('knowledgeId').value = '';
+            document.getElementById('knowledgeTitle').value = '';
+            document.getElementById('knowledgeContent').value = '';
+            document.getElementById('saveKnowledgeBtn').innerHTML = `<i class="bi bi-lightbulb-fill me-1"></i> Enseñar a la IA`;
+            document.getElementById('cancelKnowledgeBtn').classList.add('d-none');
+        }
+    </script>
+</body>
+
+</html>
