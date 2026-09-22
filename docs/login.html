@@ -143,6 +143,18 @@
         const title = document.getElementById('cardTitle');
         const msg = document.getElementById('authMessage');
 
+        // Check if user is already logged in and redirect to admin
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const user = await getLoggedInUser();
+                if (user) {
+                    window.location.href = './admin.html';
+                }
+            } catch (err) {
+                console.log("No active session:", err);
+            }
+        });
+
         function showForm(type) {
             Object.values(forms).forEach(f => f.classList.add('d-none'));
             forms[type].classList.remove('d-none');
