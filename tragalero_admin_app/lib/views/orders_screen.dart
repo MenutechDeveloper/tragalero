@@ -189,7 +189,7 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: Start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

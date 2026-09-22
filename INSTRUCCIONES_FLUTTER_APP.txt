@@ -1,0 +1,77 @@
+================================================================================
+GUÍA PASO A PASO: CÓMO ABRIR, EJECUTAR Y PUBLICAR LA APP FLUTTER EN ANDROID STUDIO
+================================================================================
+
+PROYECTO: Tragalero Admin App (Flutter / Dart)
+UBICACIÓN DEL PROYECTO: /tragalero_admin_app/
+
+--------------------------------------------------------------------------------
+1. REQUISITOS PREVIOS
+--------------------------------------------------------------------------------
+1. Tener instalado Flutter SDK (versión 3.0.0 o superior):
+   https://docs.flutter.dev/get-started/install
+2. Tener instalado Android Studio con Android SDK y emulador o un teléfono Android con depuración USB activada:
+   https://developer.android.com/studio
+3. (Opcional) Para compilación iOS, una computadora Mac con Xcode instalado.
+
+--------------------------------------------------------------------------------
+2. CÓMO ABRIR EL PROYECTO EN ANDROID STUDIO O VS CODE
+--------------------------------------------------------------------------------
+En Android Studio:
+1. Abre Android Studio.
+2. Selecciona "Open" (Abrir) y busca la carpeta del proyecto:
+   `tragalero_admin_app`
+3. Android Studio detectará automáticamente que es un proyecto Flutter.
+4. Si te pide instalar los plugins de Flutter y Dart, haz clic en "Install" y reinicia Android Studio.
+
+En VS Code:
+1. Abre VS Code.
+2. Archivo -> Abrir Carpeta -> Selecciona la carpeta `tragalero_admin_app`.
+3. Asegúrate de tener la extensión oficial "Flutter" instalada.
+
+--------------------------------------------------------------------------------
+3. INSTALACIÓN DE DEPENDENCIAS
+--------------------------------------------------------------------------------
+Abre una terminal dentro de la carpeta `tragalero_admin_app` y ejecuta:
+
+   flutter pub get
+
+Esto descargará todas las librerías necesarias:
+- supabase_flutter (Autenticación y Supabase Realtime)
+- flutter_tts (Voz en español "¡Nueva orden de tragalero!")
+- audioplayers (Sonido de alerta)
+- shared_preferences (Almacenamiento de impresoras locales)
+
+--------------------------------------------------------------------------------
+4. CÓMO PROBAR Y EJECUTAR LA APP EN EMULADOR O TELÉFONO
+--------------------------------------------------------------------------------
+1. Conecta tu teléfono Android por USB (con Depuración USB activada) o inicia un Emulador desde Android Studio Device Manager.
+2. En la terminal de la carpeta `tragalero_admin_app`, ejecuta:
+
+   flutter run
+
+3. La aplicación se instalará y abrirá en tu dispositivo.
+
+--------------------------------------------------------------------------------
+5. CÓMO GENERAR EL ARCHIVO APK O AAB PARA PUBLICAR EN GOOGLE PLAY STORE
+--------------------------------------------------------------------------------
+Para generar el archivo APK de instalación directa:
+   flutter build apk --release
+
+El archivo APK se guardará en:
+   `tragalero_admin_app/build/app/outputs/flutter-apk/app-release.apk`
+
+Para generar el archivo Android App Bundle (AAB) requerido por Google Play Console:
+   flutter build appbundle --release
+
+El archivo AAB se guardará en:
+   `tragalero_admin_app/build/app/outputs/bundle/release/app-release.aab`
+
+--------------------------------------------------------------------------------
+6. CARACTERÍSTICAS INCLUIDAS EN ESTA APLICACIÓN
+--------------------------------------------------------------------------------
+1. Impresión directa en impresora térmica Epson TM-T20III por red Ethernet / TCP/IP en el puerto 9100 con comandos ESC/POS y corte de papel.
+2. Recepción de órdenes en tiempo real mediante Supabase Realtime subscription a la tabla `tragalero_orders`.
+3. Notificaciones por voz en español sintetizada ("¡Nueva orden de tragalero!") y sonido de alerta.
+4. Chatbot IA integrado con globo de pensamiento ("globo de pensamiento") y contexto completo de las órdenes activas.
+5. Configuración y pestaña dedicada para todas las impresoras conectadas con asignación de nombres personalizados (ej. "Impresora Cocina", "Barra", etc.).
