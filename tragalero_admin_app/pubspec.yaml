@@ -1,5 +1,5 @@
-name: menutech_admin_app
-description: "App Android de Menutech Admin para impresión de tickets Epson TM-T20III Ethernet y gestión de órdenes en tiempo real."
+name: tragalero_admin_app
+description: "Aplicación Android/iOS de Tragalero Admin para impresión de tickets Ethernet Epson TM-T20III y gestión de órdenes en tiempo real."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -23,5 +23,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  assets:
-    - assets/img/

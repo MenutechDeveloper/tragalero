@@ -13,16 +13,16 @@ void main() async {
     anonKey: SupabaseService.supabaseAnonKey,
   );
 
-  runApp(const MenutechAdminApp());
+  runApp(const TragaleroAdminApp());
 }
 
-class MenutechAdminApp extends StatelessWidget {
-  const MenutechAdminApp({super.key});
+class TragaleroAdminApp extends StatelessWidget {
+  const TragaleroAdminApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Menutech Admin',
+      title: 'Tragalero Admin',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
